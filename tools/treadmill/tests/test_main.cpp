@@ -170,6 +170,59 @@ TEST(Runner, ClockGapAbortsInsteadOfCatchupAcceleration) {
     EXPECT_EQ(runner.state(), Runner::State::Aborted);
     EXPECT_EQ(runner.elapsedMs(), 0);
 }
+TEST(Workout, RejectsDtdDeclarations) {
+    EXPECT_FALSE(parsePlan(R"(<!DOCTYPE rows [<!ENTITY name "Unexpected">]><rows version="1" id="a" name="&name;" speedunit="km/h" inclineunit="percent"><row name="ok" duration="00:01:00" speed="2" inclination="0" forcespeed="1"/></rows>)").error.isEmpty());
+}
+TEST(Runner, NoAckReportsTimeoutWithoutRepeatingStart) {
+    Simulator simulator;
+    simulator.inject(Simulator::Failure::NoAcknowledgements);
+    Runner runner(simulator, shortPlan());
+    int timedOut = 0;
+    int submitted = 0;
+    QObject::connect(&runner, &Runner::commandTimedOut, [&](quint64) { ++timedOut; });
+    QObject::connect(&simulator, &Controller::commandEvent, [&](quint64, QString phase) {
+        if (phase == "submitted") ++submitted;
+    });
+    qint64 now = startRunner(runner);
+    while (!runner.finished() && now < 30000) { now += 200; runner.advance(now); }
+    EXPECT_EQ(runner.state(), Runner::State::Completed);
+    EXPECT_GT(timedOut, 0);
+    EXPECT_EQ(submitted, 2); // One start, one stop; no blind retry.
+}
+TEST(Runner, ReductionCeilingSurvivesNextStage) {
+    Simulator simulator;
+    auto workout = shortPlan();
+    Stage second = workout.stages[0];
+    second.name = "Higher intensity";
+    second.from = second.to = {3, 2};
+    workout.stages.append(second);
+    Runner runner(simulator, workout);
+    qint64 now = startRunner(runner);
+    runner.reduce();
+    while (!runner.finished() && now < 50000) {
+        now += 200; runner.advance(now);
+        EXPECT_LE(runner.requested().speedKmh, 1.900001);
+        EXPECT_LE(runner.requested().gradePercent, 0);
+    }
+    EXPECT_EQ(runner.state(), Runner::State::Completed);
+}
+TEST(Runner, NotificationsPreserveSameOffsetAndDoNotRepeat) {
+    Simulator simulator;
+    auto workout = shortPlan();
+    workout.stages[0].durationMs = 40000;
+    workout.stages[0].events = {{1000, "One"}, {1000, "Two"}};
+    Runner runner(simulator, workout);
+    QStringList messages;
+    QObject::connect(&runner, &Runner::logEvent, [&](QString type, QString message) {
+        if (type == "notification") messages.append(message);
+    });
+    qint64 now = startRunner(runner);
+    while (!runner.finished() && now < 60000) { now += 200; runner.advance(now); }
+    EXPECT_EQ(messages.count("One"), 1);
+    EXPECT_EQ(messages.count("Two"), 1);
+    EXPECT_EQ(messages.filter("Next in 30 s").size(), 1);
+    EXPECT_EQ(messages.filter("Next in 10 s").size(), 1);
+}
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);

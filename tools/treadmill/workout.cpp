@@ -98,7 +98,12 @@ WorkoutLoadResult loadWorkout(const QString &path) {
         return result;
     }
     QXmlStreamReader xml(&file);
-    if (!xml.readNextStartElement() || xml.name() != "rows") xml.raiseError("Expected rows root");
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isDTD()) { xml.raiseError("DTD declarations are unsupported"); break; }
+        if (xml.isStartElement()) break;
+    }
+    if (!xml.isStartElement() || xml.name() != "rows") xml.raiseError("Expected rows root");
     const auto atts = xml.attributes();
     if (!attributesAllowed(atts, {"version", "id", "name", "speedunit", "inclineunit", "device"}) ||
         atts.value("version") != "1" || atts.value("speedunit") != "km/h" || atts.value("inclineunit") != "percent" ||

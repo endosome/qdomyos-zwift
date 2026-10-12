@@ -161,6 +161,7 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
         if (logFailed) return;
         const auto sample = runner.telemetry();
         fields.insert("session_id", sessionId);
+        fields.insert("generation", QString::number(runner.generation()));
         fields.insert("utc", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs));
         fields.insert("monotonic_ms", nowMs);
         fields.insert("elapsed_ms", runner.elapsedMs());
@@ -188,6 +189,12 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
     });
     QObject::connect(&simulator, &Controller::commandEvent, &app, [&](quint64 id, const QString &phase) {
         record("command", phase, {{"command_id", QString::number(id)}, {"phase", phase}});
+    });
+    QObject::connect(&runner, &Runner::commandTimedOut, &app, [&](quint64 id) {
+        record("command", "acknowledgement_timeout", {{"command_id", QString::number(id)}, {"phase", "acknowledgement_timeout"}});
+    });
+    QObject::connect(&runner, &Runner::commandSettled, &app, [&](quint64 id) {
+        record("command", "settled", {{"command_id", QString::number(id)}, {"phase", "settled"}});
     });
     QObject::connect(&runner, &Runner::stateChanged, &app, [&](const QString &state) {
         record("state", state);

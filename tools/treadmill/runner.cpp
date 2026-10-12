@@ -8,6 +8,8 @@ Runner::Runner(Controller &controller, Workout workout, QObject *parent)
         if (!finished()) abort(reason);
     });
     connect(&controller_, &Controller::commandEvent, this, [this](quint64 id, const QString &phase) {
+        if (phase == "submitted") acknowledgementDeadlines_.insert(id, nowMs_ + 2000);
+        else if (phase == "acknowledged" || phase == "rejected") acknowledgementDeadlines_.remove(id);
         emit logEvent("command", QString("%1 %2").arg(id).arg(phase));
         if (id == latestId_ && phase == "rejected" && !finished() && state_ != State::Stopping)
             abort("Controller rejected command");
@@ -96,12 +98,16 @@ void Runner::onSample(Telemetry sample) {
         else stoppedSamples_ = 0;
         if (stoppedSamples_ >= 3) {
             if (state_ == State::Pausing && sample.paused) setState(State::Paused);
-            else if (state_ == State::Stopping) setState(normalStop_ ? State::Completed : State::Aborted);
+            else if (state_ == State::Stopping) {
+                emit commandSettled(latestId_);
+                setState(normalStop_ ? State::Completed : State::Aborted);
+            }
         }
     } else if (state_ == State::Starting) {
         if (observed(requested_)) ++targetSamples_;
         else targetSamples_ = 0;
         if (targetSamples_ >= 3) {
+            emit commandSettled(latestId_);
             setState(State::Running);
             targetSinceMs_ = nowMs_;
             enterStage();
@@ -113,7 +119,7 @@ void Runner::onSample(Telemetry sample) {
         }
         if (observed(requested_)) {
             ++targetSamples_;
-            if (targetSamples_ == 3) emit logEvent("command", QString("%1 settled").arg(latestId_));
+            if (targetSamples_ == 3) emit commandSettled(latestId_);
         } else {
             if (targetSamples_ >= 3) {
                 abort("Manual override or unexpected target change");
@@ -138,9 +144,12 @@ void Runner::requestTarget(Target target) {
 }
 void Runner::enterStage() {
     const auto &stage = workout_.stages[stageIndex_];
-    emit logEvent("stage", stage.name);
-    if (!stage.instruction.isEmpty()) emit logEvent("instruction", stage.instruction);
     requestTarget(stage.targetAt(stageElapsedMs_));
+    if (state_ != State::Running) return;
+    emit logEvent("stage", stage.name);
+    emit logEvent("notification", QString("Now: %1, %2 km/h, %3%")
+                  .arg(stage.name).arg(requested_.speedKmh).arg(requested_.gradePercent));
+    if (!stage.instruction.isEmpty()) emit logEvent("instruction", stage.instruction);
 }
 qint64 Runner::elapsedMs() const {
     qint64 elapsed = stageElapsedMs_;
@@ -152,6 +161,7 @@ void Runner::stop(bool normal, const QString &reason) {
     normalStop_ = normal;
     reason_ = reason;
     ++generation_;
+    acknowledgementDeadlines_.clear();
     stoppedSamples_ = 0;
     setState(State::Stopping);
     deadlineMs_ = nowMs_ + 10000;
@@ -202,6 +212,13 @@ void Runner::advance(qint64 nowMs) {
     if (delta > 1500 && state_ != State::Stopping) abort("Control loop gap exceeded 1.5 seconds");
     controller_.advance(nowMs_);
     if (finished()) return;
+    const auto pendingIds = acknowledgementDeadlines_.keys();
+    for (const auto id : pendingIds) {
+        if (nowMs_ >= acknowledgementDeadlines_.value(id)) {
+            acknowledgementDeadlines_.remove(id);
+            emit commandTimedOut(id); // Weak ACK timeout never triggers an unsafe automatic retry.
+        }
+    }
     if (telemetry_.atMs < 0 || nowMs_ - telemetry_.atMs > 2000) {
         if (state_ != State::Stopping) abort("Motor telemetry stale");
     }
@@ -220,16 +237,16 @@ void Runner::advance(qint64 nowMs) {
     requestTarget(stage.targetAt(stageElapsedMs_));
     if (state_ != State::Running) return;
     const qint64 remaining = stage.durationMs - stageElapsedMs_;
-    if (stageIndex_ + 1 < workout_.stages.size()) {
-        const auto &next = workout_.stages[stageIndex_ + 1];
-        for (const qint64 lead : {30000LL, 10000LL}) {
-            const QString key = QString("%1:lead:%2").arg(stageIndex_).arg(lead);
-            if (stage.durationMs >= lead && remaining <= lead && !notified_.contains(key)) {
-                notified_.insert(key);
-                const auto pair = quantize(next.from);
-                emit logEvent("notification", QString("Next in %1 s: %2, %3 km/h, %4%")
-                           .arg(remaining / 1000).arg(next.name).arg(pair.speedKmh).arg(pair.gradePercent));
-            }
+    const bool lastStage = stageIndex_ + 1 == workout_.stages.size();
+    const QString nextName = lastStage ? "Verified stop" : workout_.stages[stageIndex_ + 1].name;
+    const Target nextPair = lastStage ? Target{0, requested_.gradePercent}
+                                      : quantize(workout_.stages[stageIndex_ + 1].from);
+    for (const qint64 lead : {30000LL, 10000LL}) {
+        const QString key = QString("%1:lead:%2").arg(stageIndex_).arg(lead);
+        if (stage.durationMs >= lead && remaining <= lead && !notified_.contains(key)) {
+            notified_.insert(key);
+            emit logEvent("notification", QString("Next in %1 s: %2, %3 km/h, %4%")
+                          .arg(remaining / 1000).arg(nextName).arg(nextPair.speedKmh).arg(nextPair.gradePercent));
         }
     }
     for (int i = 0; i < stage.events.size(); ++i) {

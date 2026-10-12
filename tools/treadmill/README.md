@@ -159,3 +159,15 @@ succeed when telemetry confirms targets; acknowledgements are not physical proof
 Other faults exercise abort/unconfirmed outcomes. A run without `--simulate` is
 refused before any Bluetooth discovery or connection because W1 motor capability
 and feedback validation is still pending.
+
+Run offline CLI/terminal integration tests after building:
+
+```sh
+python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
+```
+
+These exercise both full workouts, fault outcomes, log preservation, EOF,
+SIGTERM/terminal restoration and single-key stop. They never invoke BLE scanning
+or connect a physical device. Command logs distinguish submitted, acknowledged,
+acknowledgement timeout and telemetry-settled phases, with command/session
+generation IDs. A missing acknowledgement is recorded without repeating start.

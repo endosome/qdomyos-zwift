@@ -72,6 +72,7 @@ private:
     bool armed_ = false;
     bool everArmed_ = false;
     quint64 generation_ = 0;
+    quint64 lastArmGeneration_ = 0;
     qint64 nowMs_ = 0;
     qint64 deadlineMs_ = 0;
     qint64 lastPollMs_ = -500;

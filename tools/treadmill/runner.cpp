@@ -72,10 +72,9 @@ Target Runner::quantize(Target target) const {
     const auto caps = controller_.capabilities();
     target.speedKmh = std::min(target.speedKmh, speedCeiling_);
     target.gradePercent = std::min(target.gradePercent, gradeCeiling_);
-    // Round down so adaptation never raises the requested intensity.
-    target.speedKmh = caps.minSpeedKmh + std::floor((target.speedKmh - caps.minSpeedKmh + 1e-8) / caps.speedStepKmh) * caps.speedStepKmh;
-    target.gradePercent = caps.minGradePercent + std::floor((target.gradePercent - caps.minGradePercent + 1e-8) / caps.gradeStepPercent) * caps.gradeStepPercent;
-    return target;
+    Target mapped;
+    if (!caps.mapTarget(target, mapped)) return {NAN, NAN};
+    return mapped;
 }
 bool Runner::observed(Target target) const {
     return telemetry_.connected && telemetry_.running &&
@@ -208,7 +207,9 @@ void Runner::reduce() {
     if (state_ != State::Running && state_ != State::Paused) return;
     const auto caps = controller_.capabilities();
     speedCeiling_ = std::max(caps.minSpeedKmh, requested_.speedKmh - caps.speedStepKmh);
-    gradeCeiling_ = std::max(caps.minGradePercent, requested_.gradePercent - caps.gradeStepPercent);
+    gradeCeiling_ = caps.minGradePercent;
+    if (caps.gradeLevels.isEmpty()) gradeCeiling_ = std::max(caps.minGradePercent, requested_.gradePercent - caps.gradeStepPercent);
+    else for (const double level : caps.gradeLevels) if (level < requested_.gradePercent - 1e-8) gradeCeiling_ = level;
     emit logEvent("user", "Intensity reduction latched");
     requestTarget({speedCeiling_, gradeCeiling_});
 }

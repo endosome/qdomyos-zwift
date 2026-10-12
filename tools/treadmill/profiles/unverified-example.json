@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "identity": {"address": "AA:BB:CC:DD:EE:FF", "name": "Synthetic example only", "model": "unknown", "firmware": "unknown"},
+  "gatt": {"service": "fff0", "write": "fff2", "notify": "fff1"},
+  "speed": {"unit": "km/h", "min_code": 5, "max_code": 60, "running_min_code": 5, "step_code": 1, "unit_tag": -1},
+  "incline": [{"code": 0, "percent": 0}, {"code": 1, "percent": 1.5}, {"code": 2, "percent": 4}, {"code": 3, "percent": 6}],
+  "max_grade_mapping_loss": 2.5,
+  "validation": {"diagnostic_writes_confirmed": false, "controls": false, "speed_feedback": false,
+    "incline_feedback": false, "stop_feedback": false, "pause": false, "evidence": ""}
+}

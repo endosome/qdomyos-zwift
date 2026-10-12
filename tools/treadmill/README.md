@@ -258,3 +258,34 @@ isolated QZ archive and verify restricted defaults without connecting Bluetooth.
 After the archive build, build `driver/tests.pro` with `DRIVER_LIB=<archive-dir>`
 and the same optional Google Test include/library overrides as the Core tests.
 This is software validation only; it does not approve a W1 command sequence.
+
+## Device profiles and offline mapping preview
+
+Profiles are separate JSON files with explicit identity/model/firmware, one known
+GATT mapping, speed unit and byte limits/resolution, an ordered raw-incline-code
+→ percent-grade calibration table, mapping-loss tolerance, and individual
+verification flags/evidence. `running_min_code` is the verified usable minimum,
+which may exceed a protocol minimum of zero. Raw `unit_tag` is compared when
+known; it never automatically selects km/h versus mph.
+
+```sh
+./treadmill workout inspect uphill-walk-20 --profile /path/to/profile.json
+```
+
+This reports requested versus mapped targets without creating Bluetooth objects.
+`profiles/unverified-example.json` is a synthetic schema example, not W1 data.
+Its verification flags are false. Preview never authorizes motor execution.
+The validator checks mapping loss throughout incline ramps, including between
+valid endpoints; unsupported ramps are refused rather than silently changed.
+
+`FitShowController` adapts the restricted QZ queue to the shared async controller
+contract. Its offline tests inject real-format frames through that queue. Motor
+requests require complete profile evidence, matching live raw bounds/unit tag,
+matching observed model/firmware, fresh stopped/running data as appropriate,
+valid paired byte targets and the current generation. New packets supply fresh
+telemetry once; ACKs and cached samples cannot refresh motor feedback.
+`driver/qzcontroller.*` binds that adapter to the actual QZ/Qt transport. Standard
+Device Information model/firmware is read before the communication service;
+missing/unreadable identity currently blocks automatic control. No identity or
+physical-feedback fallback has been assumed for W1. The CLI still refuses every
+hardware workout, even when a file claims complete verification.

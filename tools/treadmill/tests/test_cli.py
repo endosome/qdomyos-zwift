@@ -75,6 +75,17 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)
 
+    def test_profile_preview_never_enables_hardware_execution(self):
+        profile = Path(__file__).resolve().parent.parent / 'profiles' / 'unverified-example.json'
+        result = self.command('workout', 'inspect', 'uphill-walk-20', '--profile', str(profile))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        preview = json.loads(result.stdout)
+        self.assertTrue(preview['preview_only'])
+        self.assertFalse(preview['motor_execution_enabled'])
+        self.assertFalse(preview['profile_motor_evidence_complete'])
+        self.assertEqual(len(preview['stages']), 11)
+        self.assertEqual(self.command('workout', 'run', 'uphill-walk-20', '--profile', str(profile)).returncode, 2)
+
     def test_simulator_status_has_explicit_backend(self):
         result = self.command('status', '--simulate')
         self.assertEqual(result.returncode, 0, result.stderr)

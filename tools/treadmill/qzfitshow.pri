@@ -2,7 +2,7 @@
 QT += bluetooth positioning
 DEFINES += TREADMILL_NO_VIRTUAL_DEVICE
 QZ_ROOT = $$clean_path($$PWD/../../src)
-INCLUDEPATH += $$QZ_ROOT $$QZ_ROOT/devices
+INCLUDEPATH += $$QZ_ROOT $$QZ_ROOT/devices $$QZ_ROOT/devices/fitshowtreadmill
 SOURCES += \
     $$QZ_ROOT/devices/fitshowtreadmill/fitshowtreadmill.cpp \
     $$QZ_ROOT/devices/fitshowtreadmill/fitshowcontrol.cpp \

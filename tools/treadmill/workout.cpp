@@ -159,8 +159,27 @@ WorkoutLoadResult loadWorkout(const QString &path) {
 QString validateWorkout(const Workout &workout, const Capabilities &capabilities) {
     if (workout.stages.isEmpty()) return "Workout has no stages";
     for (const auto &stage : workout.stages) {
-        if (stage.durationMs <= 0 || !capabilities.accepts(stage.from) || !capabilities.accepts(stage.to))
-            return "Stage outside validated capabilities: " + stage.name;
+        Target first, last;
+        if (stage.durationMs <= 0 || !capabilities.accepts(stage.from) || !capabilities.accepts(stage.to) ||
+            !capabilities.mapTarget(stage.from, first) || !capabilities.mapTarget(stage.to, last))
+            return "Stage outside validated capabilities/mapping: " + stage.name;
+        // Check the continuous ramp at each mapping boundary, not just its endpoints.
+        const double low = std::min(stage.from.gradePercent, stage.to.gradePercent);
+        const double high = std::max(stage.from.gradePercent, stage.to.gradePercent);
+        if (high > low && std::isfinite(capabilities.maxGradeMappingLoss)) {
+            if (capabilities.gradeLevels.isEmpty()) {
+                Target lower;
+                if (!capabilities.mapTarget({stage.from.speedKmh, low}, lower)) return "Unsupported grade ramp: " + stage.name;
+                const double worst = std::min(high, lower.gradePercent + capabilities.gradeStepPercent) - lower.gradePercent;
+                if (worst > capabilities.maxGradeMappingLoss + 1e-8) return "Grade ramp exceeds mapping tolerance: " + stage.name;
+            } else {
+                for (int i = 0; i + 1 < capabilities.gradeLevels.size(); ++i) {
+                    const double floor = capabilities.gradeLevels[i], next = capabilities.gradeLevels[i + 1];
+                    if (high > floor && low < next && std::min(high, next) - floor > capabilities.maxGradeMappingLoss + 1e-8)
+                        return "Grade ramp exceeds mapping tolerance: " + stage.name;
+                }
+            }
+        }
     }
     return {};
 }

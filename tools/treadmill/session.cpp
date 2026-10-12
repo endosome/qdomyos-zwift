@@ -1,5 +1,6 @@
 #include "session.h"
 #include "runner.h"
+#include "profile.h"
 #include <QDateTime>
 #include <QDir>
 #include <QElapsedTimer>
@@ -22,6 +23,7 @@
 using namespace Treadmill;
 
 void addWorkoutOptions(QCommandLineParser &parser) {
+    parser.addOption({"profile", "Device profile for offline mapping preview (never enables motor execution).", "file"});
     parser.addOption({"simulate", "Use the simulator; no Bluetooth objects are created."});
     parser.addOption({"fast", "Advance simulation deterministically without waiting (no terminal controls)."});
     parser.addOption({"workouts-dir", "Directory of external XML workout plans.", "directory"});
@@ -105,11 +107,11 @@ private:
 
 int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, const QStringList &arguments) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
-    if (arguments.size() < 2 || (arguments[1] != "list" && arguments[1] != "run"))
+    if (arguments.size() < 2 || (arguments[1] != "list" && arguments[1] != "run" && arguments[1] != "inspect"))
         return fail("Usage: treadmill workout list | run <id-or-path> --simulate [--fast]");
     if (arguments[1] == "list") {
         if (arguments.size() != 2 || parser.isSet("simulate") || parser.isSet("fast") ||
-            parser.isSet("log") || parser.isSet("inject") || parser.isSet("inject-at")) return fail("Invalid workout list options");
+            parser.isSet("log") || parser.isSet("inject") || parser.isSet("inject-at") || parser.isSet("profile")) return fail("Invalid workout list options");
         QMap<QString, QString> paths;
         QJsonArray entries;
         QString error;
@@ -118,8 +120,12 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
         return 0;
     }
     if (arguments.size() != 3) return fail("workout run requires one workout ID or file path");
-    if (!parser.isSet("simulate"))
+    const bool inspect = arguments[1] == "inspect";
+    if (!inspect && !parser.isSet("simulate"))
         return fail("Hardware workout execution is disabled: W1 compatibility, capabilities and stop feedback are unverified. Use --simulate.");
+    if (!inspect && parser.isSet("profile")) return fail("--profile is for offline workout inspect; simulation uses its own explicit model");
+    if (inspect && (!parser.isSet("profile") || parser.isSet("simulate") || parser.isSet("fast") || parser.isSet("log") ||
+                    parser.isSet("inject") || parser.isSet("inject-at"))) return fail("workout inspect requires --profile and no execution options");
     QString path = arguments[2];
     if (!QFileInfo::exists(path)) {
         QMap<QString, QString> paths;
@@ -131,6 +137,26 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
     }
     const auto loaded = loadWorkout(path);
     if (!loaded.error.isEmpty()) return fail(loaded.error);
+    if (inspect) {
+        const auto profile = loadProfile(parser.value("profile"));
+        if (!profile.error.isEmpty()) return fail(profile.error);
+        auto geometry = profile.profile.capabilities();
+        geometry.validated = true; // Offline feasibility preview, never passed to a controller.
+        const auto error = validateWorkout(loaded.workout, geometry);
+        if (!error.isEmpty()) return fail(error);
+        QJsonArray stages;
+        for (const auto &stage : loaded.workout.stages) {
+            Target from, to;
+            if (!profile.profile.map(stage.from, from) || !profile.profile.map(stage.to, to)) return fail("Unmappable stage: " + stage.name);
+            stages.append(QJsonObject{{"name", stage.name}, {"duration_seconds", double(stage.durationMs) / 1000},
+                                     {"requested_from", pairJson(stage.from)}, {"requested_to", pairJson(stage.to)},
+                                     {"mapped_from", pairJson(from)}, {"mapped_to", pairJson(to)}});
+        }
+        QJsonObject report{{"workout_id", loaded.workout.id}, {"preview_only", true}, {"motor_execution_enabled", false},
+                           {"profile_motor_evidence_complete", profile.profile.motorEvidenceComplete()}, {"stages", stages}};
+        QTextStream(stdout) << QJsonDocument(report).toJson(QJsonDocument::Indented);
+        return 0;
+    }
     Simulator simulator;
     Runner runner(simulator, loaded.workout);
     const auto validation = validateWorkout(loaded.workout, simulator.capabilities());

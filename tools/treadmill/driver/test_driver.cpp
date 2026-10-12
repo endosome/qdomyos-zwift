@@ -3,6 +3,7 @@
 #include <QTemporaryDir>
 #include <gtest/gtest.h>
 #include "fitshowtreadmill/fitshowtreadmill.h"
+#include "qzcontroller.h"
 
 TEST(Driver, RestrictedModeRejectsLegacyControlAndNeverWritesBeforeTransport) {
     QSettings settings;
@@ -34,6 +35,17 @@ TEST(Driver, LegacyModeKeepsItsDefaultAutoStartPausePolicy) {
     EXPECT_TRUE(driver.autoStartWhenSpeedIsGreaterThenZero());
     EXPECT_TRUE(driver.autoPauseWhenSpeedIsZero());
     EXPECT_FALSE(driver.setRestrictedGatt(0xfff0, 0xfff2, 0xfff1));
+}
+TEST(Driver, RealAdapterWithInvalidProfileNeverOpensBluetoothTransport) {
+    Treadmill::DeviceProfile profile;
+    Treadmill::QzController controller(profile);
+    int faults = 0, connections = 0;
+    QObject::connect(&controller, &Treadmill::Controller::fault, [&](QString) { ++faults; });
+    QObject::connect(&controller, &Treadmill::Controller::connectionChanged, [&](bool) { ++connections; });
+    controller.connectDevice(1);
+    EXPECT_EQ(faults, 1);
+    EXPECT_EQ(connections, 0);
+    EXPECT_FALSE(controller.capabilities().validated);
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

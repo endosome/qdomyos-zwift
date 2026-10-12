@@ -70,7 +70,7 @@ void Control::queryLimits(quint64 id) {
 }
 bool Control::arm(quint64 generation) {
     if (!available_ || !diagnostics_ || !limits_.complete() || generation < generation_) return false;
-    generation_ = generation;
+    generation_ = lastArmGeneration_ = generation;
     armed_ = everArmed_ = true;
     return true;
 }
@@ -98,11 +98,11 @@ void Control::target(quint64 generation, quint64 id, int speed, int incline) {
     for (const auto replaced : canceled) emit commandEvent(replaced, "canceled");
 }
 void Control::stop(quint64 generation, quint64 id) {
-    if (!available_ || !diagnostics_ || !everArmed_ || generation < generation_) {
+    if (!available_ || !diagnostics_ || !everArmed_ || generation < lastArmGeneration_) {
         emit commandEvent(id, "rejected"); return;
     }
     armed_ = false;
-    generation_ = generation;
+    generation_ = qMax(generation_, generation);
     clearPending();
     enqueue(Kind::Stop, QByteArray::fromHex("5303"), id);
     pump(nowMs_); // Stop overtakes an outstanding target without waiting for its ACK.
@@ -145,6 +145,7 @@ void Control::receive(const QByteArray &frame) {
     if (!available_) return;
     const auto response = decodeResponse(frame);
     if (!response.valid) return; // Invalid and unrelated traffic never refreshes motor telemetry.
+    const auto previous = limits_;
     if (response.limits.minSpeed >= 0) {
         limits_.minSpeed = response.limits.minSpeed; limits_.maxSpeed = response.limits.maxSpeed;
         limits_.unit = response.limits.unit;
@@ -159,7 +160,15 @@ void Control::receive(const QByteArray &frame) {
         sent_ = false;
         emit commandEvent(id, "acknowledged"); // Matching command/subtype is a weak protocol ACK only.
     }
-    if (limitsResponse) emit limitsChanged(limits_);
+    if (limitsResponse) {
+        if (armed_ && (previous.minSpeed != limits_.minSpeed || previous.maxSpeed != limits_.maxSpeed ||
+                       previous.minIncline != limits_.minIncline || previous.maxIncline != limits_.maxIncline ||
+                       previous.unit != limits_.unit || previous.pause != limits_.pause)) {
+            cancel();
+            emit fault("FitShow capabilities changed during an armed session");
+        }
+        emit limitsChanged(limits_);
+    }
     if (response.command == 0x51) {
         if (response.status.state == 5 || response.status.state == 6 || response.status.state == 7) {
             cancel();

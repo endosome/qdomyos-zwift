@@ -9,6 +9,7 @@ class QzController : public FitShowController {
 public:
     explicit QzController(DeviceProfile profile, QObject *parent = nullptr);
     ~QzController() override;
+    FitShow::Control &diagnosticChannel() { return transport_->driver.restrictedControl(); }
 private:
     struct Transport {
         fitshowtreadmill driver {200, true, true, 0, 0, fitshowtreadmill::Mode::Restricted};

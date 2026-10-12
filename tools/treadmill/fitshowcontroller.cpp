@@ -19,7 +19,7 @@ FitShowController::FitShowController(FitShow::Control &control, DeviceProfile pr
     connect(&control_, &FitShow::Control::limitsChanged, this, [this](FitShow::Limits limits) {
         if (!limits.complete()) return;
         boundsMatch_ = profile_.matches(limits);
-        if (!boundsMatch_) { control_.cancel(); emit fault("Live FitShow bounds/unit tag differ from the configured profile"); }
+        if (!boundsMatch_ && profile_.motorEvidenceComplete()) { control_.cancel(); emit fault("Live FitShow bounds/unit tag differ from the configured profile"); }
     });
     connect(&control_, &FitShow::Control::statusChanged, this, [this](FitShow::Status status) {
         if (!status.hasMotorData) return;
@@ -45,6 +45,7 @@ void FitShowController::connectDevice(quint64 generation) {
 }
 void FitShowController::disconnectDevice() { close_(); }
 void FitShowController::observeIdentity(const QString &model, const QString &firmware) {
+    emit identityObserved(model, firmware);
     identityMatch_ = !model.isEmpty() && !firmware.isEmpty() && model == profile_.model && firmware == profile_.firmware;
     if (!identityMatch_ && profile_.motorEvidenceComplete()) {
         control_.cancel();

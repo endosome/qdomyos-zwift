@@ -75,6 +75,42 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)
 
+    def test_protocol_diagnostics_cannot_start_without_approval_and_terminal(self):
+        profile_path = Path(__file__).resolve().parent.parent / 'profiles' / 'unverified-example.json'
+        result = self.command('status', '--profile', str(profile_path))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('--confirm-diagnostics', result.stderr)
+        profile = json.loads(profile_path.read_text())
+        profile['validation']['diagnostic_writes_confirmed'] = True
+        reviewed = Path(self.temporary.name) / 'reviewed.json'
+        reviewed.write_text(json.dumps(profile))
+        result = subprocess.run([BINARY, 'status', '--profile', str(reviewed), '--confirm-diagnostics'],
+                                stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('interactive terminal', result.stderr)
+
+    def test_declined_terminal_confirmation_never_creates_a_trace(self):
+        source = Path(__file__).resolve().parent.parent / 'profiles' / 'unverified-example.json'
+        profile = json.loads(source.read_text())
+        profile['validation']['diagnostic_writes_confirmed'] = True
+        reviewed = Path(self.temporary.name) / 'reviewed.json'
+        reviewed.write_text(json.dumps(profile))
+        master, slave = pty.openpty()
+        process = subprocess.Popen([BINARY, 'status', '--profile', str(reviewed), '--confirm-diagnostics',
+                                    '--log', str(self.log)], stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            os.write(master, b'NO\n')
+            output, errors = process.communicate(timeout=5)
+            self.assertEqual(process.returncode, 2, output.decode() + errors.decode())
+            self.assertIn('not confirmed', errors.decode())
+            self.assertFalse(self.log.exists())
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
     def test_profile_preview_never_enables_hardware_execution(self):
         profile = Path(__file__).resolve().parent.parent / 'profiles' / 'unverified-example.json'
         result = self.command('workout', 'inspect', 'uphill-walk-20', '--profile', str(profile))

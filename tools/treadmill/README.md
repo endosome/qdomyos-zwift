@@ -1,13 +1,14 @@
 # treadmill CLI
 
-Initial implementation: read-only BLE discovery on Linux. This standalone target
-uses Qt Core and Bluetooth without loading QZ's device factory or FitShow driver.
+Linux CLI with read-only BLE discovery, explicitly approved nonmotor protocol
+diagnostics, and offline workout simulation. It uses Qt Core, Bluetooth and
+Positioning and does not load QZ's device factory or GUI.
 
 ## Build
 
-Requires a C++17 compiler, make, qmake and Qt 5.15 Core/Bluetooth development
+Requires a C++17 compiler, make, qmake and Qt 5.15 Core/Bluetooth/Positioning development
 packages. Debian/Ubuntu packages include `build-essential`, `qtbase5-dev`,
-`qt5-qmake` and `qtconnectivity5-dev`.
+`qt5-qmake`, `qtconnectivity5-dev` and `qtpositioning5-dev`.
 
 Build outside the source directory (adjust the checkout path as needed):
 
@@ -181,12 +182,11 @@ parameter bytes; response lengths no longer truncate to eight bits before
 validation. Combined info requires its complete payload before fields are read.
 These checks do not establish W1 compatibility.
 
-The full QZ static-library build spike could not configure with the small local
-Qt toolchain: Positioning, Quick/QML, NetworkAuth, WebSockets, TextToSpeech,
-Location, Multimedia, Charts and QuickControls2 were missing. Driver isolation,
-opt-in motor policy, queue cancellation/stop priority and the real controller
-adapter still need implementation and full QZ regression builds. The CLI refuses
-hardware workout execution until those changes and W1 validation are complete.
+The complete QZ static library now builds with the broader local Qt toolchain.
+Restricted driver/adapter support is implemented and tested offline; physical W1
+compatibility and feedback verification remain pending. Hardware workout
+execution is disabled until that validation and an explicit launch approval path
+are complete.
 
 ## Install and CI
 
@@ -209,8 +209,7 @@ read-only W1 compatibility checkpoint. Sources remain subject to the repository
 license; extracting a library does not change that license.
 
 `./treadmill status --simulate` reports an explicitly labeled simulator snapshot
-and synthetic limits without starting movement. Real status queries remain gated
-on validated W1 notification/query behavior.
+and synthetic limits without starting movement. Write-enabled raw protocol status requires the explicit diagnostics procedure below.
 
 Connection events are logged independently of motor telemetry freshness. A lost
 connection immediately revokes automation and marks stopping unconfirmed without
@@ -289,3 +288,28 @@ Device Information model/firmware is read before the communication service;
 missing/unreadable identity currently blocks automatic control. No identity or
 physical-feedback fallback has been assumed for W1. The CLI still refuses every
 hardware workout, even when a file claims complete verification.
+
+## Later nonmotor protocol investigation
+
+Hardware testing is postponed. After the read-only reports have been reviewed,
+a separately approved probe is available:
+
+```sh
+./treadmill status --profile /path/to/reviewed-profile.json --confirm-diagnostics \
+  --timeout 30 --log /tmp/new-protocol-trace.jsonl
+```
+
+The profile must explicitly permit diagnostic writes, and the operator must type
+`NONMOTOR` on an interactive terminal before any transport is created. The probe
+subscribes through CCCD and sends only standard QZ FitShow speed/incline info
+queries (`50/02`, `50/03`) and status polling (`51`). W1 compatibility/initialization
+requirements remain unknown; this mode must be reviewed before physical use.
+It forces motor verification off and never calls start/stop/target/pause.
+It records complete raw notifications (including malformed frames), requested
+payloads, weak ACKs, raw bounds/unit tags, status codes and observed identity.
+No speed units, attained incline or physical stop are inferred from these traces.
+
+Q/S, EOF, termination signals and the 1–60 second deadline close the connection.
+This is an observer; physical belt operation remains with the operator.
+Existing trace files are preserved and recording is bounded to 8 MiB. The
+ordinary `scan` and `info` commands remain read-only and require no write approval.

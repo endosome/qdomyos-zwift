@@ -20,6 +20,7 @@ QzController::QzController(std::shared_ptr<Transport> transport, DeviceProfile p
         if (!profile.diagnosticsConfirmed || !transport_->driver.enableRestrictedDiagnostics())
             emit fault("Restricted notification subscription was not approved or failed");
     });
+    connect(&transport_->driver, &fitshowtreadmill::restrictedFrameObserved, this, &FitShowController::frameObserved);
     connect(&transport_->driver, &fitshowtreadmill::restrictedIdentityObserved, this, &FitShowController::observeIdentity);
 }
 QzController::~QzController() { disconnectDevice(); }

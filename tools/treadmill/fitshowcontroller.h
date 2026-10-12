@@ -19,6 +19,9 @@ public:
     void pause(quint64 generation, quint64 id) override;
     void advance(qint64 nowMs) override;
     void observeIdentity(const QString &model, const QString &firmware);
+signals:
+    void frameObserved(QByteArray frame);
+    void identityObserved(QString model, QString firmware);
 private:
     bool canControl(quint64 generation, quint64 id, Target target, int &speed, int &incline);
     FitShow::Control &control_;

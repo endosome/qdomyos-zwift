@@ -21,3 +21,8 @@ INCLUDEPATH += ../../src/devices/fitshowtreadmill
 profiles.files = $$PWD/profiles/*.json
 profiles.path = $$PREFIX/share/treadmill/profiles
 INSTALLS += profiles
+
+include(qzfitshow.pri)
+INCLUDEPATH += .
+SOURCES += fitshowcontroller.cpp driver/qzcontroller.cpp probe.cpp
+HEADERS += fitshowcontroller.h driver/qzcontroller.h terminal.h probe.h

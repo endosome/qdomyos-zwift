@@ -189,6 +189,7 @@ class fitshowtreadmill : public treadmill {
     void toastRequested(QString message);
     void restrictedGattReady();
     void restrictedIdentityObserved(QString model, QString firmware);
+    void restrictedFrameObserved(QByteArray frame);
 
   public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);

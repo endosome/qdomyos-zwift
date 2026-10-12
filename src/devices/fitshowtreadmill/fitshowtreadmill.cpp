@@ -348,8 +348,10 @@ void fitshowtreadmill::sendSportData() {
 void fitshowtreadmill::characteristicChanged(const QLowEnergyCharacteristic &characteristic,
                                              const QByteArray &newValue) {
     if (mode_ == Mode::Restricted) {
-        if (sender() == gattCommunicationChannelService && characteristic.uuid() == gattNotifyCharacteristic.uuid())
+        if (sender() == gattCommunicationChannelService && characteristic.uuid() == gattNotifyCharacteristic.uuid()) {
+            emit restrictedFrameObserved(newValue);
             restricted_.receive(newValue);
+        }
         return;
     }
     // qDebug() << "characteristicChanged" << characteristic.uuid() << newValue << newValue.length();

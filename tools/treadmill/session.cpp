@@ -1,6 +1,7 @@
 #include "session.h"
 #include "runner.h"
 #include "profile.h"
+#include "terminal.h"
 #include <QDateTime>
 #include <QDir>
 #include <QElapsedTimer>
@@ -23,6 +24,7 @@
 using namespace Treadmill;
 
 void addWorkoutOptions(QCommandLineParser &parser) {
+    parser.addOption({"confirm-diagnostics", "Enable the interactive nonmotor status confirmation prompt."});
     parser.addOption({"profile", "Device profile for offline mapping preview (never enables motor execution).", "file"});
     parser.addOption({"simulate", "Use the simulator; no Bluetooth objects are created."});
     parser.addOption({"fast", "Advance simulation deterministically without waiting (no terminal controls)."});
@@ -56,54 +58,6 @@ static bool catalog(const QString &directory, QMap<QString, QString> &paths, QJs
     return true;
 }
 
-static volatile sig_atomic_t signalWriteFd = -1;
-static void terminationSignal(int) {
-    const int savedErrno = errno;
-    const char value = 's';
-    if (signalWriteFd >= 0) {
-        const auto ignored = ::write(signalWriteFd, &value, 1);
-        (void)ignored;
-    }
-    errno = savedErrno;
-}
-// Own terminal/signal settings so every normal exit restores the caller's state.
-class InputGuard {
-public:
-    explicit InputGuard(bool interactive) {
-        if (::pipe2(signalPipe, O_NONBLOCK | O_CLOEXEC) == 0) {
-            signalWriteFd = signalPipe[1];
-            struct sigaction action {};
-            action.sa_handler = terminationSignal;
-            sigemptyset(&action.sa_mask);
-            for (int i = 0; i < 3; ++i) {
-                if (::sigaction(terminationSignals[i], &action, &previous[i]) != 0) break;
-                ++installed;
-            }
-        }
-        if (interactive && ::isatty(STDIN_FILENO) && ::tcgetattr(STDIN_FILENO, &terminal) == 0) {
-            auto raw = terminal;
-            raw.c_lflag &= ~(ICANON | ECHO);
-            raw.c_cc[VMIN] = 1;
-            raw.c_cc[VTIME] = 0;
-            terminalChanged = ::tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0;
-        }
-    }
-    ~InputGuard() {
-        for (int i = 0; i < installed; ++i) ::sigaction(terminationSignals[i], &previous[i], nullptr);
-        signalWriteFd = -1;
-        if (signalPipe[0] >= 0) ::close(signalPipe[0]);
-        if (signalPipe[1] >= 0) ::close(signalPipe[1]);
-        if (terminalChanged) ::tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
-    }
-    bool valid() const { return signalPipe[0] >= 0 && installed == 3; }
-    int signalPipe[2] = {-1, -1};
-private:
-    const int terminationSignals[3] = {SIGINT, SIGTERM, SIGHUP};
-    struct sigaction previous[3] {};
-    int installed = 0;
-    struct termios terminal {};
-    bool terminalChanged = false;
-};
 
 int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, const QStringList &arguments) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };

@@ -1,5 +1,6 @@
 #include "diagnostics.h"
 #include "session.h"
+#include "probe.h"
 #include <QBluetoothAddress>
 #include <QCommandLineParser>
 #include <QCoreApplication>
@@ -22,11 +23,17 @@ int main(int argc, char *argv[]) {
     parser.process(app);
     const auto arguments = parser.positionalArguments();
     if (!arguments.isEmpty() && arguments.first() == "status") {
+        if (arguments.size() == 1 && !parser.isSet("simulate")) {
+            for (const QString option : {"device", "fast", "workouts-dir", "inject", "inject-at"}) {
+                if (parser.isSet(option)) { QTextStream(stderr) << "Unsupported protocol status option: " << option << '\n'; return 2; }
+            }
+            return probeStatus(app, parser);
+        }
         if (arguments.size() != 1 || !parser.isSet("simulate")) {
             QTextStream(stderr) << "Hardware telemetry remains unverified; use treadmill status --simulate.\n";
             return 2;
         }
-        for (const QString option : {"device", "timeout", "fast", "workouts-dir", "log", "inject", "inject-at", "profile"}) {
+        for (const QString option : {"device", "timeout", "fast", "workouts-dir", "log", "inject", "inject-at", "profile", "confirm-diagnostics"}) {
             if (parser.isSet(option)) {
                 QTextStream(stderr) << "Unsupported status option: " << option << '\n';
                 return 2;
@@ -35,13 +42,14 @@ int main(int argc, char *argv[]) {
         return simulatorStatus();
     }
     if (!arguments.isEmpty() && arguments.first() == "workout") {
+        if (parser.isSet("confirm-diagnostics")) { QTextStream(stderr) << "--confirm-diagnostics applies to protocol status only.\n"; return 2; }
         if (parser.isSet(deviceOption) || parser.isSet(timeoutOption)) {
             QTextStream(stderr) << "--device/--timeout apply to BLE diagnostics.\n";
             return 2;
         }
         return workoutCommand(app, parser, arguments);
     }
-    for (const QString option : {"simulate", "fast", "workouts-dir", "log", "inject", "inject-at", "profile"}) {
+    for (const QString option : {"simulate", "fast", "workouts-dir", "log", "inject", "inject-at", "profile", "confirm-diagnostics"}) {
         if (parser.isSet(option)) {
             QTextStream(stderr) << option << " applies to workout commands.\n";
             return 2;

@@ -71,3 +71,26 @@ Standard readable model, firmware, hardware and manufacturer information is
 shown when available. Motor capabilities remain explicitly unknown. The
 connection/detail-discovery phase has a total 30-second deadline and returns
 partial metadata on error. Actual W1 GATT inspection remains hardware-unverified.
+
+## Controller and simulation model
+
+`Controller` defines asynchronous requests and separate telemetry/command events.
+`Simulator` implements countdown, acknowledgement delay, speed/grade response,
+priority stop with generation cancellation, pause, and injected failures. Its
+0.5–6 km/h and 0–10% limits are simulation parameters, not W1 specifications.
+A submitted or acknowledged operation does not establish motion or stopping.
+
+The Core-only Google Test target has no Bluetooth dependency:
+
+```sh
+mkdir -p /tmp/treadmill-tests
+cd /tmp/treadmill-tests
+qmake /home/mix/qdomyos-zwift/tools/treadmill/tests/tests.pro
+make -j2
+./treadmill-tests
+```
+
+Requires Google Test development headers/library (`libgtest-dev` on Ubuntu).
+For a nonstandard installation, pass `GTEST_INCLUDE=<path>` and `GTEST_LIB=<path>`
+to qmake. Tests exercise acknowledgement versus movement, countdown cancellation,
+stale-generation rejection, stop failure and capability validation.

@@ -216,3 +216,8 @@ Connection events are logged independently of motor telemetry freshness. A lost
 connection immediately revokes automation and marks stopping unconfirmed without
 claiming an offline stop command was delivered. Simulator reconnection preserves
 possible existing belt movement; new preflight refuses to start in that state.
+
+Diagnostic reports include the Qt version. `info` retains all enumerated service
+UUIDs even if later detail discovery fails, and records every characteristic
+property flag plus its numeric bits. `address_type` is null because Qt 5's device
+information does not expose that fact; it is not guessed from the address.

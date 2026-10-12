@@ -33,6 +33,7 @@ public:
     using QObject::QObject;
     virtual Capabilities capabilities() const = 0;
     virtual void connectDevice(quint64 generation) = 0;
+    virtual void disconnectDevice() = 0;
     virtual void start(quint64 generation, quint64 id, Target initial) = 0;
     virtual void setTarget(quint64 generation, quint64 id, Target target) = 0;
     virtual void stop(quint64 generation, quint64 id) = 0;
@@ -40,6 +41,7 @@ public:
     virtual void advance(qint64 nowMs) = 0;
 signals:
     void sample(Treadmill::Telemetry telemetry);
+    void connectionChanged(bool connected);
     void commandEvent(quint64 id, QString phase);
     void fault(QString reason);
 };
@@ -51,6 +53,7 @@ public:
     explicit Simulator(QObject *parent = nullptr);
     Capabilities capabilities() const override;
     void connectDevice(quint64 generation) override;
+    void disconnectDevice() override;
     void start(quint64 generation, quint64 id, Target initial) override;
     void setTarget(quint64 generation, quint64 id, Target target) override;
     void stop(quint64 generation, quint64 id) override;
@@ -66,6 +69,7 @@ private:
     qint64 nowMs_ = 0;
     qint64 lastSampleMs_ = -1000;
     qint64 startAtMs_ = -1;
+    bool hasConnected_ = false;
     bool stopping_ = false;
     bool pausePending_ = false;
     Target target_;

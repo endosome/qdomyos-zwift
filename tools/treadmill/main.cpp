@@ -9,9 +9,9 @@ int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("treadmill"));
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Read-only Linux BLE treadmill diagnostics."));
+    parser.setApplicationDescription(QStringLiteral("Linux BLE diagnostics and simulated treadmill workouts."));
     parser.addHelpOption();
-    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan, info, workout list, or workout run <id-or-path>."));
+    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan, info, status --simulate, workout list, or workout run <id-or-path>."));
     QCommandLineOption timeoutOption(QStringLiteral("timeout"), QStringLiteral("Scan duration (1–60 seconds)."),
                                     QStringLiteral("seconds"), QStringLiteral("10"));
     QCommandLineOption deviceOption(QStringLiteral("device"), QStringLiteral("Explicit Bluetooth address for info."),
@@ -21,6 +21,19 @@ int main(int argc, char *argv[]) {
     addWorkoutOptions(parser);
     parser.process(app);
     const auto arguments = parser.positionalArguments();
+    if (!arguments.isEmpty() && arguments.first() == "status") {
+        if (arguments.size() != 1 || !parser.isSet("simulate")) {
+            QTextStream(stderr) << "Hardware telemetry remains unverified; use treadmill status --simulate.\n";
+            return 2;
+        }
+        for (const QString option : {"device", "timeout", "fast", "workouts-dir", "log", "inject", "inject-at"}) {
+            if (parser.isSet(option)) {
+                QTextStream(stderr) << "Unsupported status option: " << option << '\n';
+                return 2;
+            }
+        }
+        return simulatorStatus();
+    }
     if (!arguments.isEmpty() && arguments.first() == "workout") {
         if (parser.isSet(deviceOption) || parser.isSet(timeoutOption)) {
             QTextStream(stderr) << "--device/--timeout apply to BLE diagnostics.\n";

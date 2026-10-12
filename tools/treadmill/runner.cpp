@@ -4,6 +4,11 @@ namespace Treadmill {
 Runner::Runner(Controller &controller, Workout workout, QObject *parent)
     : QObject(parent), controller_(controller), workout_(std::move(workout)) {
     connect(&controller_, &Controller::sample, this, &Runner::onSample);
+    connect(&controller_, &Controller::connectionChanged, this, [this](bool connected) {
+        telemetry_.connected = connected; // A connection event does not refresh motor sample timestamps.
+        emit logEvent("connection", connected ? "connected" : "disconnected");
+        if (!connected && !finished()) abort("Connection lost");
+    });
     connect(&controller_, &Controller::fault, this, [this](const QString &reason) {
         if (!finished()) abort(reason);
     });
@@ -165,6 +170,11 @@ void Runner::stop(bool normal, const QString &reason) {
     stoppedSamples_ = 0;
     setState(State::Stopping);
     deadlineMs_ = nowMs_ + 10000;
+    if (!telemetry_.connected) {
+        reason_ += "; stop unconfirmed — use the physical stop mechanism";
+        setState(State::StopUnconfirmed);
+        return;
+    }
     latestId_ = ++nextId_;
     controller_.stop(generation_, latestId_);
 }

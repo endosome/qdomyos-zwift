@@ -246,6 +246,35 @@ TEST(FitShowPacket, RejectsTruncatedCorruptAndOversizedResponses) {
     const uint8_t oversized[23] = {};
     EXPECT_TRUE(FitShowPacket::encode(oversized, sizeof(oversized)).isEmpty());
 }
+TEST(Simulator, CountdownTimeDoesNotAccelerateBelt) {
+    Simulator simulator;
+    Telemetry sample;
+    QObject::connect(&simulator, &Controller::sample, [&](Telemetry value) { sample = value; });
+    simulator.connectDevice(1);
+    simulator.start(1, 1, {2, 0});
+    simulator.advance(2000);
+    EXPECT_TRUE(sample.running);
+    EXPECT_DOUBLE_EQ(sample.actual.speedKmh, 0);
+    simulator.advance(3000);
+    EXPECT_DOUBLE_EQ(sample.actual.speedKmh, 0.5);
+}
+TEST(Simulator, ReconnectionDoesNotEraseExistingMovementOrStartAutomatically) {
+    Simulator simulator;
+    Telemetry sample;
+    QObject::connect(&simulator, &Controller::sample, [&](Telemetry value) { sample = value; });
+    simulator.connectDevice(1);
+    simulator.start(1, 1, {2, 0});
+    simulator.advance(6000);
+    ASSERT_TRUE(sample.running);
+    simulator.disconnectDevice();
+    simulator.connectDevice(3);
+    EXPECT_TRUE(sample.running);
+    EXPECT_DOUBLE_EQ(sample.actual.speedKmh, 2);
+    Runner newRun(simulator, shortPlan());
+    newRun.prepare(6000);
+    EXPECT_EQ(newRun.state(), Runner::State::Fault);
+    EXPECT_EQ(newRun.reason(), "Initial treadmill state is moving");
+}
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);

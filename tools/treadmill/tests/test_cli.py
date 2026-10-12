@@ -64,6 +64,8 @@ class CliTests(unittest.TestCase):
                 result = self.run_plan('--inject', fault)
                 self.assertEqual(result.returncode, 0 if state == 'COMPLETED' else 1, result.stderr)
                 self.assertEqual(self.events()[-1]['state'], state)
+                if fault == 'disconnect':
+                    self.assertFalse(self.events()[-1]['connected'])
 
     def test_hardware_gate_and_invalid_options(self):
         result = self.command('workout', 'run', 'interval-demo')
@@ -72,6 +74,15 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.command('info').returncode, 2)
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)
+
+    def test_simulator_status_has_explicit_backend(self):
+        result = self.command('status', '--simulate')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['backend'], 'simulator')
+        self.assertFalse(report['running'])
+        self.assertEqual(report['reported']['speed_kmh'], 0)
+        self.assertEqual(self.command('status').returncode, 2)
 
     def test_log_never_overwrites_existing_file(self):
         self.log.write_text('keep this session')

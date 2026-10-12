@@ -94,3 +94,19 @@ Requires Google Test development headers/library (`libgtest-dev` on Ubuntu).
 For a nonstandard installation, pass `GTEST_INCLUDE=<path>` and `GTEST_LIB=<path>`
 to qmake. Tests exercise acknowledgement versus movement, countdown cancellation,
 stale-generation rejection, stop failure and capability validation.
+
+## Workout files
+
+The loader retains QZ's `rows`, `row`, `repeat`, `speedfrom/speedto`, `inclination`
+and `textevent` syntax. The CLI dialect requires root `version="1"`, `id`, `name`,
+`speedunit="km/h"` and `inclineunit="percent"`; each row requires a name,
+positive `hh:mm:ss` duration, `forcespeed="1"` and explicit targets. Incline ramps
+use `inclinationfrom/inclinationto`. These additions are not implemented by the
+ordinary QZ workout loader; legacy files need explicit metadata before CLI use.
+Ramps retain child events and exact endpoints. Unsupported controls, nonfinite
+values, nested repeats and excessive expansion are rejected.
+
+`workouts/uphill-walk-20.xml` provides 1,200 seconds of editable uphill walking.
+`workouts/interval-demo.xml` provides an unrelated 120-second repeat/ramp example.
+Their speed/grade values are prototype targets, not personal prescriptions or
+verified W1 capability claims. Device adaptation must happen before a real run.

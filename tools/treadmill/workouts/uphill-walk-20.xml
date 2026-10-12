@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="uphill-walk-20" name="Uphill walking — 20 minutes" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Warm-up" instruction="Choose a comfortable effort; reduce intensity or stop when needed." duration="00:03:00" speedfrom="2.0" speedto="2.6" inclination="0" forcespeed="1"/>
+  <row name="Progressive ascent" duration="00:03:00" speedfrom="2.6" speedto="3.0" inclinationfrom="0" inclinationto="3" forcespeed="1"/>
+  <row name="First climb ramp" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="First climb" duration="00:02:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery" duration="00:01:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Second climb ramp" duration="00:01:00" speedfrom="2.5" speedto="3.2" inclinationfrom="1" inclinationto="5" forcespeed="1"/>
+  <row name="Second climb" duration="00:02:00" speed="3.2" inclination="5" forcespeed="1"/>
+  <row name="Easier walking" duration="00:02:00" speedfrom="3.2" speedto="2.6" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Cooldown descent" duration="00:01:00" speedfrom="2.6" speedto="2.4" inclinationfrom="1" inclinationto="0" forcespeed="1"/>
+  <row name="Cooldown walking" duration="00:03:00" speedfrom="2.4" speedto="1.5" inclination="0" forcespeed="1"/>
+</rows>

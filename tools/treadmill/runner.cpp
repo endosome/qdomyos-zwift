@@ -230,7 +230,10 @@ void Runner::advance(qint64 nowMs) {
             emit commandTimedOut(id); // Weak ACK timeout never triggers an unsafe automatic retry.
         }
     }
-    if (telemetry_.atMs < 0 || nowMs_ - telemetry_.atMs > 2000) {
+    // Discovery, identity and capability queries precede the first usable
+    // motor report. Preflight has its own bounded deadline; no motor is armed.
+    const bool awaitingFirstReport = state_ == State::Preflight && telemetry_.atMs < 0;
+    if (!awaitingFirstReport && (telemetry_.atMs < 0 || nowMs_ - telemetry_.atMs > 2000)) {
         if (state_ != State::Stopping) abort("Motor telemetry stale");
     }
     if ((state_ == State::Preflight || state_ == State::Starting || state_ == State::Pausing || state_ == State::Stopping) &&

@@ -528,6 +528,124 @@ TEST(FitShowAdapter, MissingNewPacketsRevokesQueuedMotorControlAndCannotResume) 
     controller.start(1, 2, {2, 0}); control.pump(clock + 200);
     for (const auto &payload : writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
 }
+// A synthetic peripheral, not W1 behavior. Replies traverse the production
+// decoder/queue/adapter; time and physical response are controlled by the test.
+class FitShowWorkoutFixture {
+public:
+    struct Reply { qint64 due; QByteArray payload; };
+    qint64 now = 0;
+    int speed = 0, incline = 0, targetSpeed = 0, targetIncline = 0;
+    int acknowledgementDelay = 100;
+    qint64 startAt = -1;
+    bool moving = false, reportStatus = true;
+    QList<Reply> replies;
+    QList<QByteArray> writes;
+    FitShow::Control control;
+    FitShowController controller;
+    Runner runner;
+    static DeviceProfile profile() {
+        auto result = syntheticProfile();
+        result.inclines = {{0, 0}, {1, 1.5}, {2, 4}, {3, 6}};
+        return result;
+    }
+    explicit FitShowWorkoutFixture(Workout workout)
+        : controller(control, profile(), [&]() { return now; }, [&]() {
+              control.setTransport(true);
+              controller.observeIdentity("test-model", "test-firmware");
+          }, [&]() { control.setTransport(false); }), runner(controller, std::move(workout)) {
+        QObject::connect(&control, &FitShow::Control::payloadReady, &controller,
+                         [&](QByteArray payload, quint64, quint64) {
+            writes.append(payload);
+            QByteArray response;
+            if (payload == QByteArray::fromHex("5002")) response = QByteArray::fromHex("50023c05");
+            else if (payload == QByteArray::fromHex("5003")) response = QByteArray::fromHex("5003030002");
+            else if (uint8_t(payload[0]) == 0x53) {
+                const int command = uint8_t(payload[1]);
+                response = payload.left(2);
+                if (command == 1) startAt = now + 2000;
+                else if (command == 2) {
+                    targetSpeed = uint8_t(payload[2]); targetIncline = uint8_t(payload[3]);
+                } else if (command == 3) {
+                    startAt = -1; moving = false; targetSpeed = 0;
+                }
+            }
+            if (!response.isEmpty()) replies.append({now + acknowledgementDelay, response});
+        });
+        runner.prepare(now);
+    }
+    void tick() {
+        now += 100;
+        for (int i = replies.size() - 1; i >= 0; --i) {
+            if (replies[i].due > now) continue;
+            const auto payload = replies.takeAt(i).payload;
+            control.receive(FitShowPacket::encode(reinterpret_cast<const uint8_t *>(payload.constData()), payload.size()));
+        }
+        if (startAt >= 0 && now >= startAt) { moving = true; startAt = -1; }
+        if (moving || targetSpeed == 0) {
+            if (speed < targetSpeed) ++speed;
+            else if (speed > targetSpeed) --speed;
+            if (incline < targetIncline) ++incline;
+            else if (incline > targetIncline) --incline;
+        }
+        if (reportStatus && now % 200 == 0)
+            control.receive(motorStatus(moving ? 3 : (startAt >= 0 ? 1 : 4), speed, incline));
+        runner.advance(now);
+        control.pump(now);
+    }
+    void start() {
+        for (int i = 0; i < 100 && runner.state() == Runner::State::Preflight; ++i) tick();
+        ASSERT_EQ(runner.state(), Runner::State::Ready) << runner.reason().toStdString();
+        runner.confirmStart();
+        for (int i = 0; i < 200 && runner.state() == Runner::State::Starting; ++i) tick();
+        ASSERT_EQ(runner.state(), Runner::State::Running) << runner.reason().toStdString();
+    }
+};
+TEST(FitShowWorkout, FullExternalWorkoutCompletesThroughProductionQueueAndAdapter) {
+    const auto loaded = loadWorkout(QFileInfo(__FILE__).absolutePath() + "/../workouts/uphill-walk-20.xml");
+    ASSERT_TRUE(loaded.error.isEmpty());
+    FitShowWorkoutFixture fixture(loaded.workout);
+    QStringList stages;
+    QObject::connect(&fixture.runner, &Runner::logEvent, [&](QString type, QString message) {
+        if (type == "stage") stages.append(message);
+    });
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    for (int i = 0; i < 14000 && !fixture.runner.finished(); ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Completed) << fixture.runner.reason().toStdString();
+    EXPECT_EQ(fixture.runner.elapsedMs(), 1200000);
+    ASSERT_EQ(stages.size(), loaded.workout.stages.size());
+    for (int i = 0; i < stages.size(); ++i) EXPECT_EQ(stages[i], loaded.workout.stages[i].name);
+    EXPECT_EQ(fixture.speed, 0);
+    EXPECT_EQ(fixture.incline, 0);
+    EXPECT_TRUE(fixture.writes.contains(QByteArray::fromHex("53022002"))); // 3.2 km/h, mapped 4%.
+    EXPECT_TRUE(fixture.writes.contains(QByteArray::fromHex("5303")));
+}
+TEST(FitShowWorkout, AbortOvertakesDelayedTargetReplyWithoutRestart) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    fixture.acknowledgementDelay = 1500;
+    fixture.runner.reduce(); fixture.control.pump(fixture.now);
+    fixture.runner.abort("shutdown");
+    const int afterStop = fixture.writes.size();
+    ASSERT_EQ(fixture.writes.last(), QByteArray::fromHex("5303"));
+    for (int i = 0; i < 80; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Aborted);
+    EXPECT_EQ(fixture.speed, 0);
+    for (int i = afterStop; i < fixture.writes.size(); ++i)
+        EXPECT_EQ(fixture.writes[i], QByteArray::fromHex("51"));
+}
+TEST(FitShowWorkout, MissingInitialMotorReportsExpiresPreflightWithoutArming) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.reportStatus = false;
+    for (int i = 0; i < 99; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Preflight);
+    fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Stopping);
+    for (int i = 0; i < 100; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    for (const auto &payload : fixture.writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
+}
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);

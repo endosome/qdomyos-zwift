@@ -1,0 +1,62 @@
+name: Treadmill standalone CLI
+
+on:
+  push:
+    paths:
+      - 'tools/treadmill/**'
+      - 'src/devices/fitshowtreadmill/fitshowpacket.h'
+      - '.github/workflows/treadmill.yml'
+  pull_request:
+    paths:
+      - 'tools/treadmill/**'
+      - 'src/devices/fitshowtreadmill/fitshowpacket.h'
+      - '.github/workflows/treadmill.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install standalone dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential qtbase5-dev qt5-qmake qtconnectivity5-dev libgtest-dev python3
+      - name: Build CLI and Core tests
+        run: |
+          mkdir -p /tmp/treadmill-build /tmp/treadmill-tests
+          cd /tmp/treadmill-build
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/treadmill.pro"
+          make -j2
+          cd /tmp/treadmill-tests
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/tests/tests.pro"
+          make -j2
+      - name: Run offline tests without a Bluetooth bus
+        env:
+          DBUS_SYSTEM_BUS_ADDRESS: unix:path=/tmp/treadmill-no-system-bus
+        run: |
+          /tmp/treadmill-tests/treadmill-tests --gtest_output=xml:/tmp/treadmill-tests/results.xml
+          python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
+      - name: Check staged installation
+        run: |
+          cd /tmp/treadmill-build
+          make INSTALL_ROOT=/tmp/treadmill-stage install
+          /tmp/treadmill-stage/usr/local/bin/treadmill workout list
+      - name: Build and run sanitizer tests
+        run: |
+          mkdir -p /tmp/treadmill-sanitizers
+          cd /tmp/treadmill-sanitizers
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/tests/tests.pro" CONFIG+=debug \
+            'QMAKE_CXXFLAGS+=-fsanitize=address,undefined -fno-omit-frame-pointer' \
+            'QMAKE_LFLAGS+=-fsanitize=address,undefined'
+          make -j2
+          ./treadmill-tests
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: treadmill-test-results
+          path: /tmp/treadmill-tests/results.xml

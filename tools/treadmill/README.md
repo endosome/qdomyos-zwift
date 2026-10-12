@@ -187,3 +187,23 @@ Location, Multimedia, Charts and QuickControls2 were missing. Driver isolation,
 opt-in motor policy, queue cancellation/stop priority and the real controller
 adapter still need implementation and full QZ regression builds. The CLI refuses
 hardware workout execution until those changes and W1 validation are complete.
+
+## Install and CI
+
+```sh
+# Run in the CLI build directory; PREFIX defaults to /usr/local.
+qmake /path/to/qdomyos-zwift/tools/treadmill/treadmill.pro PREFIX=/usr/local
+make -j2
+make INSTALL_ROOT=/tmp/treadmill-stage install
+```
+
+Staging installs the binary, external plans, README, status notes and repository
+LICENSE. Installation does not bundle Qt or BlueZ; provide the matching dynamic
+runtime packages on the target host. The standalone Linux workflow builds the
+CLI/Core tests, runs offline simulation/terminal tests without a system Bluetooth
+bus, checks staged installation and runs address/undefined-behavior sanitizers.
+Full QZ regressions and physical W1 validation remain separate requirements.
+
+See [STATUS.md](STATUS.md) for completed tasks, pending hardware work and the
+read-only W1 compatibility checkpoint. Sources remain subject to the repository
+license; extracting a library does not change that license.

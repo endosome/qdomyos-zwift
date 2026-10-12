@@ -7,5 +7,5 @@ INCLUDEPATH += ..
 !isEmpty(GTEST_INCLUDE): INCLUDEPATH += $$GTEST_INCLUDE
 !isEmpty(GTEST_LIB): LIBS += -L$$GTEST_LIB
 LIBS += -lgtest -lpthread
-SOURCES += test_main.cpp ../controller.cpp ../workout.cpp
-HEADERS += ../controller.h ../workout.h
+SOURCES += test_main.cpp ../controller.cpp ../workout.cpp ../runner.cpp
+HEADERS += ../controller.h ../workout.h ../runner.h

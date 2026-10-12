@@ -1,6 +1,7 @@
 #pragma once
 #include "workout.h"
 #include <QSet>
+#include <QMap>
 
 namespace Treadmill {
 class Runner : public QObject {
@@ -22,10 +23,13 @@ public:
     Target requested() const { return requested_; }
     Telemetry telemetry() const { return telemetry_; }
     QString reason() const { return reason_; }
+    quint64 generation() const { return generation_; }
     bool finished() const;
     static QString stateName(State state);
 signals:
     void logEvent(QString type, QString message);
+    void commandSettled(quint64 id);
+    void commandTimedOut(quint64 id);
     void stateChanged(QString state);
 private:
     void setState(State state);
@@ -57,5 +61,6 @@ private:
     Target requested_;
     Telemetry telemetry_;
     QSet<QString> notified_;
+    QMap<quint64, qint64> acknowledgementDeadlines_;
 };
 }

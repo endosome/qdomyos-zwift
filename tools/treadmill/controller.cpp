@@ -72,7 +72,10 @@ void Simulator::stop(quint64 generation, quint64 id) {
     pausePending_ = false;
     stopping_ = true;
     submit(id);
-    if (failure_ != Failure::StopFailure) target_.speedKmh = 0;
+    if (failure_ != Failure::StopFailure) {
+        target_.speedKmh = 0;
+        target_.gradePercent = telemetry_.actual.gradePercent;
+    }
 }
 void Simulator::pause(quint64 generation, quint64 id) {
     if (generation != generation_ || !telemetry_.running || stopping_) {
@@ -121,8 +124,11 @@ void Simulator::advance(qint64 nowMs) {
         telemetry_.running = false;
         telemetry_.paused = pausePending_;
     }
-    if (failure_ == Failure::ManualOverride && telemetry_.running)
+    if (failure_ == Failure::ManualOverride && telemetry_.running) {
         telemetry_.actual.speedKmh = std::max(0.5, telemetry_.actual.speedKmh - 1.0);
+        target_.speedKmh = telemetry_.actual.speedKmh;
+        failure_ = Failure::None; // One console intervention, not resistance to every stop.
+    }
     if (failure_ != Failure::StaleTelemetry && nowMs_ - lastSampleMs_ >= 200) {
         telemetry_.atMs = nowMs_;
         lastSampleMs_ = nowMs_;

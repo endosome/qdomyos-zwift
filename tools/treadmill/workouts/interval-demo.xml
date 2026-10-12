@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="interval-demo" name="Short interval demonstration" speedunit="km/h" inclineunit="percent">
+  <row name="Warm-up" duration="00:00:20" speed="1.0" inclination="0" forcespeed="1">
+    <textevent timeoffset="5" message="This is a simulation demonstration."/>
+  </row>
+  <repeat times="2">
+    <row name="Walking" duration="00:00:20" speed="2.0" inclination="1" forcespeed="1"/>
+    <row name="Recovery" duration="00:00:20" speed="1.0" inclination="0" forcespeed="1"/>
+  </repeat>
+  <row name="Cooldown" duration="00:00:20" speedfrom="1.0" speedto="0.5" inclination="0" forcespeed="1"/>
+</rows>

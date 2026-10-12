@@ -30,6 +30,7 @@ static QJsonArray deviceReport(const QList<QBluetoothDeviceInfo> &discovered) {
         QJsonObject entry;
         entry.insert(QStringLiteral("name"), device.name());
         entry.insert(QStringLiteral("address"), device.address().toString());
+        entry.insert(QStringLiteral("address_type"), QJsonValue());
         entry.insert(QStringLiteral("rssi_dbm"), device.rssi());
         entry.insert(QStringLiteral("advertised_service_uuids"), advertisedServices);
         report.append(entry);
@@ -50,6 +51,7 @@ int scanDevices(QCoreApplication &app, int timeoutSeconds) {
         deadline.stop();
         QJsonObject report;
         report.insert(QStringLiteral("command"), QStringLiteral("scan"));
+        report.insert(QStringLiteral("qt_version"), QString::fromLatin1(qVersion()));
         report.insert(QStringLiteral("status"), status);
         report.insert(QStringLiteral("devices"), deviceReport(discovery.discoveredDevices()));
         if (!error.isEmpty()) {
@@ -98,6 +100,7 @@ int inspectDevice(QCoreApplication &app, const QBluetoothAddress &address, int t
     QLowEnergyController *controller = nullptr;
     QList<QBluetoothUuid> pendingServices;
     QJsonArray services;
+    QJsonArray serviceUuids;
     QString deviceName;
     bool completed = false;
     auto finish = [&](const QString &error) {
@@ -106,10 +109,13 @@ int inspectDevice(QCoreApplication &app, const QBluetoothAddress &address, int t
         deadline.stop();
         QJsonObject report;
         report.insert("command", "info");
+        report.insert("qt_version", QString::fromLatin1(qVersion()));
         report.insert("status", error.isEmpty() ? "complete" : "error");
         report.insert("address", address.toString());
         report.insert("name", deviceName);
         report.insert("services", services);
+        report.insert("service_uuids", serviceUuids);
+        report.insert("address_type", QJsonValue());
         report.insert("motor_capabilities", "unknown: no FitShow queries were sent");
         if (!error.isEmpty()) {
             report.insert("error", error);
@@ -148,11 +154,14 @@ int inspectDevice(QCoreApplication &app, const QBluetoothAddress &address, int t
             for (const auto &characteristic : list) {
                 QJsonArray properties;
                 const auto flags = characteristic.properties();
+                if (flags & QLowEnergyCharacteristic::Broadcasting) properties.append("broadcast");
                 if (flags & QLowEnergyCharacteristic::Read) properties.append("read");
                 if (flags & QLowEnergyCharacteristic::Write) properties.append("write");
                 if (flags & QLowEnergyCharacteristic::WriteNoResponse) properties.append("write_without_response");
                 if (flags & QLowEnergyCharacteristic::Notify) properties.append("notify");
                 if (flags & QLowEnergyCharacteristic::Indicate) properties.append("indicate");
+                if (flags & QLowEnergyCharacteristic::WriteSigned) properties.append("signed_write");
+                if (flags & QLowEnergyCharacteristic::ExtendedProperty) properties.append("extended_properties");
                 QJsonArray descriptors;
                 for (const auto &descriptor : characteristic.descriptors()) {
                     QJsonObject entry;
@@ -164,6 +173,7 @@ int inspectDevice(QCoreApplication &app, const QBluetoothAddress &address, int t
                 entry.insert("uuid", characteristic.uuid().toString());
                 entry.insert("handle", characteristic.handle());
                 entry.insert("properties", properties);
+                entry.insert("properties_bits", int(flags));
                 entry.insert("descriptors", descriptors);
                 const quint16 id = characteristic.uuid().toUInt16();
                 if (uuid == QBluetoothUuid(quint16(0x180a)) &&
@@ -218,6 +228,7 @@ int inspectDevice(QCoreApplication &app, const QBluetoothAddress &address, int t
             std::sort(pendingServices.begin(), pendingServices.end(), [](const auto &left, const auto &right) {
                 return left.toString() < right.toString();
             });
+            for (const auto &uuid : pendingServices) serviceUuids.append(uuid.toString());
             discoverNext();
         });
         deadline.start(30000);

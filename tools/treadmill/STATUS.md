@@ -1,8 +1,9 @@
 # Implementation status
 
 This project is not yet a validated W1 motor controller. Hardware execution is
-explicitly disabled. Read-only BLE discovery/GATT inspection and complete
-simulation are implemented.
+explicitly disabled. Hardware testing is postponed at the user's request.
+Read-only discovery, approved nonmotor diagnostics, real-adapter software and
+complete simulation are implemented.
 
 | Roadmap task | Status | Evidence / next dependency |
 |---|---|---|
@@ -10,14 +11,15 @@ simulation are implemented.
 | 1.1 standalone scan | Implemented; physical scan unverified | Qt 5.15.18 build and argument validation |
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Pending physical access | First operator checkpoint: scan/info reports |
-| 1.4 QZ link spike | Isolated driver compiled and linked | Six QZ sources; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5–1.7 nonmotor queries/calibration/start-stop | Pending evidence and operator confirmation | Do not replay driver initialization or issue motor probes |
+| 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
+| 1.5 nonmotor probe | Implemented; not run on hardware | Profile approval + typed confirmation; raw trace only, never armed |
+| 1.6–1.7 calibration/start-stop | Postponed physical validation | No W1 units/mapping/feedback facts assumed |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
 | M3 workout engine | Implemented for simulator | Generic XML, ramps/repeats/events; external 20-minute and second plan |
 | M4 CLI | Simulation complete; real run pending | Catalog, controls, logs, shutdown and offline integration tests |
-| M5 hardening/package | Initial support implemented; release acceptance pending | Linux CI/install targets; W1 and full QZ regressions not validated |
+| M5 hardening/package | Software support implemented; physical release acceptance pending | CI/install/sanitizer support; full QZ library and selected existing regressions validated |
 
 ## First hardware checkpoint: ready for read-only discovery
 
@@ -40,9 +42,10 @@ writes or subscriptions are requested. Model/firmware may remain unknown.
 
 ## Next hardware checkpoints
 
-After reviewing GATT evidence, implement a restricted FitShow adapter and
-nonmotor query/subscription mode. That is a separately reviewed write-enabled
-step, not part of the read-only tool. Establish actual protocol framing,
+The restricted FitShow adapter and nonmotor query/subscription mode are
+implemented and tested offline. After reviewing GATT evidence, the status probe
+requires a separately reviewed write-enabled step; it is not part of the
+read-only tool. Establish actual protocol framing,
 initialization, speed units/limits and discrete incline mapping before motor use.
 Only then propose a bounded minimum-speed start/stop test with explicit operator
 confirmation and physical-stop access. A full workout is the final hardware
@@ -58,7 +61,7 @@ from QZ public metrics. Pausing is implemented/verified only in simulation.
 The QZ driver has a tested opt-in restricted path with explicit GATT mapping,
 asynchronous priority-stop queue and raw capability/status events. Legacy QZ
 behavior remains the default. The workout CLI still refuses hardware execution.
-The isolated QZ driver and adapter compile/link. The full QZ static library builds; existing regression checks are tracked separately.
+The isolated QZ driver and adapter compile/link. The full QZ static library builds. Selected existing FitShow/training/metric regressions pass with the Bluetooth system bus disabled (three inapplicable exclusion cases are skipped).
 
 No physical treadmill, motor command, Bluetooth connection or scanning action was
 run during this implementation session. Existing device support must not be
@@ -77,3 +80,26 @@ Code remains under the repository's applicable GPL terms. Install the repository
 LICENSE and keep corresponding source/build instructions with distributed
 artifacts. Qt dependencies are dynamically linked; this install target does not
 bundle Qt/BlueZ or complete an audit of the full QZ dependency tree.
+
+## Software checks completed without a treadmill
+
+Qt 5.15.18/C++17 builds for the standalone CLI, isolated real driver/adapter and
+full QZ static library. Core parser/queue/profile/runner/adapter tests, actual
+isolated-driver tests, offline CLI/terminal tests and address/undefined-behavior
+sanitizers are included. Staged installation carries external XML plans, the
+unverified profile example, documentation and applicable repository license.
+Tests use synthetic transport data and an unavailable system Bluetooth bus;
+none represents physical W1 validation. Existing source warnings and nonfatal
+Qt QML foreign-type metadata warnings are not treated as new hardware evidence.
+
+The remaining hardware acceptance tasks are identity/protocol confirmation,
+required initialization, speed units/resolution, all incline mappings and actual
+feedback semantics, bounded start/stop, pause if needed, and a conservative full
+session. Unlocking hardware workouts and validating device-specific deadlines
+remain explicit future steps; no automatic enablement from a profile file exists.
+
+Latest offline results: 37 Core tests, 4 isolated-driver tests and 11 CLI/terminal
+tests pass. Core tests pass under address/undefined-behavior sanitizers. The
+selected existing QZ regressions have 32 passes and 3 documented skips. The
+adapter independently latches faults and revokes queued motor authorization when
+reports become stale; fresh packets cannot silently resume a faulted session.

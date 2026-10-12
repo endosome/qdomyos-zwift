@@ -4,12 +4,20 @@ on:
   push:
     paths:
       - 'tools/treadmill/**'
-      - 'src/devices/fitshowtreadmill/fitshowpacket.h'
+      - 'src/devices/fitshowtreadmill/**'
+      - 'src/devices/bluetoothdevice.*'
+      - 'src/devices/treadmill.*'
+      - 'src/qzsettings.*'
+      - 'src/metric.*'
       - '.github/workflows/treadmill.yml'
   pull_request:
     paths:
       - 'tools/treadmill/**'
-      - 'src/devices/fitshowtreadmill/fitshowpacket.h'
+      - 'src/devices/fitshowtreadmill/**'
+      - 'src/devices/bluetoothdevice.*'
+      - 'src/devices/treadmill.*'
+      - 'src/qzsettings.*'
+      - 'src/metric.*'
       - '.github/workflows/treadmill.yml'
   workflow_dispatch:
 
@@ -24,21 +32,28 @@ jobs:
       - name: Install standalone dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential qtbase5-dev qt5-qmake qtconnectivity5-dev libgtest-dev python3
+          sudo apt-get install -y build-essential qtbase5-dev qt5-qmake qtconnectivity5-dev qtpositioning5-dev libgtest-dev python3
       - name: Build CLI and Core tests
         run: |
-          mkdir -p /tmp/treadmill-build /tmp/treadmill-tests
+          mkdir -p /tmp/treadmill-build /tmp/treadmill-tests /tmp/treadmill-driver /tmp/treadmill-driver-tests
           cd /tmp/treadmill-build
           qmake "$GITHUB_WORKSPACE/tools/treadmill/treadmill.pro"
           make -j2
           cd /tmp/treadmill-tests
           qmake "$GITHUB_WORKSPACE/tools/treadmill/tests/tests.pro"
           make -j2
+          cd /tmp/treadmill-driver
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/driver/driver.pro"
+          make -j2
+          cd /tmp/treadmill-driver-tests
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/driver/tests.pro" DRIVER_LIB=/tmp/treadmill-driver
+          make -j2
       - name: Run offline tests without a Bluetooth bus
         env:
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/tmp/treadmill-no-system-bus
         run: |
           /tmp/treadmill-tests/treadmill-tests --gtest_output=xml:/tmp/treadmill-tests/results.xml
+          /tmp/treadmill-driver-tests/qz-fitshow-tests --gtest_output=xml:/tmp/treadmill-driver-tests/results.xml
           python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
       - name: Check staged installation
         run: |
@@ -59,4 +74,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: treadmill-test-results
-          path: /tmp/treadmill-tests/results.xml
+          path: |
+            /tmp/treadmill-tests/results.xml
+            /tmp/treadmill-driver-tests/results.xml

@@ -499,7 +499,7 @@ TEST(FitShowAdapter, UnmappedGradeAndDelayedTelemetryFaultWithoutInventingPositi
     clock = 400; control.receive(motorStatus(4, 0, 8)); controller.advance(clock);
     EXPECT_EQ(faults, 1); EXPECT_EQ(samples, 0);
     control.receive(motorStatus(4, 0, 0)); clock = 3000; controller.advance(clock);
-    EXPECT_EQ(faults, 2); EXPECT_EQ(samples, 0);
+    EXPECT_EQ(faults, 1); EXPECT_EQ(samples, 0); // Fault remains latched; new packets cannot resume it.
 }
 TEST(FitShowControl, StopStillWinsAfterSeveralFaultInvalidations) {
     FitShow::Control control;
@@ -512,6 +512,21 @@ TEST(FitShowControl, StopStillWinsAfterSeveralFaultInvalidations) {
     control.stop(2, 2);
     ASSERT_EQ(writes.size(), 2);
     EXPECT_EQ(writes.last().toHex(), "5303");
+}
+TEST(FitShowAdapter, MissingNewPacketsRevokesQueuedMotorControlAndCannotResume) {
+    FitShow::Control control;
+    qint64 clock = 0;
+    FitShowController controller(control, syntheticProfile(), [&]() { return clock; },
+                                [&]() { control.setTransport(true); }, [&]() { control.setTransport(false); });
+    QList<QByteArray> writes;
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    connectFixture(controller, control);
+    clock = 400; control.receive(motorStatus(4, 0, 0)); controller.advance(clock);
+    controller.start(1, 1, {2, 0});
+    clock = 3000; controller.advance(clock); control.pump(clock);
+    control.receive(motorStatus(4, 0, 0)); controller.advance(clock);
+    controller.start(1, 2, {2, 0}); control.pump(clock + 200);
+    for (const auto &payload : writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

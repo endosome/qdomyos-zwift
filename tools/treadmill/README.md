@@ -313,3 +313,31 @@ Q/S, EOF, termination signals and the 1–60 second deadline close the connectio
 This is an observer; physical belt operation remains with the operator.
 Existing trace files are preserved and recording is bounded to 8 MiB. The
 ordinary `scan` and `info` commands remain read-only and require no write approval.
+
+
+## Software regression validation
+
+The standalone Core suite and isolated-driver suite run without a Bluetooth
+system bus. The Core suite is also checked with address/undefined-behavior
+sanitizers. CLI tests cover full simulations, fault outcomes, profile previews,
+permission refusal and terminal/signal cleanup; no test confirms a live probe.
+The full QZ static library was built with Qt 5.15.18. Its existing filtered
+FitShow/training/metric regressions are run with an unavailable Bluetooth bus;
+three exclusion scenarios without applicable exclusions are skipped by the
+existing tests. Full-suite coverage and physical acceptance are distinct from
+these checks.
+
+For existing QZ regressions, build `src/qdomyos-zwift-lib.pro`, initialize the
+SMTP/Google Test/ZwiftPlay submodules and generate translation artifacts with
+lrelease. Build `tst/qdomyos-zwift-tests.pro` with C++17 and Qt Concurrent enabled
+(the test project historically selects C++11), keeping its expected sibling
+static-library directory. An example safe filter is:
+
+```sh
+DBUS_SYSTEM_BUS_ADDRESS=unix:path=/tmp/no-bluetooth-bus \
+  ./qdomyos-zwift-tests --gtest_filter='TrainProgramTestSuite.*:*Metric*:*FitShow*'
+```
+
+No physical W1 test was performed. Hardware-specific commands/limits, feedback,
+initialization requirements and response deadlines still require the postponed
+validation, and hardware workout launching remains disabled.

@@ -29,7 +29,7 @@ private:
     std::function<qint64()> receiveClock_;
     std::function<void()> open_, close_;
     quint64 generation_ = 0;
-    bool boundsMatch_ = false, identityMatch_ = false, pendingStatus_ = false, hasStatus_ = false;
+    bool boundsMatch_ = false, identityMatch_ = false, pendingStatus_ = false, hasStatus_ = false, faulted_ = false, startPending_ = false;
     FitShow::Status status_;
     qint64 arrivedAtMs_ = -1;
 };

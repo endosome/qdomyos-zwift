@@ -56,3 +56,18 @@ No physical-device actions were performed during implementation.
 
 Next planned task: explicit-device read-only GATT metadata inspection, before
 subscriptions, protocol queries or motor-control implementation.
+
+## Read-only GATT inspection
+
+```sh
+./treadmill info --device AA:BB:CC:DD:EE:FF --timeout 10
+```
+
+Select an address from `scan`. The command scans for that exact BLE address,
+connects and reports service UUIDs, characteristic properties/handles and
+CCCD/other descriptor metadata. Qt 5.15 detail discovery can read characteristic
+and descriptor values; this command issues no GATT writes or subscriptions.
+Standard readable model, firmware, hardware and manufacturer information is
+shown when available. Motor capabilities remain explicitly unknown. The
+connection/detail-discovery phase has a total 30-second deadline and returns
+partial metadata on error. Actual W1 GATT inspection remains hardware-unverified.

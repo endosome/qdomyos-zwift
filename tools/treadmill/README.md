@@ -171,3 +171,19 @@ SIGTERM/terminal restoration and single-key stop. They never invoke BLE scanning
 or connect a physical device. Command logs distinguish submitted, acknowledged,
 acknowledgement timeout and telemetry-settled phases, with command/session
 generation IDs. A missing acknowledgement is recorded without repeating start.
+
+## FitShow reuse and remaining integration
+
+FitShow framing/checksum code is now shared with the existing QZ driver through
+`src/devices/fitshowtreadmill/fitshowpacket.h`. Byte fixtures and malformed-frame
+cases run in the Core-only test target. Incoming responses require command and
+parameter bytes; response lengths no longer truncate to eight bits before
+validation. Combined info requires its complete payload before fields are read.
+These checks do not establish W1 compatibility.
+
+The full QZ static-library build spike could not configure with the small local
+Qt toolchain: Positioning, Quick/QML, NetworkAuth, WebSockets, TextToSpeech,
+Location, Multimedia, Charts and QuickControls2 were missing. Driver isolation,
+opt-in motor policy, queue cancellation/stop priority and the real controller
+adapter still need implementation and full QZ regression builds. The CLI refuses
+hardware workout execution until those changes and W1 validation are complete.

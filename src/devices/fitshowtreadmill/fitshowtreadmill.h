@@ -89,7 +89,7 @@ class fitshowtreadmill : public treadmill {
     double minStepInclination() override;
 
   private:
-    bool checkIncomingPacket(const uint8_t *data, uint8_t data_len) const;
+    bool checkIncomingPacket(const uint8_t *data, int data_len) const;
     void forceSpeedOrIncline(double requestSpeed, double requestIncline);
     void cancelPendingStartTarget(const QString &reason);
     void btinit(bool startTape);

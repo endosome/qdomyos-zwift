@@ -1,6 +1,7 @@
 #include "controller.h"
 #include "workout.h"
 #include "runner.h"
+#include "fitshowpacket.h"
 #include <QTemporaryFile>
 #include <QFileInfo>
 #include <QCoreApplication>
@@ -222,6 +223,28 @@ TEST(Runner, NotificationsPreserveSameOffsetAndDoNotRepeat) {
     EXPECT_EQ(messages.count("Two"), 1);
     EXPECT_EQ(messages.filter("Next in 30 s").size(), 1);
     EXPECT_EQ(messages.filter("Next in 10 s").size(), 1);
+}
+TEST(FitShowPacket, EncodesExistingPairedTargetFrame) {
+    const uint8_t target[] = {0x53, 0x02, 30, 5};
+    const auto frame = FitShowPacket::encode(target, sizeof(target));
+    EXPECT_EQ(frame.toHex(), "0253021e054a03");
+    EXPECT_TRUE(FitShowPacket::validResponse(reinterpret_cast<const uint8_t *>(frame.constData()), frame.size()));
+}
+TEST(FitShowPacket, RejectsTruncatedCorruptAndOversizedResponses) {
+    const uint8_t status[] = {0x51};
+    const auto shortFrame = FitShowPacket::encode(status, sizeof(status));
+    EXPECT_FALSE(FitShowPacket::validResponse(reinterpret_cast<const uint8_t *>(shortFrame.constData()), shortFrame.size()));
+    const uint8_t stop[] = {0x53, 0x03};
+    const auto good = FitShowPacket::encode(stop, sizeof(stop));
+    for (int i = 0; i < good.size(); ++i) {
+        auto corrupt = good;
+        corrupt[i] = char(uint8_t(corrupt[i]) ^ 1);
+        EXPECT_FALSE(FitShowPacket::validResponse(reinterpret_cast<const uint8_t *>(corrupt.constData()), corrupt.size()));
+    }
+    const auto longFrame = good + QByteArray(256, char(0));
+    EXPECT_FALSE(FitShowPacket::validResponse(reinterpret_cast<const uint8_t *>(longFrame.constData()), longFrame.size()));
+    const uint8_t oversized[23] = {};
+    EXPECT_TRUE(FitShowPacket::encode(oversized, sizeof(oversized)).isEmpty());
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

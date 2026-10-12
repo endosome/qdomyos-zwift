@@ -16,7 +16,7 @@
 using namespace std::chrono_literals;
 
 fitshowtreadmill::fitshowtreadmill(uint32_t pollDeviceTime, bool noConsole, bool noHeartService, double forceInitSpeed,
-                                   double forceInitInclination) {
+                                   double forceInitInclination, Mode mode) : mode_(mode), restricted_(this) {
     Q_UNUSED(noConsole)
 
     m_watt.setType(metric::METRIC_WATT, deviceType());
@@ -37,13 +37,33 @@ fitshowtreadmill::fitshowtreadmill(uint32_t pollDeviceTime, bool noConsole, bool
     refresh = new QTimer(this);
     initDone = false;
     QSettings settings;
-    anyrun = settings.value(QZSettings::fitshow_anyrun, QZSettings::default_fitshow_anyrun).toBool();
-    truetimer = settings.value(QZSettings::fitshow_truetimer, QZSettings::default_fitshow_truetimer).toBool();
+    if (mode_ == Mode::Legacy) {
+        anyrun = settings.value(QZSettings::fitshow_anyrun, QZSettings::default_fitshow_anyrun).toBool();
+        truetimer = settings.value(QZSettings::fitshow_truetimer, QZSettings::default_fitshow_truetimer).toBool();
+    }
+    restrictedClock_.start();
+    connect(&restricted_, &FitShow::Control::payloadReady, this, [this](const QByteArray &payload, quint64 generation, quint64) {
+        if (mode_ != Mode::Restricted) return;
+        if (generation != restricted_.generation()) return;
+        if (!restrictedDiagnosticsRequested_ || !restrictedGattReady_ || !m_control ||
+            m_control->state() != QLowEnergyController::DiscoveredState || !gattCommunicationChannelService) {
+            restricted_.cancel();
+            emit restricted_.fault(QStringLiteral("Restricted FitShow transport unavailable"));
+            return;
+        }
+        const QByteArray frame = FitShowPacket::encode(reinterpret_cast<const uint8_t *>(payload.constData()), payload.size());
+        if (frame.isEmpty()) return;
+        const auto mode = (gattWriteCharacteristic.properties() & QLowEnergyCharacteristic::WriteNoResponse)
+                              ? QLowEnergyService::WriteWithoutResponse : QLowEnergyService::WriteWithResponse;
+        // Asynchronous: no nested event loop and no transport callback used as motor proof.
+        gattCommunicationChannelService->writeCharacteristic(gattWriteCharacteristic, frame, mode);
+    });
     connect(refresh, &QTimer::timeout, this, &fitshowtreadmill::update);
     refresh->start(pollDeviceTime);
 }
 
 fitshowtreadmill::~fitshowtreadmill() {
+    if (mode_ == Mode::Restricted) disconnectRestricted();
     if (refresh) {
         refresh->stop();
         delete refresh;
@@ -141,6 +161,10 @@ void fitshowtreadmill::cancelPendingStartTarget(const QString &reason) {
 }
 
 void fitshowtreadmill::update() {
+    if (mode_ == Mode::Restricted) {
+        restricted_.pump(restrictedClock_.elapsed());
+        return;
+    }
     if (!m_control || m_control->state() == QLowEnergyController::UnconnectedState) {
         cancelPendingStartTarget(QStringLiteral("disconnected"));
         emit disconnected();
@@ -294,6 +318,10 @@ void fitshowtreadmill::removeFromBuffer() {
 }
 
 void fitshowtreadmill::serviceDiscovered(const QBluetoothUuid &gatt) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() == m_control && gatt == QBluetoothUuid(restrictedService_)) serviceId = gatt;
+        return;
+    }
     uint32_t servRepr = gatt.toUInt32();
     QBluetoothUuid nobleproconnect(QStringLiteral("0000ae00-0000-1000-8000-00805f9b34fb"));
     emit debug(QStringLiteral("serviceDiscovered ") + gatt.toString() + QStringLiteral(" ") +
@@ -319,6 +347,11 @@ void fitshowtreadmill::sendSportData() {
 
 void fitshowtreadmill::characteristicChanged(const QLowEnergyCharacteristic &characteristic,
                                              const QByteArray &newValue) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() == gattCommunicationChannelService && characteristic.uuid() == gattNotifyCharacteristic.uuid())
+            restricted_.receive(newValue);
+        return;
+    }
     // qDebug() << "characteristicChanged" << characteristic.uuid() << newValue << newValue.length();
     QSettings settings;
     QString heartRateBeltName =
@@ -764,6 +797,26 @@ void fitshowtreadmill::btinit(bool startTape) {
 }
 
 void fitshowtreadmill::stateChanged(QLowEnergyService::ServiceState state) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() != gattCommunicationChannelService || state != QLowEnergyService::ServiceDiscovered || restrictedGattReady_) return;
+        for (const auto &characteristic : gattCommunicationChannelService->characteristics()) {
+            if (characteristic.uuid() == QBluetoothUuid(restrictedWrite_)) gattWriteCharacteristic = characteristic;
+            if (characteristic.uuid() == QBluetoothUuid(restrictedNotify_)) gattNotifyCharacteristic = characteristic;
+        }
+        if (!gattWriteCharacteristic.isValid() || !gattNotifyCharacteristic.isValid() ||
+            !(gattWriteCharacteristic.properties() & (QLowEnergyCharacteristic::Write | QLowEnergyCharacteristic::WriteNoResponse)) ||
+            !(gattNotifyCharacteristic.properties() & QLowEnergyCharacteristic::Notify) ||
+            !gattNotifyCharacteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration).isValid()) {
+            emit restricted_.fault(QStringLiteral("Restricted FitShow GATT properties do not match the selected mapping"));
+            return;
+        }
+        connect(gattCommunicationChannelService, &QLowEnergyService::characteristicChanged, this, &fitshowtreadmill::characteristicChanged);
+        connect(gattCommunicationChannelService, &QLowEnergyService::descriptorWritten, this, &fitshowtreadmill::descriptorWritten);
+        connect(gattCommunicationChannelService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &fitshowtreadmill::errorService);
+        restrictedGattReady_ = true;
+        emit restrictedGattReady();
+        return; // No automatic CCCD write or btinit.
+    }
     QMetaEnum metaEnum = QMetaEnum::fromType<QLowEnergyService::ServiceState>();
     emit debug(QStringLiteral("BTLE stateChanged ") + QString::fromLocal8Bit(metaEnum.valueToKey(state)));
 
@@ -849,6 +902,14 @@ void fitshowtreadmill::stateChanged(QLowEnergyService::ServiceState state) {
 }
 
 void fitshowtreadmill::descriptorWritten(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() == gattCommunicationChannelService && restrictedDiagnosticsRequested_ && newValue == QByteArray::fromHex("0100") &&
+            descriptor == gattNotifyCharacteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration)) {
+            restricted_.setTransport(true);
+            restricted_.allowDiagnostics(true);
+        }
+        return;
+    }
     emit debug(QStringLiteral("descriptorWritten ") + descriptor.name() + QStringLiteral(" ") + newValue.toHex(' '));
 
     initRequest = true;
@@ -862,6 +923,18 @@ void fitshowtreadmill::characteristicWritten(const QLowEnergyCharacteristic &cha
 }
 
 void fitshowtreadmill::serviceScanDone(void) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() != m_control) return;
+        if (serviceId.isNull()) {
+            emit restricted_.fault(QStringLiteral("Selected FitShow service was not found"));
+            return;
+        }
+        gattCommunicationChannelService = m_control->createServiceObject(serviceId, this);
+        if (!gattCommunicationChannelService) { emit restricted_.fault(QStringLiteral("Cannot create FitShow service")); return; }
+        connect(gattCommunicationChannelService, &QLowEnergyService::stateChanged, this, &fitshowtreadmill::stateChanged);
+        gattCommunicationChannelService->discoverDetails();
+        return; // Optional cadence service is outside the standalone controller.
+    }
     emit debug(QStringLiteral("serviceScanDone"));
 
     gattCommunicationChannelService = m_control->createServiceObject(serviceId);
@@ -893,18 +966,45 @@ void fitshowtreadmill::serviceScanDone(void) {
 }
 
 void fitshowtreadmill::errorService(QLowEnergyService::ServiceError err) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() != gattCommunicationChannelService) return;
+        restricted_.setTransport(false);
+        emit restricted_.fault(QStringLiteral("FitShow GATT error %1").arg(int(err)));
+        return;
+    }
     QMetaEnum metaEnum = QMetaEnum::fromType<QLowEnergyService::ServiceError>();
     emit debug(QStringLiteral("fitshowtreadmill::errorService ") + QString::fromLocal8Bit(metaEnum.valueToKey(err)) +
                m_control->errorString());
 }
 
 void fitshowtreadmill::error(QLowEnergyController::Error err) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() != m_control) return;
+        restricted_.setTransport(false);
+        emit restricted_.fault(m_control->errorString());
+        return;
+    }
     QMetaEnum metaEnum = QMetaEnum::fromType<QLowEnergyController::Error>();
     emit debug(QStringLiteral("fitshowtreadmill::error ") + QString::fromLocal8Bit(metaEnum.valueToKey(err)) +
                m_control->errorString());
 }
 
 void fitshowtreadmill::deviceDiscovered(const QBluetoothDeviceInfo &device) {
+    if (mode_ == Mode::Restricted) {
+        if (restrictedService_ == 0) { emit restricted_.fault(QStringLiteral("An explicit FitShow GATT mapping is required")); return; }
+        disconnectRestricted();
+        bluetoothDevice = device;
+        m_control = QLowEnergyController::createCentral(device, this);
+        connect(m_control, &QLowEnergyController::serviceDiscovered, this, &fitshowtreadmill::serviceDiscovered);
+        connect(m_control, &QLowEnergyController::discoveryFinished, this, &fitshowtreadmill::serviceScanDone);
+        connect(m_control, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, &fitshowtreadmill::error);
+        connect(m_control, &QLowEnergyController::stateChanged, this, &fitshowtreadmill::controllerStateChanged);
+        connect(m_control, &QLowEnergyController::connected, this, [this]() {
+            if (sender() == m_control) m_control->discoverServices();
+        });
+        m_control->connectToDevice();
+        return;
+    }
     emit debug(QStringLiteral("Found new device: ") + device.name() + QStringLiteral(" (") +
                device.address().toString() + ')');
     if (device.name().toUpper().startsWith(QStringLiteral("FS-")) ||
@@ -958,6 +1058,7 @@ void fitshowtreadmill::deviceDiscovered(const QBluetoothDeviceInfo &device) {
 }
 
 bool fitshowtreadmill::connected() {
+    if (mode_ == Mode::Restricted) return restrictedGattReady_;
     if (!m_control) {
         return false;
     }
@@ -967,6 +1068,15 @@ bool fitshowtreadmill::connected() {
 void fitshowtreadmill::searchingStop() { searchStopped = true; }
 
 void fitshowtreadmill::controllerStateChanged(QLowEnergyController::ControllerState state) {
+    if (mode_ == Mode::Restricted) {
+        if (sender() != m_control) return;
+        if (state == QLowEnergyController::UnconnectedState) {
+            restrictedGattReady_ = restrictedDiagnosticsRequested_ = false;
+            restricted_.setTransport(false);
+            emit disconnected();
+        }
+        return; // No automatic reconnection, initialization or retained motor targets.
+    }
     qDebug() << QStringLiteral("controllerStateChanged") << state;
     if (state == QLowEnergyController::UnconnectedState && m_control) {
         cancelPendingStartTarget(QStringLiteral("connection lost"));
@@ -977,6 +1087,7 @@ void fitshowtreadmill::controllerStateChanged(QLowEnergyController::ControllerSt
 }
 
 bool fitshowtreadmill::autoPauseWhenSpeedIsZero() {
+    if (mode_ == Mode::Restricted) return false;
     if (lastStart == 0 || QDateTime::currentMSecsSinceEpoch() > (lastStart + 10000))
         return true;
     else
@@ -984,6 +1095,7 @@ bool fitshowtreadmill::autoPauseWhenSpeedIsZero() {
 }
 
 bool fitshowtreadmill::autoStartWhenSpeedIsGreaterThenZero() {
+    if (mode_ == Mode::Restricted) return false;
     if ((lastStop == 0 || QDateTime::currentMSecsSinceEpoch() > (lastStop + 25000)) && requestStop == -1)
         return true;
     else
@@ -996,4 +1108,59 @@ void fitshowtreadmill::changeInclinationRequested(double grade, double percentag
     if (percentage < 0)
         percentage = 0;
     changeInclination(qRound(grade), qRound(percentage));
+}
+
+
+bool fitshowtreadmill::setRestrictedGatt(quint16 service, quint16 write, quint16 notify) {
+    if (mode_ != Mode::Restricted || m_control) return false;
+    if (!((service == 0xffe0 && write == 0xffe1 && notify == 0xffe4) ||
+          (service == 0xfff0 && write == 0xfff2 && notify == 0xfff1) ||
+          (service == 0xae00 && write == 0xae01 && notify == 0xae02))) return false;
+    restrictedService_ = service; restrictedWrite_ = write; restrictedNotify_ = notify;
+    return true;
+}
+bool fitshowtreadmill::enableRestrictedDiagnostics() {
+    if (mode_ != Mode::Restricted || !restrictedGattReady_ || restrictedDiagnosticsRequested_) return false;
+    restrictedDiagnosticsRequested_ = true;
+    gattCommunicationChannelService->writeDescriptor(
+        gattNotifyCharacteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration), QByteArray::fromHex("0100"));
+    return true;
+}
+void fitshowtreadmill::disconnectRestricted() {
+    if (mode_ != Mode::Restricted) return;
+    restrictedGattReady_ = restrictedDiagnosticsRequested_ = false;
+    restricted_.setTransport(false);
+    serviceId = {};
+    gattWriteCharacteristic = {}; gattNotifyCharacteristic = {};
+    if (gattCommunicationChannelService) {
+        gattCommunicationChannelService->disconnect(this);
+        gattCommunicationChannelService->deleteLater();
+        gattCommunicationChannelService = nullptr;
+    }
+    if (m_control) {
+        m_control->disconnect(this);
+        m_control->disconnectFromDevice();
+        m_control->deleteLater();
+        m_control = nullptr;
+    }
+}
+void fitshowtreadmill::start() {
+    if (mode_ == Mode::Legacy) bluetoothdevice::start();
+    else { restricted_.cancel(); emit restricted_.fault(QStringLiteral("Restricted control requires explicit asynchronous paired commands")); }
+}
+void fitshowtreadmill::stop(bool pause) {
+    if (mode_ == Mode::Legacy) bluetoothdevice::stop(pause);
+    else { restricted_.cancel(); emit restricted_.fault(QStringLiteral("Restricted stop requires an explicit command generation")); }
+}
+void fitshowtreadmill::changeSpeed(double speed) {
+    if (mode_ == Mode::Legacy) treadmill::changeSpeed(speed);
+    else { restricted_.cancel(); emit restricted_.fault(QStringLiteral("Restricted control requires paired targets")); }
+}
+void fitshowtreadmill::changeInclination(double grade, double percentage) {
+    if (mode_ == Mode::Legacy) treadmill::changeInclination(grade, percentage);
+    else { restricted_.cancel(); emit restricted_.fault(QStringLiteral("Restricted control requires paired targets")); }
+}
+void fitshowtreadmill::changeSpeedAndInclination(double speed, double inclination) {
+    if (mode_ == Mode::Legacy) treadmill::changeSpeedAndInclination(speed, inclination);
+    else { restricted_.cancel(); emit restricted_.fault(QStringLiteral("Restricted control requires paired targets")); }
 }

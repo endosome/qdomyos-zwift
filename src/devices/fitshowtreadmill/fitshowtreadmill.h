@@ -28,6 +28,8 @@
 
 #include "fitshowstartspeedgate.h"
 #include "treadmill.h"
+#include "fitshowcontrol.h"
+#include <QElapsedTimer>
 
 #ifdef Q_OS_IOS
 #include "ios/lockscreen.h"
@@ -79,15 +81,31 @@
 class fitshowtreadmill : public treadmill {
     Q_OBJECT
   public:
+    enum class Mode { Legacy, Restricted };
     fitshowtreadmill(uint32_t poolDeviceTime = 200, bool noConsole = false, bool noHeartService = false,
-                     double forceInitSpeed = 0.0, double forceInitInclination = 0.0);
+                     double forceInitSpeed = 0.0, double forceInitInclination = 0.0, Mode mode = Mode::Legacy);
     virtual ~fitshowtreadmill();
     bool connected() override;
     bool autoPauseWhenSpeedIsZero() override;
     bool autoStartWhenSpeedIsGreaterThenZero() override;
     double minStepInclination() override;
+    FitShow::Control &restrictedControl() { return restricted_; }
+    bool setRestrictedGatt(quint16 service, quint16 write, quint16 notify);
+    bool enableRestrictedDiagnostics();
+    void disconnectRestricted();
+    void start() override;
+    void stop(bool pause) override;
+    void changeSpeed(double speed) override;
+    void changeInclination(double grade, double percentage) override;
+    void changeSpeedAndInclination(double speed, double inclination) override;
 
   private:
+    Mode mode_ = Mode::Legacy;
+    FitShow::Control restricted_;
+    QElapsedTimer restrictedClock_;
+    quint16 restrictedService_ = 0, restrictedWrite_ = 0, restrictedNotify_ = 0;
+    bool restrictedGattReady_ = false;
+    bool restrictedDiagnosticsRequested_ = false;
     bool checkIncomingPacket(const uint8_t *data, int data_len) const;
     void forceSpeedOrIncline(double requestSpeed, double requestIncline);
     void cancelPendingStartTarget(const QString &reason);
@@ -168,6 +186,7 @@ class fitshowtreadmill : public treadmill {
     void speedChanged(double speed);
     void packetReceived();
     void toastRequested(QString message);
+    void restrictedGattReady();
 
   public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);

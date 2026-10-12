@@ -240,3 +240,21 @@ make -j2
 This produces an internal static archive, not a stable installed SDK. Building
 or linking this target does not connect a device. Positioning development/runtime
 packages are an additional dependency (`qtpositioning5-dev` on Ubuntu).
+
+## Restricted FitShow control path
+
+The driver has an opt-in `Mode::Restricted`; legacy QZ callers keep `Mode::Legacy`.
+Restricted mode requires an explicit supported GATT mapping, never runs `btinit`,
+never creates a virtual peripheral or persists an FTMS switch, and never reconnects
+automatically. Notification subscription requires an explicit diagnostics request.
+The separate `FitShow::Control` queue requires reported bounds before arming,
+serializes commands asynchronously, coalesces unsent target pairs, and purges
+pending commands before priority stop. Timed-out motor commands are not retried.
+Matching command/subtype replies are labeled weak acknowledgements; full valid
+motor status retains raw speed even when status says stopped.
+
+Core-only queue/parser tests use recorded payloads; driver tests link the actual
+isolated QZ archive and verify restricted defaults without connecting Bluetooth.
+After the archive build, build `driver/tests.pro` with `DRIVER_LIB=<archive-dir>`
+and the same optional Google Test include/library overrides as the Core tests.
+This is software validation only; it does not approve a W1 command sequence.

@@ -239,6 +239,7 @@ devices/fitmetria_fanfit/fitmetria_fanfit.cpp \
 devices/fitplusbike/fitplusbike.cpp \
 devices/fitplusrower/fitplusrower.cpp \
 devices/fitshowtreadmill/fitshowtreadmill.cpp \
+    devices/fitshowtreadmill/fitshowcontrol.cpp \
 fit-sdk/fit.cpp \
 fit-sdk/fit_accumulated_field.cpp \
 fit-sdk/fit_accumulator.cpp \
@@ -585,6 +586,7 @@ devices/kingsmithr2treadmill/kingsmithr2treadmill.h \
 devices/m3ibike/m3ibike.h \
 devices/fitshowtreadmill/fitshowtreadmill.h \
     devices/fitshowtreadmill/fitshowpacket.h \
+    devices/fitshowtreadmill/fitshowcontrol.h \
 fit-sdk/FitDecode.h \
 fit-sdk/FitDeveloperField.h \
 fit-sdk/FitEncode.h \

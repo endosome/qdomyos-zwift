@@ -28,7 +28,6 @@
 
 #include "fitshowstartspeedgate.h"
 #include "treadmill.h"
-#include "virtualdevices/virtualtreadmill.h"
 
 #ifdef Q_OS_IOS
 #include "ios/lockscreen.h"
@@ -168,6 +167,7 @@ class fitshowtreadmill : public treadmill {
     void debug(QString string);
     void speedChanged(double speed);
     void packetReceived();
+    void toastRequested(QString message);
 
   public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);

@@ -10,7 +10,7 @@ simulation are implemented.
 | 1.1 standalone scan | Implemented; physical scan unverified | Qt 5.15.18 build and argument validation |
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Pending physical access | First operator checkpoint: scan/info reports |
-| 1.4 QZ link spike | Attempted; incomplete | Full archive qmake needs broader Qt modules; isolated CLI only needs Core/Bluetooth |
+| 1.4 QZ link spike | Isolated driver compiled and linked | Six QZ sources; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
 | 1.5–1.7 nonmotor queries/calibration/start-stop | Pending evidence and operator confirmation | Do not replay driver initialization or issue motor probes |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.8 real driver policy/adapter | Pending | QZ build environment, validated profile; queue/reconnect/raw-feedback changes required |
@@ -57,7 +57,7 @@ from QZ public metrics. Pausing is implemented/verified only in simulation.
 The existing QZ driver now shares its pure packet framing helper. Its default
 FIFO stop ordering, automatic reconnection/initialization and private capability
 state still require opt-in CLI changes. The CLI never constructs that driver.
-The full QZ application/regression suite has not been built in this environment.
+The isolated QZ driver compiles and links; full application/regression builds are separate checks.
 
 No physical treadmill, motor command, Bluetooth connection or scanning action was
 run during this implementation session. Existing device support must not be

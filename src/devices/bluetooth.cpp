@@ -3222,6 +3222,9 @@ void bluetooth::deviceDiscovered(const QBluetoothDeviceInfo &device) {
                 connect(fitshowTreadmill, &bluetoothdevice::connectedAndDiscovered, this,
                         &bluetooth::connectedAndDiscovered);
                 connect(fitshowTreadmill, &fitshowtreadmill::debug, this, &bluetooth::debug);
+                connect(fitshowTreadmill, &fitshowtreadmill::toastRequested, this, [](const QString &message) {
+                    if (homeform::singleton()) homeform::singleton()->setToastRequested(message);
+                });
                 fitshowTreadmill->deviceDiscovered(b);
                 connect(this, &bluetooth::searchingStop, fitshowTreadmill, &fitshowtreadmill::searchingStop);
                 if (this->discoveryAgent && !this->discoveryAgent->isActive())

@@ -3,8 +3,9 @@
 #ifdef Q_OS_ANDROID
 #include "keepawakehelper.h"
 #endif
+#ifndef TREADMILL_NO_VIRTUAL_DEVICE
 #include "virtualdevices/virtualtreadmill.h"
-#include "homeform.h"
+#endif
 #include <QBluetoothLocalDevice>
 #include <QDateTime>
 #include <QFile>
@@ -155,6 +156,7 @@ void fitshowtreadmill::update() {
                gattNotifyCharacteristic.isValid() && initDone) {
         QSettings settings;
         // ******************************************* virtual treadmill init *************************************
+#ifndef TREADMILL_NO_VIRTUAL_DEVICE
         if (!firstInit && searchStopped && !this->hasVirtualDevice()) {
             bool virtual_device_enabled =
                 settings.value(QZSettings::virtual_device_enabled, QZSettings::default_virtual_device_enabled).toBool();
@@ -168,6 +170,7 @@ void fitshowtreadmill::update() {
                 firstInit = 1;
             }
         }
+#endif
         // ********************************************************************************************************
 
         emit debug(QStringLiteral("fitshow Treadmill RSSI ") + QString::number(bluetoothDevice.rssi()));
@@ -303,8 +306,7 @@ void fitshowtreadmill::serviceDiscovered(const QBluetoothUuid &gatt) {
         QSettings settings;
         settings.setValue(QZSettings::ftms_treadmill, bluetoothDevice.name());
         qDebug() << "forcing FTMS treadmill since it has FTMS";
-        if(homeform::singleton())
-            homeform::singleton()->setToastRequested(QObject::tr("FTMS treadmill found, restart the app to apply the change"));
+        emit toastRequested(QObject::tr("FTMS treadmill found, restart the app to apply the change"));
     }
 }
 

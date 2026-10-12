@@ -1,4 +1,5 @@
 #include "fitshowtreadmill.h"
+#include "fitshowpacket.h"
 #ifdef Q_OS_ANDROID
 #include "keepawakehelper.h"
 #endif
@@ -12,8 +13,6 @@
 #include <chrono>
 
 using namespace std::chrono_literals;
-
-#define BLE_SERIALOUTPUT_MAXSIZE 25
 
 fitshowtreadmill::fitshowtreadmill(uint32_t pollDeviceTime, bool noConsole, bool noHeartService, double forceInitSpeed,
                                    double forceInitInclination) {
@@ -90,38 +89,14 @@ void fitshowtreadmill::writeCharacteristic(const uint8_t *data, uint8_t data_len
     }
 }
 
-bool fitshowtreadmill::checkIncomingPacket(const uint8_t *data, uint8_t data_len) const {
-    if (data_len >= 4 && data[0] == FITSHOW_PKT_HEADER && data[data_len - 1] == FITSHOW_PKT_FOOTER) {
-        int n4 = 0;
-        int n5 = 1;
-        int n6 = data_len - 2;
-
-        while (true) {
-            if (n5 >= n6) {
-                break;
-            }
-            n4 ^= data[n5];
-            ++n5;
-        }
-        return n4 == data[n6];
-    } else
-        return false;
+bool fitshowtreadmill::checkIncomingPacket(const uint8_t *data, int data_len) const {
+    return FitShowPacket::validResponse(data, data_len);
 }
 
 bool fitshowtreadmill::writePayload(const uint8_t *array, uint8_t size, const QString &info) {
-    if (size + 3 > BLE_SERIALOUTPUT_MAXSIZE) {
-        return false;
-    }
-    uint8_t array2[BLE_SERIALOUTPUT_MAXSIZE];
-    array2[0] = FITSHOW_PKT_HEADER;
-    uint8_t n = 0, i = 0;
-    while (i < size) {
-        array2[i + 1] = array[i];
-        n ^= array[i++];
-    }
-    array2[size + 1] = n;
-    array2[size + 2] = FITSHOW_PKT_FOOTER;
-    writeCharacteristic(array2, size + 3, info);
+    const QByteArray frame = FitShowPacket::encode(array, size);
+    if (frame.isEmpty()) return false;
+    writeCharacteristic(reinterpret_cast<const uint8_t *>(frame.constData()), uint8_t(frame.size()), info);
     return true;
 }
 
@@ -385,7 +360,7 @@ void fitshowtreadmill::characteristicChanged(const QLowEnergyCharacteristic &cha
     }
 
     const uint8_t *full_array = (uint8_t *)value.constData();
-    uint8_t full_len = value.length();
+    const int full_len = value.size();
     if (!checkIncomingPacket(full_array, full_len)) {
         emit debug(QStringLiteral("Invalid packet"));
         return;
@@ -411,7 +386,7 @@ void fitshowtreadmill::characteristicChanged(const QLowEnergyCharacteristic &cha
                 }
             }
         } else if (par == FITSHOW_INFO_UNKNOWN) {
-            if (full_len >= 9) {
+            if (full_len >= 11) {
                 MAX_SPEED = full_array[3];
                 MIN_SPEED = full_array[4];
                 MAX_INCLINE = full_array[5];

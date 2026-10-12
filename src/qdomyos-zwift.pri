@@ -584,6 +584,7 @@ devices/kingsmithr1protreadmill/kingsmithr1protreadmill.h \
 devices/kingsmithr2treadmill/kingsmithr2treadmill.h \
 devices/m3ibike/m3ibike.h \
 devices/fitshowtreadmill/fitshowtreadmill.h \
+    devices/fitshowtreadmill/fitshowpacket.h \
 fit-sdk/FitDecode.h \
 fit-sdk/FitDeveloperField.h \
 fit-sdk/FitEncode.h \

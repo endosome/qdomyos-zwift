@@ -20,15 +20,27 @@ Capabilities Simulator::capabilities() const {
 }
 void Simulator::connectDevice(quint64 generation) {
     generation_ = generation;
-    telemetry_ = {};
+    if (!hasConnected_) {
+        telemetry_ = {};
+        target_ = {};
+    }
+    hasConnected_ = true;
     telemetry_.connected = true;
     telemetry_.atMs = nowMs_;
-    target_ = {};
     startAtMs_ = -1;
     stopping_ = false;
     pausePending_ = false;
     acknowledgements_.clear();
+    emit connectionChanged(true);
     emit sample(telemetry_);
+}
+void Simulator::disconnectDevice() {
+    if (!telemetry_.connected) return;
+    telemetry_.connected = false;
+    acknowledgements_.clear();
+    startAtMs_ = -1;
+    ++generation_;
+    emit connectionChanged(false);
 }
 bool Simulator::accept(quint64 generation, quint64 id, Target target) {
     if (generation != generation_ || !telemetry_.connected || stopping_ || !capabilities().accepts(target)) {
@@ -42,7 +54,8 @@ void Simulator::submit(quint64 id) {
     acknowledgements_.append({id, nowMs_ + 100});
 }
 void Simulator::start(quint64 generation, quint64 id, Target initial) {
-    if (!accept(generation, id, initial) || telemetry_.running || telemetry_.actual.speedKmh > 0) {
+    if (!accept(generation, id, initial)) return;
+    if (telemetry_.running || telemetry_.actual.speedKmh > 0) {
         emit commandEvent(id, "rejected");
         return;
     }
@@ -91,13 +104,12 @@ void Simulator::advance(qint64 nowMs) {
         emit fault("Simulator clock moved backwards");
         return;
     }
-    const double seconds = (nowMs - nowMs_) / 1000.0;
+    const qint64 previousMs = nowMs_;
+    double movementSeconds = (nowMs - nowMs_) / 1000.0;
     nowMs_ = nowMs;
     if (!telemetry_.connected) return;
     if (failure_ == Failure::Disconnect) {
-        telemetry_.connected = false;
-        acknowledgements_.clear();
-        startAtMs_ = -1;
+        disconnectDevice();
         emit fault("Simulated connection loss");
         return;
     }
@@ -108,11 +120,12 @@ void Simulator::advance(qint64 nowMs) {
         }
     }
     if (startAtMs_ >= 0 && nowMs_ >= startAtMs_) {
+        movementSeconds = (nowMs_ - std::max(previousMs, startAtMs_)) / 1000.0;
         telemetry_.running = true;
         startAtMs_ = -1;
     }
-    auto approach = [seconds](double actual, double target, double rate) {
-        const double delta = std::clamp(target - actual, -rate * seconds, rate * seconds);
+    auto approach = [movementSeconds](double actual, double target, double rate) {
+        const double delta = std::clamp(target - actual, -rate * movementSeconds, rate * movementSeconds);
         return actual + delta;
     };
     if (telemetry_.running) {

@@ -207,3 +207,12 @@ Full QZ regressions and physical W1 validation remain separate requirements.
 See [STATUS.md](STATUS.md) for completed tasks, pending hardware work and the
 read-only W1 compatibility checkpoint. Sources remain subject to the repository
 license; extracting a library does not change that license.
+
+`./treadmill status --simulate` reports an explicitly labeled simulator snapshot
+and synthetic limits without starting movement. Real status queries remain gated
+on validated W1 notification/query behavior.
+
+Connection events are logged independently of motor telemetry freshness. A lost
+connection immediately revokes automation and marks stopping unconfirmed without
+claiming an offline stop command was delivered. Simulator reconnection preserves
+possible existing belt movement; new preflight refuses to start in that state.

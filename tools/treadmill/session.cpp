@@ -293,8 +293,29 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
         timer.start();
         if (!runner.finished()) app.exec();
     }
+    simulator.disconnectDevice();
     record("session_end", runner.reason(), {{"workout_id", loaded.workout.id}, {"backend", "simulator"}});
     const bool flushed = log.flush();
     QTextStream(stdout) << Runner::stateName(runner.state()) << ": " << runner.reason() << '\n';
     return runner.state() == Runner::State::Completed && !logFailed && flushed ? 0 : 1;
+}
+
+int simulatorStatus() {
+    Simulator simulator;
+    Telemetry telemetry;
+    QObject::connect(&simulator, &Controller::sample, [&](Telemetry sample) { telemetry = sample; });
+    simulator.connectDevice(1);
+    simulator.advance(200);
+    simulator.advance(400);
+    const auto capabilities = simulator.capabilities();
+    QJsonObject limits{{"speed_unit", "km/h"}, {"incline_unit", "percent"},
+                       {"min_speed", capabilities.minSpeedKmh}, {"max_speed", capabilities.maxSpeedKmh},
+                       {"speed_resolution", capabilities.speedStepKmh},
+                       {"min_incline", capabilities.minGradePercent}, {"max_incline", capabilities.maxGradePercent},
+                       {"incline_resolution", capabilities.gradeStepPercent}};
+    QJsonObject report{{"backend", "simulator"}, {"connected", telemetry.connected},
+                       {"running", telemetry.running}, {"reported", pairJson(telemetry.actual)},
+                       {"simulation_limits", limits}};
+    QTextStream(stdout) << QJsonDocument(report).toJson(QJsonDocument::Indented);
+    return 0;
 }

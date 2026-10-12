@@ -9,3 +9,6 @@ INCLUDEPATH += .. ../../../src/devices/fitshowtreadmill
 LIBS += -lgtest -lpthread
 SOURCES += test_main.cpp ../controller.cpp ../workout.cpp ../runner.cpp
 HEADERS += ../controller.h ../workout.h ../runner.h
+
+SOURCES += ../../../src/devices/fitshowtreadmill/fitshowcontrol.cpp
+HEADERS += ../../../src/devices/fitshowtreadmill/fitshowcontrol.h

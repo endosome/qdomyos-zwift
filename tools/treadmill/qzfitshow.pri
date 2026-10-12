@@ -5,6 +5,7 @@ QZ_ROOT = $$clean_path($$PWD/../../src)
 INCLUDEPATH += $$QZ_ROOT $$QZ_ROOT/devices
 SOURCES += \
     $$QZ_ROOT/devices/fitshowtreadmill/fitshowtreadmill.cpp \
+    $$QZ_ROOT/devices/fitshowtreadmill/fitshowcontrol.cpp \
     $$QZ_ROOT/devices/treadmill.cpp \
     $$QZ_ROOT/devices/bluetoothdevice.cpp \
     $$QZ_ROOT/metric.cpp \
@@ -13,6 +14,7 @@ SOURCES += \
 HEADERS += \
     $$QZ_ROOT/devices/fitshowtreadmill/fitshowtreadmill.h \
     $$QZ_ROOT/devices/fitshowtreadmill/fitshowpacket.h \
+    $$QZ_ROOT/devices/fitshowtreadmill/fitshowcontrol.h \
     $$QZ_ROOT/devices/treadmill.h \
     $$QZ_ROOT/devices/bluetoothdevice.h \
     $$QZ_ROOT/ergtable.h \

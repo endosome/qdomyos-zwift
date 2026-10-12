@@ -13,7 +13,8 @@ simulation are implemented.
 | 1.4 QZ link spike | Isolated driver compiled and linked | Six QZ sources; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
 | 1.5–1.7 nonmotor queries/calibration/start-stop | Pending evidence and operator confirmation | Do not replay driver initialization or issue motor probes |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
-| 2.4–2.8 real driver policy/adapter | Pending | QZ build environment, validated profile; queue/reconnect/raw-feedback changes required |
+| 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
+| 2.8 real adapter/profile validation | In progress | Calibrated profile and live identity/bounds must be checked before motor requests |
 | M3 workout engine | Implemented for simulator | Generic XML, ramps/repeats/events; external 20-minute and second plan |
 | M4 CLI | Simulation complete; real run pending | Catalog, controls, logs, shutdown and offline integration tests |
 | M5 hardening/package | Initial support implemented; release acceptance pending | Linux CI/install targets; W1 and full QZ regressions not validated |
@@ -54,9 +55,9 @@ movement/stopping, not W1 movement. The future hardware controller must expose
 raw valid feedback and calibrated discrete grade mapping rather than infer them
 from QZ public metrics. Pausing is implemented/verified only in simulation.
 
-The existing QZ driver now shares its pure packet framing helper. Its default
-FIFO stop ordering, automatic reconnection/initialization and private capability
-state still require opt-in CLI changes. The CLI never constructs that driver.
+The QZ driver has a tested opt-in restricted path with explicit GATT mapping,
+asynchronous priority-stop queue and raw capability/status events. Legacy QZ
+behavior remains the default. The workout CLI still refuses hardware execution.
 The isolated QZ driver compiles and links; full application/regression builds are separate checks.
 
 No physical treadmill, motor command, Bluetooth connection or scanning action was

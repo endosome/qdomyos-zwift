@@ -1,0 +1,11 @@
+QT = core bluetooth positioning
+CONFIG += console c++17
+CONFIG -= app_bundle
+TEMPLATE = app
+TARGET = qz-fitshow-tests
+INCLUDEPATH += ../../../src ../../../src/devices
+!isEmpty(GTEST_INCLUDE): INCLUDEPATH += $$GTEST_INCLUDE
+!isEmpty(GTEST_LIB): LIBS += -L$$GTEST_LIB
+isEmpty(DRIVER_LIB): DRIVER_LIB = /tmp/treadmill-driver
+LIBS += -L$$DRIVER_LIB -lqz-fitshow -lgtest -lpthread
+SOURCES += test_driver.cpp

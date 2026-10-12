@@ -2,6 +2,7 @@
 #include "workout.h"
 #include "runner.h"
 #include "fitshowpacket.h"
+#include "fitshowcontrol.h"
 #include <QTemporaryFile>
 #include <QFileInfo>
 #include <QCoreApplication>
@@ -274,6 +275,86 @@ TEST(Simulator, ReconnectionDoesNotEraseExistingMovementOrStartAutomatically) {
     newRun.prepare(6000);
     EXPECT_EQ(newRun.state(), Runner::State::Fault);
     EXPECT_EQ(newRun.reason(), "Initial treadmill state is moving");
+}
+static QByteArray wire(const char *hex) {
+    const auto payload = QByteArray::fromHex(hex);
+    return FitShowPacket::encode(reinterpret_cast<const uint8_t *>(payload.constData()), payload.size());
+}
+static void reportedLimits(FitShow::Control &control) {
+    control.receive(wire("50023c05"));
+    control.receive(wire("5003080002"));
+}
+TEST(FitShowControl, ReadOnlyDefaultAndUnknownLimitsRefuseMotorWrites) {
+    FitShow::Control control;
+    int writes = 0;
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray, quint64, quint64) { ++writes; });
+    control.setTransport(true);
+    control.queryLimits(1); control.pump(200);
+    EXPECT_EQ(writes, 0);
+    EXPECT_FALSE(control.arm(1));
+    control.allowDiagnostics(true);
+    EXPECT_FALSE(control.arm(1));
+    reportedLimits(control);
+    EXPECT_TRUE(control.arm(1));
+}
+TEST(FitShowControl, StopOvertakesInFlightStartAndCancelsInitialTarget) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    control.start(1, 1, 20, 2); control.pump(200);
+    control.stop(2, 2);
+    control.receive(wire("5301")); // Late start acknowledgement cannot release an old target.
+    control.target(1, 3, 30, 5);
+    control.receive(wire("5303")); control.pump(400);
+    ASSERT_GE(writes.size(), 2);
+    EXPECT_EQ(writes[0].toHex(), "53010000000000000000");
+    EXPECT_EQ(writes[1].toHex(), "5303");
+    for (int i = 2; i < writes.size(); ++i) EXPECT_EQ(writes[i].toHex(), "51");
+}
+TEST(FitShowControl, AbortFromSubmissionCallbackCannotTransmitCanceledPayload) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    QObject::connect(&control, &FitShow::Control::commandEvent, [&](quint64 id, QString phase) {
+        if (id == 1 && phase == "submitted") control.stop(2, 2);
+    });
+    control.start(1, 1, 20, 2); control.pump(200);
+    ASSERT_EQ(writes.size(), 1);
+    EXPECT_EQ(writes[0].toHex(), "5303");
+}
+TEST(FitShowControl, CoalescesTargetsAndDoesNotRetryOnTimeout) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    control.target(1, 1, 20, 0); control.target(1, 2, 30, 2); control.pump(200);
+    ASSERT_EQ(writes.size(), 1);
+    EXPECT_EQ(writes[0].toHex(), "53021e02");
+    control.pump(2200); control.pump(2400);
+    for (int i = 1; i < writes.size(); ++i) EXPECT_EQ(writes[i].toHex(), "51");
+    control.target(1, 3, 30, 2); control.pump(2600);
+    EXPECT_EQ(writes.size(), 2); // One target and one status poll, never another target.
+}
+TEST(FitShowControl, DisconnectClearsCapabilitiesAndAuthorization) {
+    FitShow::Control control;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    control.setTransport(false); control.setTransport(true);
+    EXPECT_FALSE(control.limits().complete());
+    EXPECT_FALSE(control.arm(3));
+}
+TEST(FitShowParser, PreservesNonRunningRawSpeedAndRejectsShortStatus) {
+    auto response = FitShow::decodeResponse(wire("51040502000000000000000000"));
+    ASSERT_TRUE(response.valid);
+    EXPECT_TRUE(response.status.hasMotorData);
+    EXPECT_EQ(response.status.speedTenths, 5); // Stopped status is not permission to invent speed zero.
+    EXPECT_FALSE(FitShow::decodeResponse(wire("510400" )).valid);
+    EXPECT_FALSE(FitShow::decodeResponse(wire("50053c050800" )).valid);
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

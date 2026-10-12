@@ -98,8 +98,14 @@ feedback semantics, bounded start/stop, pause if needed, and a conservative full
 session. Unlocking hardware workouts and validating device-specific deadlines
 remain explicit future steps; no automatic enablement from a profile file exists.
 
-Latest offline results: 37 Core tests, 4 isolated-driver tests and 11 CLI/terminal
+Latest offline results: 40 Core tests, 4 isolated-driver tests and 11 CLI/terminal
 tests pass. Core tests pass under address/undefined-behavior sanitizers. The
 selected existing QZ regressions have 32 passes and 3 documented skips. The
 adapter independently latches faults and revokes queued motor authorization when
 reports become stale; fresh packets cannot silently resume a faulted session.
+
+The complete external 20-minute workout also passes through the production
+FitShow queue, raw decoder and adapter using a delayed synthetic peripheral.
+Startup waits for asynchronous capabilities/identity and three stopped reports;
+missing initial reports expire the bounded preflight without arming. Priority
+abort overtakes a delayed target reply and never transmits another motor target.

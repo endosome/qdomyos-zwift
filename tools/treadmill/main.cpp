@@ -1,4 +1,5 @@
 #include "diagnostics.h"
+#include "session.h"
 #include <QBluetoothAddress>
 #include <QCommandLineParser>
 #include <QCoreApplication>
@@ -10,15 +11,29 @@ int main(int argc, char *argv[]) {
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Read-only Linux BLE treadmill diagnostics."));
     parser.addHelpOption();
-    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan or info."));
+    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan, info, workout list, or workout run <id-or-path>."));
     QCommandLineOption timeoutOption(QStringLiteral("timeout"), QStringLiteral("Scan duration (1–60 seconds)."),
                                     QStringLiteral("seconds"), QStringLiteral("10"));
     QCommandLineOption deviceOption(QStringLiteral("device"), QStringLiteral("Explicit Bluetooth address for info."),
                                    QStringLiteral("address"));
     parser.addOption(timeoutOption);
     parser.addOption(deviceOption);
+    addWorkoutOptions(parser);
     parser.process(app);
     const auto arguments = parser.positionalArguments();
+    if (!arguments.isEmpty() && arguments.first() == "workout") {
+        if (parser.isSet(deviceOption) || parser.isSet(timeoutOption)) {
+            QTextStream(stderr) << "--device/--timeout apply to BLE diagnostics.\n";
+            return 2;
+        }
+        return workoutCommand(app, parser, arguments);
+    }
+    for (const QString option : {"simulate", "fast", "workouts-dir", "log", "inject", "inject-at"}) {
+        if (parser.isSet(option)) {
+            QTextStream(stderr) << option << " applies to workout commands.\n";
+            return 2;
+        }
+    }
     if (arguments.size() != 1 || (arguments.first() != "scan" && arguments.first() != "info")) {
         QTextStream(stderr) << "Usage: treadmill scan | info --device <address> [--timeout <seconds>]\n";
         return 2;

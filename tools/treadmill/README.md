@@ -128,3 +128,34 @@ command generation. Missing telemetry, control-loop gaps, rejected commands,
 unexpected movement/state changes and stop deadlines prevent successful
 completion. The 2/10/15/30-second development deadlines are simulator parameters
 and must be calibrated before any hardware backend is enabled.
+
+## Run in simulation
+
+```sh
+./treadmill workout list
+./treadmill workout run uphill-walk-20 --simulate
+./treadmill workout run uphill-walk-20 --simulate --fast --log /tmp/session.jsonl
+./treadmill workout run interval-demo --simulate --fast --inject stop-failure
+```
+
+Select by ID or explicit XML path. `--workouts-dir` overrides the catalog directory.
+Without an override, the installed `../share/treadmill/workouts` directory is used
+when present, with the checkout workout directory as a development fallback.
+`--fast` advances a deterministic virtual clock and disables stdin controls; it
+performs no BLE operations. Normal simulation follows elapsed real time and
+accepts P (pause), R (explicit resume), S/Q (stop/quit) and - (reduce intensity).
+Terminal state is restored on exit; EOF and SIGINT/SIGTERM/SIGHUP initiate stop.
+
+Each run writes JSON Lines with UTC/monotonic timestamps, requested/reported
+pairs, sample age, stages, command submission/acknowledgement, user actions,
+connection/running state and final result. By default logs go in the app's
+standard local-data `sessions` directory. `--log` requires a new file and never
+truncates an existing session. Logs are capped at 32 MiB; recording failure
+aborts the run. A successful simulation ends only after observed stopping.
+
+Fault injection: `--inject stale|disconnect|override|stop-failure|reject|no-ack`,
+with optional `--inject-at <active-seconds>` (default 5). The no-ack case can still
+succeed when telemetry confirms targets; acknowledgements are not physical proof.
+Other faults exercise abort/unconfirmed outcomes. A run without `--simulate` is
+refused before any Bluetooth discovery or connection because W1 motor capability
+and feedback validation is still pending.

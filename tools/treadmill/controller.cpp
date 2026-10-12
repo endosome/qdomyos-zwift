@@ -8,15 +8,35 @@ bool Capabilities::accepts(Target target) const {
         !std::isfinite(minGradePercent) || !std::isfinite(maxGradePercent) ||
         !std::isfinite(speedStepKmh) || !std::isfinite(gradeStepPercent) ||
         minSpeedKmh <= 0 || maxSpeedKmh < minSpeedKmh || speedStepKmh <= 0 ||
-        minGradePercent < 0 || maxGradePercent < minGradePercent || gradeStepPercent <= 0)
+        minGradePercent < 0 || maxGradePercent < minGradePercent || (gradeLevels.isEmpty() && gradeStepPercent <= 0))
         return false;
     return target.speedKmh >= minSpeedKmh - 1e-8 && target.speedKmh <= maxSpeedKmh + 1e-8 &&
            target.gradePercent >= minGradePercent - 1e-8 && target.gradePercent <= maxGradePercent + 1e-8;
 }
+bool Capabilities::mapTarget(Target requested, Target &mapped) const {
+    auto geometry = *this;
+    geometry.validated = true; // Geometry preview is independent of motor authorization.
+    if (!geometry.accepts(requested)) return false;
+    mapped.speedKmh = minSpeedKmh + std::floor((requested.speedKmh - minSpeedKmh + 1e-8) / speedStepKmh) * speedStepKmh;
+    if (gradeLevels.isEmpty()) {
+        mapped.gradePercent = minGradePercent + std::floor((requested.gradePercent - minGradePercent + 1e-8) / gradeStepPercent) * gradeStepPercent;
+    } else {
+        double previous = -1;
+        mapped.gradePercent = minGradePercent;
+        for (const double level : gradeLevels) {
+            if (!std::isfinite(level) || level < minGradePercent || level > maxGradePercent || level <= previous) return false;
+            previous = level;
+            if (level <= requested.gradePercent + 1e-8) mapped.gradePercent = level;
+        }
+        if (gradeLevels.first() != minGradePercent || gradeLevels.last() != maxGradePercent) return false;
+    }
+    return geometry.accepts(mapped) && !std::isnan(maxGradeMappingLoss) && maxGradeMappingLoss >= 0 &&
+           requested.gradePercent - mapped.gradePercent <= maxGradeMappingLoss + 1e-8;
+}
 Simulator::Simulator(QObject *parent) : Controller(parent) {}
 Capabilities Simulator::capabilities() const {
     // Explicit simulator model; these numbers are not W1 specifications.
-    return {true, true, 0.5, 6.0, 0.1, 0.0, 10.0, 1.0};
+    return {true, true, 0.5, 6.0, 0.1, 0.0, 10.0, 1.0, {}};
 }
 void Simulator::connectDevice(quint64 generation) {
     generation_ = generation;

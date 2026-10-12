@@ -798,6 +798,18 @@ void fitshowtreadmill::btinit(bool startTape) {
 
 void fitshowtreadmill::stateChanged(QLowEnergyService::ServiceState state) {
     if (mode_ == Mode::Restricted) {
+        if (sender() == restrictedIdentityService_ && state == QLowEnergyService::ServiceDiscovered) {
+            QString model, firmware;
+            for (const auto &characteristic : restrictedIdentityService_->characteristics()) {
+                if (!(characteristic.properties() & QLowEnergyCharacteristic::Read)) continue;
+                if (characteristic.uuid() == QBluetoothUuid(quint16(0x2a24))) model = QString::fromUtf8(characteristic.value()).trimmed();
+                if (characteristic.uuid() == QBluetoothUuid(quint16(0x2a26))) firmware = QString::fromUtf8(characteristic.value()).trimmed();
+            }
+            emit restrictedIdentityObserved(model, firmware);
+            if (gattCommunicationChannelService && gattCommunicationChannelService->state() == QLowEnergyService::DiscoveryRequired)
+                gattCommunicationChannelService->discoverDetails();
+            return;
+        }
         if (sender() != gattCommunicationChannelService || state != QLowEnergyService::ServiceDiscovered || restrictedGattReady_) return;
         for (const auto &characteristic : gattCommunicationChannelService->characteristics()) {
             if (characteristic.uuid() == QBluetoothUuid(restrictedWrite_)) gattWriteCharacteristic = characteristic;
@@ -932,7 +944,21 @@ void fitshowtreadmill::serviceScanDone(void) {
         gattCommunicationChannelService = m_control->createServiceObject(serviceId, this);
         if (!gattCommunicationChannelService) { emit restricted_.fault(QStringLiteral("Cannot create FitShow service")); return; }
         connect(gattCommunicationChannelService, &QLowEnergyService::stateChanged, this, &fitshowtreadmill::stateChanged);
-        gattCommunicationChannelService->discoverDetails();
+        restrictedIdentityService_ = m_control->createServiceObject(QBluetoothUuid(quint16(0x180a)), this);
+        if (restrictedIdentityService_) {
+            connect(restrictedIdentityService_, &QLowEnergyService::stateChanged, this, &fitshowtreadmill::stateChanged);
+            connect(restrictedIdentityService_, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this,
+                    [this](QLowEnergyService::ServiceError) {
+                        if (sender() != restrictedIdentityService_) return;
+                        emit restrictedIdentityObserved({}, {});
+                        if (gattCommunicationChannelService && gattCommunicationChannelService->state() == QLowEnergyService::DiscoveryRequired)
+                            gattCommunicationChannelService->discoverDetails();
+                    });
+            restrictedIdentityService_->discoverDetails();
+        } else {
+            emit restrictedIdentityObserved({}, {});
+            gattCommunicationChannelService->discoverDetails();
+        }
         return; // Optional cadence service is outside the standalone controller.
     }
     emit debug(QStringLiteral("serviceScanDone"));
@@ -1136,6 +1162,11 @@ void fitshowtreadmill::disconnectRestricted() {
         gattCommunicationChannelService->disconnect(this);
         gattCommunicationChannelService->deleteLater();
         gattCommunicationChannelService = nullptr;
+    }
+    if (restrictedIdentityService_) {
+        restrictedIdentityService_->disconnect(this);
+        restrictedIdentityService_->deleteLater();
+        restrictedIdentityService_ = nullptr;
     }
     if (m_control) {
         m_control->disconnect(this);

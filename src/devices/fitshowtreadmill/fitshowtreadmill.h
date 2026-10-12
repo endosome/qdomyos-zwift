@@ -104,6 +104,7 @@ class fitshowtreadmill : public treadmill {
     FitShow::Control restricted_;
     QElapsedTimer restrictedClock_;
     quint16 restrictedService_ = 0, restrictedWrite_ = 0, restrictedNotify_ = 0;
+    QLowEnergyService *restrictedIdentityService_ = nullptr;
     bool restrictedGattReady_ = false;
     bool restrictedDiagnosticsRequested_ = false;
     bool checkIncomingPacket(const uint8_t *data, int data_len) const;
@@ -187,6 +188,7 @@ class fitshowtreadmill : public treadmill {
     void packetReceived();
     void toastRequested(QString message);
     void restrictedGattReady();
+    void restrictedIdentityObserved(QString model, QString firmware);
 
   public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);

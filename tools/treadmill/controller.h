@@ -17,7 +17,10 @@ struct Capabilities {
     double minGradePercent = 0;
     double maxGradePercent = 0;
     double gradeStepPercent = 0;
+    QVector<double> gradeLevels;
+    double maxGradeMappingLoss = INFINITY;
     bool accepts(Target target) const;
+    bool mapTarget(Target requested, Target &mapped) const;
 };
 struct Telemetry {
     qint64 atMs = -1;

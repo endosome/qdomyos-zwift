@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
             QTextStream(stderr) << "Hardware telemetry remains unverified; use treadmill status --simulate.\n";
             return 2;
         }
-        for (const QString option : {"device", "timeout", "fast", "workouts-dir", "log", "inject", "inject-at"}) {
+        for (const QString option : {"device", "timeout", "fast", "workouts-dir", "log", "inject", "inject-at", "profile"}) {
             if (parser.isSet(option)) {
                 QTextStream(stderr) << "Unsupported status option: " << option << '\n';
                 return 2;
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
         }
         return workoutCommand(app, parser, arguments);
     }
-    for (const QString option : {"simulate", "fast", "workouts-dir", "log", "inject", "inject-at"}) {
+    for (const QString option : {"simulate", "fast", "workouts-dir", "log", "inject", "inject-at", "profile"}) {
         if (parser.isSet(option)) {
             QTextStream(stderr) << option << " applies to workout commands.\n";
             return 2;

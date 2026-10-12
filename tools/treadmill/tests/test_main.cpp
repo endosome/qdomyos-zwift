@@ -3,6 +3,8 @@
 #include "runner.h"
 #include "fitshowpacket.h"
 #include "fitshowcontrol.h"
+#include "profile.h"
+#include "fitshowcontroller.h"
 #include <QTemporaryFile>
 #include <QFileInfo>
 #include <QCoreApplication>
@@ -355,6 +357,161 @@ TEST(FitShowParser, PreservesNonRunningRawSpeedAndRejectsShortStatus) {
     EXPECT_EQ(response.status.speedTenths, 5); // Stopped status is not permission to invent speed zero.
     EXPECT_FALSE(FitShow::decodeResponse(wire("510400" )).valid);
     EXPECT_FALSE(FitShow::decodeResponse(wire("50053c050800" )).valid);
+}
+static DeviceProfile syntheticProfile() {
+    DeviceProfile profile;
+    profile.address = "AA:BB:CC:DD:EE:FF"; profile.name = "Synthetic fixture";
+    profile.model = "test-model"; profile.firmware = "test-firmware"; profile.evidence = "offline fixture only";
+    profile.service = 0xfff0; profile.write = 0xfff2; profile.notify = 0xfff1;
+    profile.speedUnit = DeviceProfile::SpeedUnit::Kmh;
+    profile.minSpeedCode = 5; profile.runningMinCode = 5; profile.maxSpeedCode = 60; profile.speedStepCode = 1;
+    profile.inclines = {{0, 0}, {1, 1.5}, {2, 4}};
+    profile.maxGradeMappingLoss = 2.5;
+    profile.diagnosticsConfirmed = profile.controlsVerified = profile.speedFeedbackVerified =
+        profile.inclineFeedbackVerified = profile.stopFeedbackVerified = true;
+    return profile;
+}
+TEST(Profile, UsesCalibratedInclineTableAndExplicitMphScaling) {
+    auto profile = syntheticProfile();
+    profile.speedUnit = DeviceProfile::SpeedUnit::Mph;
+    ASSERT_TRUE(profile.validate().isEmpty());
+    Target mapped;
+    ASSERT_TRUE(profile.map({2.0, 3.5}, mapped));
+    EXPECT_DOUBLE_EQ(mapped.gradePercent, 1.5);
+    EXPECT_LE(mapped.speedKmh, 2.0);
+    int speed = -1, incline = -1;
+    ASSERT_TRUE(profile.toWire(mapped, speed, incline));
+    EXPECT_EQ(incline, 1);
+    Target reported;
+    ASSERT_TRUE(profile.fromWire(speed, incline, reported));
+    EXPECT_NEAR(reported.speedKmh, mapped.speedKmh, 1e-7);
+    EXPECT_DOUBLE_EQ(reported.gradePercent, 1.5);
+    EXPECT_FALSE(profile.fromWire(speed, 8, reported));
+}
+TEST(Profile, IncompleteEvidenceCannotAuthorizeMotorAndBoundsMustMatch) {
+    auto profile = syntheticProfile();
+    profile.controlsVerified = false;
+    EXPECT_FALSE(profile.capabilities().validated);
+    profile.controlsVerified = true; profile.stopFeedbackVerified = false;
+    EXPECT_FALSE(profile.validate().isEmpty());
+    profile.stopFeedbackVerified = true;
+    FitShow::Limits limits;
+    limits.minSpeed = 5; limits.maxSpeed = 60; limits.minIncline = 0; limits.maxIncline = 2;
+    EXPECT_TRUE(profile.matches(limits));
+    limits.maxSpeed = 80;
+    EXPECT_FALSE(profile.matches(limits));
+}
+TEST(Profile, RejectsRampLossBetweenOtherwiseValidEndpoints) {
+    auto profile = syntheticProfile();
+    profile.maxGradeMappingLoss = 1;
+    auto workout = shortPlan();
+    workout.stages[0].from.gradePercent = 0;
+    workout.stages[0].to.gradePercent = 4;
+    EXPECT_FALSE(validateWorkout(workout, profile.capabilities()).isEmpty());
+    profile.maxGradeMappingLoss = 2.5;
+    EXPECT_TRUE(validateWorkout(workout, profile.capabilities()).isEmpty());
+}
+TEST(Profile, ExampleRemainsUnverifiedAndMalformedEvidenceIsRejected) {
+    const QString path = QFileInfo(__FILE__).absolutePath() + "/../profiles/unverified-example.json";
+    auto loaded = loadProfile(path);
+    ASSERT_TRUE(loaded.error.isEmpty()) << loaded.error.toStdString();
+    EXPECT_FALSE(loaded.profile.motorEvidenceComplete());
+    EXPECT_FALSE(loaded.profile.capabilities().validated);
+    QTemporaryFile file;
+    ASSERT_TRUE(file.open());
+    file.write("{\"version\":1,\"validation\":{\"controls\":true}}"); file.flush();
+    EXPECT_FALSE(loadProfile(file.fileName()).error.isEmpty());
+}
+static QByteArray motorStatus(int state, int speed, int incline) {
+    QByteArray payload;
+    payload.append(char(0x51)); payload.append(char(state)); payload.append(char(speed)); payload.append(char(incline));
+    payload.append(QByteArray(9, char(0)));
+    return FitShowPacket::encode(reinterpret_cast<const uint8_t *>(payload.constData()), payload.size());
+}
+static void connectFixture(FitShowController &controller, FitShow::Control &control) {
+    controller.connectDevice(1);
+    control.pump(0); control.receive(wire("50023c05"));
+    control.pump(200); control.receive(wire("5003020002"));
+    controller.observeIdentity("test-model", "test-firmware");
+}
+TEST(FitShowAdapter, SendsMappedPairOnlyAfterLiveBoundsIdentityAndStoppedData) {
+    FitShow::Control control;
+    qint64 clock = 0;
+    FitShowController controller(control, syntheticProfile(), [&]() { return clock; },
+                                [&]() { control.setTransport(true); }, [&]() { control.setTransport(false); });
+    QList<QByteArray> writes;
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    connectFixture(controller, control);
+    controller.start(1, 1, {2, 1.5});
+    EXPECT_EQ(writes.size(), 2); // Only the two explicitly permitted information queries.
+    clock = 400; control.receive(motorStatus(4, 0, 0)); controller.advance(clock);
+    controller.start(1, 2, {2, 1.5}); control.pump(clock); control.receive(wire("5301"));
+    control.pump(600);
+    ASSERT_EQ(writes.size(), 4);
+    EXPECT_EQ(writes.last().toHex(), "53021401");
+    controller.stop(2, 3);
+    EXPECT_EQ(writes.last().toHex(), "5303");
+}
+TEST(FitShowAdapter, PreservesRawStopSpeedAndDoesNotRefreshFromAckOrCache) {
+    FitShow::Control control;
+    qint64 clock = 0;
+    FitShowController controller(control, syntheticProfile(), [&]() { return clock; },
+                                [&]() { control.setTransport(true); }, [&]() { control.setTransport(false); });
+    Telemetry latest;
+    int samples = 0;
+    QObject::connect(&controller, &Controller::sample, [&](Telemetry sample) { latest = sample; ++samples; });
+    connectFixture(controller, control);
+    clock = 400; control.receive(motorStatus(4, 5, 1)); controller.advance(clock);
+    EXPECT_EQ(samples, 1);
+    EXPECT_FALSE(latest.running);
+    EXPECT_DOUBLE_EQ(latest.actual.speedKmh, 0.5);
+    EXPECT_DOUBLE_EQ(latest.actual.gradePercent, 1.5);
+    clock = 600; control.receive(wire("5303")); controller.advance(clock);
+    clock = 800; controller.advance(clock);
+    EXPECT_EQ(samples, 1);
+    EXPECT_EQ(latest.atMs, 400);
+}
+TEST(FitShowAdapter, MissingFirmwareAndChangedBoundsRejectMotorCommands) {
+    for (bool wrongIdentity : {false, true}) {
+        FitShow::Control control;
+        qint64 clock = 0;
+        FitShowController controller(control, syntheticProfile(), [&]() { return clock; },
+                                    [&]() { control.setTransport(true); }, [&]() { control.setTransport(false); });
+        QList<QByteArray> writes;
+        QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+        connectFixture(controller, control);
+        if (wrongIdentity) controller.observeIdentity("test-model", "different-firmware");
+        else control.receive(wire("50025005"));
+        clock = 400; control.receive(motorStatus(4, 0, 0)); controller.advance(clock);
+        controller.start(1, 1, {2, 0}); control.pump(clock);
+        for (const auto &payload : writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
+    }
+}
+TEST(FitShowAdapter, UnmappedGradeAndDelayedTelemetryFaultWithoutInventingPosition) {
+    FitShow::Control control;
+    qint64 clock = 0;
+    FitShowController controller(control, syntheticProfile(), [&]() { return clock; },
+                                [&]() { control.setTransport(true); }, [&]() { control.setTransport(false); });
+    int faults = 0, samples = 0;
+    QObject::connect(&controller, &Controller::fault, [&](QString) { ++faults; });
+    QObject::connect(&controller, &Controller::sample, [&](Telemetry) { ++samples; });
+    connectFixture(controller, control);
+    clock = 400; control.receive(motorStatus(4, 0, 8)); controller.advance(clock);
+    EXPECT_EQ(faults, 1); EXPECT_EQ(samples, 0);
+    control.receive(motorStatus(4, 0, 0)); clock = 3000; controller.advance(clock);
+    EXPECT_EQ(faults, 2); EXPECT_EQ(samples, 0);
+}
+TEST(FitShowControl, StopStillWinsAfterSeveralFaultInvalidations) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    control.target(1, 1, 20, 1); control.pump(200);
+    control.cancel(); control.cancel();
+    control.stop(2, 2);
+    ASSERT_EQ(writes.size(), 2);
+    EXPECT_EQ(writes.last().toHex(), "5303");
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

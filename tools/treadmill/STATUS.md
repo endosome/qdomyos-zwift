@@ -14,7 +14,7 @@ simulation are implemented.
 | 1.5–1.7 nonmotor queries/calibration/start-stop | Pending evidence and operator confirmation | Do not replay driver initialization or issue motor probes |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
-| 2.8 real adapter/profile validation | In progress | Calibrated profile and live identity/bounds must be checked before motor requests |
+| 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
 | M3 workout engine | Implemented for simulator | Generic XML, ramps/repeats/events; external 20-minute and second plan |
 | M4 CLI | Simulation complete; real run pending | Catalog, controls, logs, shutdown and offline integration tests |
 | M5 hardening/package | Initial support implemented; release acceptance pending | Linux CI/install targets; W1 and full QZ regressions not validated |
@@ -58,7 +58,7 @@ from QZ public metrics. Pausing is implemented/verified only in simulation.
 The QZ driver has a tested opt-in restricted path with explicit GATT mapping,
 asynchronous priority-stop queue and raw capability/status events. Legacy QZ
 behavior remains the default. The workout CLI still refuses hardware execution.
-The isolated QZ driver compiles and links; full application/regression builds are separate checks.
+The isolated QZ driver and adapter compile/link. The full QZ static library builds; existing regression checks are tracked separately.
 
 No physical treadmill, motor command, Bluetooth connection or scanning action was
 run during this implementation session. Existing device support must not be

@@ -646,6 +646,66 @@ TEST(FitShowWorkout, MissingInitialMotorReportsExpiresPreflightWithoutArming) {
     EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
     for (const auto &payload : fixture.writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
 }
+TEST(FitShowWorkout, CapabilityChangeCancelsTargetsAndRequestsPriorityStop) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    fixture.runner.reduce(); // Leave an unsent target for the capability fault to purge.
+    fixture.control.receive(wire("50025005"));
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Stopping);
+    ASSERT_EQ(fixture.writes.last(), QByteArray::fromHex("5303"));
+    const int afterStop = fixture.writes.size();
+    for (int i = 0; i < 120; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    EXPECT_EQ(fixture.speed, 0); // The faulted adapter does not certify fixture motion.
+    for (int i = afterStop; i < fixture.writes.size(); ++i)
+        EXPECT_EQ(fixture.writes[i], QByteArray::fromHex("51"));
+}
+TEST(FitShowWorkout, TimedOutTargetIsNotRetriedAndLateRepliesCannotResume) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    fixture.acknowledgementDelay = 2500;
+    fixture.runner.reduce(); fixture.control.pump(fixture.now);
+    const int targetWrites = fixture.writes.size();
+    for (int i = 0; i < 140; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    int stops = 0;
+    for (int i = targetWrites; i < fixture.writes.size(); ++i) {
+        if (fixture.writes[i] == QByteArray::fromHex("5303")) ++stops;
+        else EXPECT_EQ(fixture.writes[i], QByteArray::fromHex("51"));
+    }
+    EXPECT_EQ(stops, 1);
+}
+TEST(FitShowWorkout, StaleMotorReportsStopAutomationEvenWithLiveReplies) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    fixture.reportStatus = false;
+    for (int i = 0; i < 25; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::Stopping);
+    EXPECT_TRUE(fixture.writes.contains(QByteArray::fromHex("5303")));
+    fixture.reportStatus = true;
+    for (int i = 0; i < 110; ++i) fixture.tick();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    EXPECT_EQ(fixture.speed, 0);
+}
+TEST(FitShowWorkout, ReconnectionAndOldFramesCannotRestartAbortedWorkout) {
+    FitShowWorkoutFixture fixture(shortPlan());
+    fixture.start();
+    ASSERT_EQ(fixture.runner.state(), Runner::State::Running);
+    fixture.runner.reduce();
+    fixture.control.setTransport(false);
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    const int beforeReconnect = fixture.writes.size();
+    fixture.control.setTransport(true);
+    fixture.control.receive(wire("5302")); // Reply from the previous connection.
+    for (int i = 0; i < 80; ++i) fixture.tick();
+    fixture.runner.confirmStart(); fixture.runner.resume();
+    EXPECT_EQ(fixture.runner.state(), Runner::State::StopUnconfirmed);
+    for (int i = beforeReconnect; i < fixture.writes.size(); ++i)
+        EXPECT_NE(uint8_t(fixture.writes[i][0]), 0x53);
+}
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);

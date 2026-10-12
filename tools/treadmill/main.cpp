@@ -1,5 +1,6 @@
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothDeviceInfo>
+#include <QBluetoothUuid>
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QJsonArray>

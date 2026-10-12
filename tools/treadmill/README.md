@@ -50,8 +50,8 @@ as root does not fix a missing backend.
 
 ## Current validation status
 
-Compilation/runtime discovery have not been verified: qmake and Qt5Core/
-Qt5Bluetooth development metadata were unavailable in the development environment.
+Built with Qt 5.15.18 using a local toolchain. Help and invalid-argument paths
+were exercised without accessing Bluetooth. Physical discovery remains unverified.
 No physical-device actions were performed during implementation.
 
 Next planned task: explicit-device read-only GATT metadata inspection, before

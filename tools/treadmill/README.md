@@ -221,3 +221,22 @@ Diagnostic reports include the Qt version. `info` retains all enumerated service
 UUIDs even if later detail discovery fails, and records every characteristic
 property flag plus its numeric bits. `address_type` is null because Qt 5's device
 information does not expose that fact; it is not guessed from the address.
+
+## Isolated QZ driver build
+
+The bounded driver target compiles and links QZ's FitShow driver, treadmill/base
+classes, metrics, settings and virtual-device base with Qt Core, Bluetooth and
+Positioning. `TREADMILL_NO_VIRTUAL_DEVICE` excludes peripheral creation from this
+separate target; normal QZ builds keep their existing peripheral behavior.
+The driver no longer includes GUI headers; QZ's factory delivers its toast signal.
+
+```sh
+mkdir -p /tmp/treadmill-driver
+cd /tmp/treadmill-driver
+qmake /path/to/qdomyos-zwift/tools/treadmill/driver/driver.pro
+make -j2
+```
+
+This produces an internal static archive, not a stable installed SDK. Building
+or linking this target does not connect a device. Positioning development/runtime
+packages are an additional dependency (`qtpositioning5-dev` on Ubuntu).

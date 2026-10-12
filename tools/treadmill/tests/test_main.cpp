@@ -1,5 +1,6 @@
 #include "controller.h"
 #include "workout.h"
+#include "runner.h"
 #include <QTemporaryFile>
 #include <QFileInfo>
 #include <QCoreApplication>
@@ -87,6 +88,87 @@ TEST(Workout, ExampleDurationAndDifferentPlanValidate) {
     EXPECT_EQ(other.workout.durationMs(), 120000);
     Simulator simulator;
     EXPECT_TRUE(validateWorkout(example.workout, simulator.capabilities()).isEmpty());
+}
+static Workout shortPlan() {
+    Workout workout;
+    workout.id = "short";
+    workout.name = "Short";
+    Stage stage;
+    stage.name = "Steady";
+    stage.durationMs = 10000;
+    stage.from = stage.to = {2, 0};
+    workout.stages.append(stage);
+    return workout;
+}
+static qint64 startRunner(Runner &runner) {
+    runner.prepare(0);
+    for (qint64 now = 200; now <= 10000; now += 200) {
+        runner.advance(now);
+        if (runner.state() == Runner::State::Ready) runner.confirmStart();
+        if (runner.state() == Runner::State::Running) return now;
+    }
+    ADD_FAILURE() << "Runner failed to start";
+    return 10000;
+}
+TEST(Runner, FullExampleCompletesWithVerifiedStop) {
+    const QString path = QFileInfo(__FILE__).absolutePath() + "/../workouts/uphill-walk-20.xml";
+    auto loaded = loadWorkout(path);
+    ASSERT_TRUE(loaded.error.isEmpty());
+    Simulator simulator;
+    Runner runner(simulator, loaded.workout);
+    qint64 now = startRunner(runner);
+    while (!runner.finished() && now < 1500000) { now += 200; runner.advance(now); }
+    EXPECT_EQ(runner.state(), Runner::State::Completed) << runner.reason().toStdString();
+    EXPECT_EQ(runner.elapsedMs(), 1200000);
+    EXPECT_DOUBLE_EQ(runner.telemetry().actual.speedKmh, 0);
+}
+TEST(Runner, AbortCancelsCountdownAndStops) {
+    Simulator simulator;
+    Runner runner(simulator, shortPlan());
+    runner.prepare(0);
+    runner.advance(200); runner.advance(400);
+    ASSERT_EQ(runner.state(), Runner::State::Ready);
+    runner.confirmStart();
+    runner.abort("User stop");
+    for (qint64 now = 600; now < 4000; now += 200) runner.advance(now);
+    EXPECT_EQ(runner.state(), Runner::State::Aborted);
+    EXPECT_EQ(runner.elapsedMs(), 0);
+    EXPECT_FALSE(runner.telemetry().running);
+}
+TEST(Runner, StaleDataAndStopFailureCannotComplete) {
+    for (const auto failure : {Simulator::Failure::StaleTelemetry, Simulator::Failure::StopFailure,
+                               Simulator::Failure::Disconnect}) {
+        Simulator simulator;
+        Runner runner(simulator, shortPlan());
+        qint64 now = startRunner(runner);
+        simulator.inject(failure);
+        runner.abort("Injected fault");
+        for (int i = 0; i < 100 && !runner.finished(); ++i) { now += 200; runner.advance(now); }
+        EXPECT_EQ(runner.state(), Runner::State::StopUnconfirmed);
+    }
+}
+TEST(Runner, PauseFreezesTimeAndResumePreservesPosition) {
+    Simulator simulator;
+    Runner runner(simulator, shortPlan());
+    qint64 now = startRunner(runner);
+    now += 1000; runner.advance(now);
+    const auto elapsed = runner.elapsedMs();
+    runner.pause();
+    for (int i = 0; i < 30; ++i) { now += 200; runner.advance(now); }
+    ASSERT_EQ(runner.state(), Runner::State::Paused);
+    EXPECT_EQ(runner.elapsedMs(), elapsed);
+    runner.resume();
+    for (int i = 0; i < 50 && !runner.finished(); ++i) { now += 200; runner.advance(now); }
+    EXPECT_GT(runner.elapsedMs(), elapsed);
+}
+TEST(Runner, ClockGapAbortsInsteadOfCatchupAcceleration) {
+    Simulator simulator;
+    Runner runner(simulator, shortPlan());
+    qint64 now = startRunner(runner);
+    runner.advance(now + 5000);
+    for (int i = 1; i < 30 && !runner.finished(); ++i) runner.advance(now + 5000 + i * 200);
+    EXPECT_EQ(runner.state(), Runner::State::Aborted);
+    EXPECT_EQ(runner.elapsedMs(), 0);
 }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);

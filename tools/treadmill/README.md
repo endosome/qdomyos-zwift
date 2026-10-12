@@ -110,3 +110,21 @@ values, nested repeats and excessive expansion are rejected.
 `workouts/interval-demo.xml` provides an unrelated 120-second repeat/ramp example.
 Their speed/grade values are prototype targets, not personal prescriptions or
 verified W1 capability claims. Device adaptation must happen before a real run.
+
+## Runner semantics
+
+The runner requires three fresh stopped samples before READY and three matching
+running samples before timing begins. It generates paired targets, rounds down
+to the simulator's explicit resolution, warns 30/10 seconds before stage changes,
+and preserves multiple same-offset text events. Stage timing uses supplied
+monotonic time; the CLI will use QElapsedTimer. At ramp endpoints it waits for
+matching telemetry before the next stage, excluding that settling hold from the
+planned active duration. Total wall time therefore includes startup, settling
+holds and stop verification.
+
+Pause freezes active time; resume is explicit. Intensity reduction latches lower
+ceilings for subsequent stages. Abort cancels countdown/targets through a new
+command generation. Missing telemetry, control-loop gaps, rejected commands,
+unexpected movement/state changes and stop deadlines prevent successful
+completion. The 2/10/15/30-second development deadlines are simulator parameters
+and must be calibrated before any hardware backend is enabled.

@@ -276,3 +276,15 @@ speed 1.0 only after the 60-second observer ended, but was uncertain. This is
 not present in the trace: the last RUNNING speed code was 15, followed by STOP
 codes down to 3 and then NORMAL replies. A longer or renewed observation would
 be needed to correlate any later display change; speed units remain unknown.
+
+A 120-second nonmotor capture then recorded bounds min/max raw speed 10/60 with
+unit tag 0, and incline limits 0–8. RUNNING speed telemetry rose from code 10
+to the reported maximum code 60, then returned to 10 before incline was changed.
+The operator reports the console would not increase to displayed 20.0 on this
+run; the peak display value was not recorded, so raw code 60 cannot yet be
+mapped to a display value or unit. During the incline sweep, sampled codes
+included 0, 1, 2, 4, 5, 7 and 8, then returned to 0; intermediate steps may
+have occurred between the 500 ms status polls. Physical Play/Pause produced
+STOP (0x04) speed codes 8, 5 and 2 at incline 0 before the observation ended.
+No zero-speed frame was captured. Notification cleanup succeeded, and only
+nonmotor queries 5002, 5003 and 51 were sent; motor execution remained disabled.

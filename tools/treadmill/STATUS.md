@@ -135,8 +135,13 @@ The WSL environment has no BlueZ adapter. Following the working open_oura
 approach, a separate Windows PowerShell/WinRT scan/info helper uses Windows'
 native adapter without USB passthrough. Windows interop was restored by the
 operator. A 15-second scan succeeded and found a candidate advertising FitShow
-FFF0 and FTMS 1826. Its ownership/identity requires operator confirmation before
-GATT connection. No motor commands, pairing, writes or subscriptions were sent.
+FFF0 and FTMS 1826. The operator confirmed the candidate is their treadmill.
+Read-only GATT discovery then timed out after 60 seconds, without returning any
+services. A fresh scan still saw the same name/address and advertised services.
+Model, firmware and actual GATT layout remain unknown. Before retrying, check
+whether another host/app holds the connection. Reports now identify the last
+operation so failures can be located. No motor commands, pairing, writes or
+subscriptions were sent.
 The helper compiles on Windows PowerShell 5.1 and rejects malformed addresses
 before opening a device. Scan captures remain local under ignored docs/treadmill.
 The Linux BLE backend and W1 motor/feedback compatibility remain unverified.

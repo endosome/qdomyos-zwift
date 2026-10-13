@@ -39,6 +39,7 @@ namespace TreadmillDiagnostics {
         public string windows_version = Environment.OSVersion.Version.ToString();
         public string status = "complete";
         public string error;
+        public string last_operation;
         public List<Device> devices = new List<Device>();
         public string address;
         public string address_type;
@@ -106,6 +107,7 @@ namespace TreadmillDiagnostics {
             // Framework's CodeDOM compiler cannot project WinRT event accessors.
             object token = watcher.GetType().GetMethod("add_Received").Invoke(watcher, new object[] { handler });
             try {
+                report.last_operation = "scan_advertisements";
                 watcher.Start();
                 Thread.Sleep(seconds * 1000);
                 if (watcher.Status == BluetoothLEAdvertisementWatcherStatus.Aborted)
@@ -129,6 +131,7 @@ namespace TreadmillDiagnostics {
             var opened = new List<GattDeviceService>();
             BluetoothLEDevice device = null;
             try {
+                report.last_operation = "open_device";
                 var operation = addressType == "unknown" ? BluetoothLEDevice.FromBluetoothAddressAsync(rawAddress)
                     : BluetoothLEDevice.FromBluetoothAddressAsync(rawAddress,
                         addressType == "random" ? BluetoothAddressType.Random : BluetoothAddressType.Public);
@@ -136,6 +139,7 @@ namespace TreadmillDiagnostics {
                 if (device == null) throw new Exception("Selected BLE device is unavailable; scan first and confirm its address");
                 report.name = device.Name;
                 report.address_type = device.BluetoothAddressType.ToString().ToLowerInvariant();
+                report.last_operation = "discover_services";
                 var found = Await(device.GetGattServicesAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
                 if (found.Status != GattCommunicationStatus.Success) throw new Exception("Service discovery: " + found.Status);
                 opened.AddRange(found.Services);
@@ -144,6 +148,7 @@ namespace TreadmillDiagnostics {
                 foreach (var service in opened) {
                     var entry = new Service { uuid = service.Uuid.ToString() };
                     report.services.Add(entry);
+                    report.last_operation = "discover_characteristics " + entry.uuid;
                     var characteristics = Await(service.GetCharacteristicsAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
                     entry.characteristic_status = characteristics.Status.ToString();
                     if (characteristics.Status != GattCommunicationStatus.Success) throw new Exception("Characteristic discovery: " + characteristics.Status);
@@ -151,6 +156,7 @@ namespace TreadmillDiagnostics {
                         var item = new Characteristic { uuid = characteristic.Uuid.ToString(), handle = characteristic.AttributeHandle,
                             properties = characteristic.CharacteristicProperties.ToString(), properties_bits = (uint)characteristic.CharacteristicProperties };
                         entry.characteristics.Add(item);
+                        report.last_operation = "discover_descriptors " + item.uuid;
                         var descriptors = Await(characteristic.GetDescriptorsAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
                         item.descriptor_status = descriptors.Status.ToString();
                         if (descriptors.Status != GattCommunicationStatus.Success) throw new Exception("Descriptor discovery: " + descriptors.Status);
@@ -160,6 +166,7 @@ namespace TreadmillDiagnostics {
                         if (entry.uuid == "0000180a-0000-1000-8000-00805f9b34fb" &&
                             (shortUuid == "00002a24" || shortUuid == "00002a26" || shortUuid == "00002a27" || shortUuid == "00002a29") &&
                             (characteristic.CharacteristicProperties & GattCharacteristicProperties.Read) != 0) {
+                            report.last_operation = "read_device_information " + item.uuid;
                             var value = Await(characteristic.ReadValueAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
                             item.read_status = value.Status.ToString();
                             if (value.Status == GattCommunicationStatus.Success) {

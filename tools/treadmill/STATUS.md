@@ -13,7 +13,7 @@ complete simulation are implemented.
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
 | 1.5 nonmotor probe | Eight Windows probes completed after explicit approval | Latest capture reported speed bounds 10–120/unit tag 0x20 (earlier 10–60/tag 0), then NORMAL→START→RUNNING with raw speed 10/incline 0 through elapsed second 12; no stop/change captured; no motor commands |
-| 1.6–1.7 calibration/start-stop | One manual start/pause captured; speed/incline step changes remain unverified | Latest capture stayed at raw speed 10/incline 0 and ended RUNNING; speed limit response differs from earlier capture. Units, mode relation and raw zero remain unknown |
+| 1.6–1.7 calibration/start-stop | Manual start/pause captured; speed unit and incline steps unverified | Operator reports display speed 20.0→1.0, but latest RUNNING frames stayed at raw code 10/incline 0; telemetry/display mismatch unresolved. Unit and raw zero unknown |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
@@ -227,3 +227,11 @@ second 12. No speed/incline telemetry change or stop report appeared before the
 observer ended. Notification cleanup succeeded; only the three approved
 nonmotor queries were sent. The cause of the changed speed limit reply and the
 physical state after the capture need operator clarification.
+
+
+After that capture, the operator reported changing console speed up to 20.0 and
+back down to 1.0, with no units displayed. The capture's RUNNING frames remained
+at raw speed code 10 and incline code 0 throughout, so those displayed values
+were not reflected in the captured BLE telemetry. It is unknown whether the
+console changes occurred within the observer window or why the values differ.
+Incline has not yet been adjusted.

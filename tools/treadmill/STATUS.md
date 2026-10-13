@@ -246,3 +246,12 @@ the operator adjusted incline needs confirmation. Physical pause produced STOP
 replies. No zero-speed frame was received. Notification cleanup succeeded. Only
 the approved nonmotor 5002, 5003 and 51 requests were sent; motor execution
 remained disabled.
+
+A focused 60-second incline repeat recorded all running incline codes from 0
+through 8, then back down to 0 while the running speed code remained 10. The
+operator pressed physical Play/Pause after returning to incline 0. STOP (0x04)
+frames reported speed codes 8, 6 and 3 at incline 0, followed by short NORMAL
+(0x00) replies; no zero-speed frame appeared. Notification cleanup succeeded.
+Only the approved nonmotor 5002, 5003 and 51 requests were sent, with motor
+execution disabled. The capture confirms the incline telemetry reached code 0
+before the stop sequence; physical stopping still requires operator confirmation.

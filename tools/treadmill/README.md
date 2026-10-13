@@ -121,8 +121,9 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
   -ConfirmDiagnostics -Confirmation NONMOTOR > new-probe-report.json
 ```
 
-Use the confirmed scan values and a new report path. Duration is 1–60 seconds
-and includes connection/discovery/querying, plus at most two seconds for cleanup.
+Use the confirmed scan values and a new report path. Windows nonmotor probe
+duration is 1–120 seconds and includes connection/discovery/querying, plus at
+most two seconds for cleanup.
 Raw notifications and requested frames, elapsed time, UTC and Windows write
 status are retained in the JSON report. Write success is not a device ACK or
 proof of movement. Responses are not converted into verified physical metrics.

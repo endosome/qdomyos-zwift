@@ -12,8 +12,8 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Seven Windows probes completed after explicit approval | Bounds valid; latest observer captured RUNNING/STOP frames during the repeated manual test; a prior session showed SAFETY throughout; no motor commands |
-| 1.6–1.7 calibration/start-stop | Manual physical start/pause captured; software control and calibration unverified | Raw speed code 10, incline 0; pause frames decay 10→7→4→1, then NORMAL. Earlier display reading 1.0→0.0 lacks a reported unit and was not repeated for latest capture; raw zero unknown |
+| 1.5 nonmotor probe | Eight Windows probes completed after explicit approval | Latest capture reported speed bounds 10–120/unit tag 0x20 (earlier 10–60/tag 0), then NORMAL→START→RUNNING with raw speed 10/incline 0 through elapsed second 12; no stop/change captured; no motor commands |
+| 1.6–1.7 calibration/start-stop | One manual start/pause captured; speed/incline step changes remain unverified | Latest capture stayed at raw speed 10/incline 0 and ended RUNNING; speed limit response differs from earlier capture. Units, mode relation and raw zero remain unknown |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
@@ -216,3 +216,14 @@ reported console speed 1.0 and incline 0 while running, then speed falling to
 capture, so the numeric match to raw speed code 10 remains unconfirmed.
 Notification cleanup succeeded, and only 5002, 5003 and 51 queries were sent.
 No software motor, pause or timer control was used.
+
+
+A further 60-second observer run requested for console speed/incline step changes
+returned speed limits `025002780a002003` (max raw 120, min raw 10, unit tag
+0x20), differing from the earlier reply with max raw 60 and unit tag 0. Incline
+limits were unchanged. Status progressed from NORMAL through START countdown
+3/2/1 to RUNNING, with raw speed code 10 and incline code 0 through elapsed
+second 12. No speed/incline telemetry change or stop report appeared before the
+observer ended. Notification cleanup succeeded; only the three approved
+nonmotor queries were sent. The cause of the changed speed limit reply and the
+physical state after the capture need operator clarification.

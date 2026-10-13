@@ -12,8 +12,8 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Six Windows probes completed after explicit approval | Bounds valid; one capture has manual start/running/stop telemetry; latest capture returned SAFETY throughout despite operator-reported console speed changes; discrepancy unresolved; no motor commands |
-| 1.6–1.7 calibration/start-stop | Manual physical start/pause reported; software control and calibration unverified | One capture has raw RUNNING/STOP data; latest capture has SAFETY only, so console and BLE correlation is unresolved; no confirmed raw zero or calibrated unit |
+| 1.5 nonmotor probe | Seven Windows probes completed after explicit approval | Bounds valid; latest observer captured RUNNING/STOP frames during the repeated manual test; a prior session showed SAFETY throughout; no motor commands |
+| 1.6–1.7 calibration/start-stop | Manual physical start/pause captured; software control and calibration unverified | Raw speed code 10, incline 0; pause frames decay 10→7→4→1, then NORMAL. Earlier display reading 1.0→0.0 lacks a reported unit and was not repeated for latest capture; raw zero unknown |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
@@ -203,3 +203,16 @@ RUNNING, STOP or speed telemetry frames. It is unresolved whether the physical
 button sequence occurred during the capture or why the console report and BLE
 status differ. Do not use the reported display values as BLE calibration until
 a capture correlates them.
+
+
+A repeat synchronized observer run captured RUNNING and STOP frames during the
+operator-controlled Play/Pause test. The BLE trace reported RUNNING (0x03), raw
+speed code 10 and incline code 0. The FitShow elapsed-seconds field progressed
+from 0 to 10. STOP (0x04) frames then reported raw speed codes 10, 7, 4 and 1 at
+elapsed second 11, followed by short NORMAL (0x00) status replies. The observer
+did not receive a raw zero-speed frame. In an earlier attempt, the operator
+reported console speed 1.0 and incline 0 while running, then speed falling to
+0.0 during pause; no unit was given. Those readings were not repeated for this
+capture, so the numeric match to raw speed code 10 remains unconfirmed.
+Notification cleanup succeeded, and only 5002, 5003 and 51 queries were sent.
+No software motor, pause or timer control was used.

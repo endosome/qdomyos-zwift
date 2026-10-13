@@ -25,6 +25,13 @@ permissions:
   contents: read
 
 jobs:
+  windows-offline:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Windows diagnostics and check offline gates
+        shell: powershell
+        run: powershell.exe -Mta -NoProfile -NonInteractive -ExecutionPolicy Bypass -File tools/treadmill/tests/test_windows_diagnostics.ps1
   offline:
     runs-on: ubuntu-24.04
     steps:

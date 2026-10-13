@@ -7,6 +7,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+# WinRT service discovery stalled in the default STA host on this machine.
+# Re-enter a fresh MTA host; keep the same validated, read-only arguments.
+if ([Threading.Thread]::CurrentThread.GetApartmentState() -ne [Threading.ApartmentState]::MTA) {
+    $arguments = @('-Mta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                   '-File', $PSCommandPath, '-Command', $Command, '-Timeout', "$Timeout")
+    if ($Device -ne '') { $arguments += @('-Device', $Device) }
+    if ($AddressType -ne 'unknown') { $arguments += @('-AddressType', $AddressType) }
+    & (Join-Path $PSHOME 'powershell.exe') @arguments
+    exit $LASTEXITCODE
+}
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $metadata = Join-Path $env:WINDIR 'System32\WinMetadata'

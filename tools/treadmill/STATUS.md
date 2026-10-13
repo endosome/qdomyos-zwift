@@ -1,7 +1,7 @@
 # Implementation status
 
 This project is not yet a validated W1 motor controller. Hardware execution is
-explicitly disabled. Hardware testing is postponed at the user's request.
+explicitly disabled. Read-only hardware discovery has now started at the user's request.
 Read-only discovery, approved nonmotor diagnostics, real-adapter software and
 complete simulation are implemented.
 
@@ -63,9 +63,10 @@ asynchronous priority-stop queue and raw capability/status events. Legacy QZ
 behavior remains the default. The workout CLI still refuses hardware execution.
 The isolated QZ driver and adapter compile/link. The full QZ static library builds. Selected existing FitShow/training/metric regressions pass with the Bluetooth system bus disabled (three inapplicable exclusion cases are skipped).
 
-No physical treadmill, motor command, Bluetooth connection or scanning action was
-run during this implementation session. Existing device support must not be
-claimed from simulation or byte fixtures.
+The initial offline implementation ran no physical treadmill, motor commands,
+Bluetooth connections or scans. Subsequent read-only Windows discovery is
+recorded below. Existing device support must not be claimed from simulation or
+byte fixtures.
 
 ## Library boundary and maintenance
 
@@ -127,3 +128,15 @@ semantics, explicit abort-before-shutdown and the future library boundary.
 All four follow-up software tasks (full FitShow sessions, fault races, clean
 packaging and API documentation) are complete. The next planned acceptance
 step requires the postponed physical device: read-only discovery and identity.
+
+## WSL hardware discovery follow-up
+
+The WSL environment has no BlueZ adapter. Following the working open_oura
+approach, a separate Windows PowerShell/WinRT scan/info helper uses Windows'
+native adapter without USB passthrough. Windows interop was restored by the
+operator. A 15-second scan succeeded and found a candidate advertising FitShow
+FFF0 and FTMS 1826. Its ownership/identity requires operator confirmation before
+GATT connection. No motor commands, pairing, writes or subscriptions were sent.
+The helper compiles on Windows PowerShell 5.1 and rejects malformed addresses
+before opening a device. Scan captures remain local under ignored docs/treadmill.
+The Linux BLE backend and W1 motor/feedback compatibility remain unverified.

@@ -52,6 +52,42 @@ offline only; use the native Linux executable for the future device checks.
 
 ## Scan
 
+### WSL host with Windows Bluetooth
+
+When WSL has no adapter, use this separate read-only Windows diagnostic helper.
+It uses Windows PowerShell 5.1, .NET Framework and native WinRT metadata already
+present on Windows; it does not require a Windows Qt build or USB passthrough.
+Windows interop must be active and Windows Bluetooth enabled. From the repo root:
+
+```sh
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+  -File "$(wslpath -w tools/treadmill/windows-diagnostics.ps1)" \
+  -Command scan -Timeout 15 > windows-scan.json
+```
+
+Confirm which scanned address belongs to your treadmill before connecting:
+
+```sh
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+  -File "$(wslpath -w tools/treadmill/windows-diagnostics.ps1)" \
+  -Command info -Device AA:BB:CC:DD:EE:FF -AddressType public \
+  -Timeout 30 > windows-info.json
+```
+
+Replace address and address type with the scan values. Info performs uncached
+service/characteristic/descriptor discovery and reads only standard Device
+Information model, firmware, hardware and manufacturer strings. It never pairs,
+writes characteristics/descriptors or enables notifications. Output is JSON
+with `backend: windows-winrt`; Windows property names and numeric bits are
+reported, and FitShow motor capabilities remain unknown. Discovery failure
+preserves partial details and returns 1. Timeout is 1–60 seconds, default 15;
+info applies one shared deadline to all discovery/read operations. This helper
+does not enable hardware workouts or replace the Linux controller backend.
+
+WinRT discovery follows Microsoft's [GATT client API](https://learn.microsoft.com/en-us/windows/apps/develop/devices-sensors/gatt-client).
+
+### Native Linux Bluetooth
+
 ```sh
 ./treadmill scan
 ./treadmill scan --timeout 15

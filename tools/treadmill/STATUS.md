@@ -294,3 +294,8 @@ This is consistent with a tenths-of-km/h scale (raw 10 = 1.0, raw 60 = 6.0),
 but remains an unverified interpretation because the display showed no units.
 The earlier max-120/unit-tag-0x20 reply may reflect a different mode or setting;
 that relationship has not been established.
+
+For subsequent walking-mode analysis, the operator explicitly instructs us to
+assume displayed speed 1.0 equals 1 km/h and 6.0 equals 6 km/h. Use that as the
+working scale for walking mode; it does not resolve the separate raw-120/tag-0x20
+response.

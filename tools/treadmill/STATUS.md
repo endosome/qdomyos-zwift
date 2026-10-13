@@ -12,8 +12,8 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Four Windows probes completed after explicit approval | Bounds valid; NORMAL followed operator-reported display wake; another observation had SAFETY throughout; no motor commands or motion telemetry |
-| 1.6–1.7 calibration/start-stop | Postponed physical validation | No W1 units/mapping/feedback facts assumed |
+| 1.5 nonmotor probe | Five Windows probes completed after explicit approval | Bounds valid; status NORMAL after display wake; one blank-display observation had SAFETY throughout; latest manual movement capture includes start/running/stop telemetry; no motor commands |
+| 1.6–1.7 calibration/start-stop | Manual physical start/pause observed; software control and calibration unverified | Raw RUNNING and decelerating STOP reports received; no confirmed zero-speed telemetry or calibrated units/mapping |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
@@ -171,12 +171,24 @@ after normal magnet attachment, a second 20-second probe returned NORMAL (0x00)
 as `0251005103`. Both probes cleaned up notifications successfully. A later 60-second nonmotor
 observation returned SAFETY (0x06) on all 104 status replies, with no speed or
 incline telemetry; cleanup succeeded. The operator then reported that one
-Play/Pause button press woke the previously blank display without starting the
-belt. A following 20-second observer received NORMAL (0x00) on all 31 status
-replies, plus the same bounds and no motion telemetry; cleanup succeeded. This
-coincidence suggests display sleep may be related to the SAFETY reply, but does
-not establish causation or motor behavior. The magnet cause is not established. NORMAL is a short status-only reply:
-it contains no speed/incline feedback and does not certify physical stopping.
-These raw replies do not validate speed units, grade mapping, pause, stop or
-physical movement. Two regression tests use the sanitized observed frames to
-check decoding and revocation of queued control on the safety response.
+Play/Pause button press woke the previously blank display without starting the belt. A following 20-second observer received
+NORMAL (0x00) on all 31 status replies, plus the same bounds and no motion
+telemetry; cleanup succeeded. This coincidence suggests display sleep may be
+related to the SAFETY reply, but does not establish causation. The magnet cause
+is not established. NORMAL is a short status-only reply: it contains no
+speed/incline feedback and does not certify physical stopping. These raw
+replies do not validate speed units, grade mapping, pause, stop or movement. Two regression tests use sanitized observed frames to check
+decoding and revocation of queued control on the safety response.
+
+In a later 60-second observer session, the operator manually started the belt
+after the reported three-second countdown and pressed physical Play/Pause after
+about three seconds of movement. The trace contains status START (0x02) with
+countdown values 3, 2 and 1, then RUNNING (0x03) with raw speed code 10 and
+incline code 0. Following the physical pause, it reported STOP (0x04) with raw
+speed codes 9, 6, 4 and 1, then a short NORMAL (0x00) reply. No status-4 sample
+reported raw speed zero. The operator reports the belt stopped/paused; the trace
+does not provide a verified zero-speed value. Notification cleanup succeeded.
+Only the nonmotor 5002, 5003 and 51 queries were sent; no software start, stop,
+pause or target command was sent. This validates receipt of live FitShow status
+frames during operator-controlled movement, not the Linux Qt backend or
+software motor control. Raw speed units and incline calibration remain unknown.

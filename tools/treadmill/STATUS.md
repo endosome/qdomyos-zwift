@@ -288,3 +288,9 @@ have occurred between the 500 ms status polls. Physical Play/Pause produced
 STOP (0x04) speed codes 8, 5 and 2 at incline 0 before the observation ended.
 No zero-speed frame was captured. Notification cleanup succeeded, and only
 nonmotor queries 5002, 5003 and 51 were sent; motor execution remained disabled.
+
+The operator believes raw maximum 60 may be the walking-mode limit of 6 km/h.
+This is consistent with a tenths-of-km/h scale (raw 10 = 1.0, raw 60 = 6.0),
+but remains an unverified interpretation because the display showed no units.
+The earlier max-120/unit-tag-0x20 reply may reflect a different mode or setting;
+that relationship has not been established.

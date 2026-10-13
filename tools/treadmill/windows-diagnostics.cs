@@ -220,7 +220,7 @@ namespace TreadmillDiagnostics {
         }
         public static Report Probe(string address, string addressType, string expectedName, int seconds, bool approved) {
             if (!approved || string.IsNullOrEmpty(expectedName)) throw new ArgumentException("Nonmotor probe approval/name required");
-            if (seconds < 1 || seconds > 60) throw new ArgumentException("Probe duration must be 1-60 seconds");
+            if (seconds < 1 || seconds > 120) throw new ArgumentException("Probe duration must be 1-120 seconds");
             ulong rawAddress = ParseAddress(address);
             var report = new Report { command = "probe", address = Address(rawAddress), address_type = addressType,
                 motor_capabilities = "unknown: raw diagnostic replies only; no physical behavior verified" };

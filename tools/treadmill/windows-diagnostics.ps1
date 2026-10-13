@@ -1,7 +1,7 @@
 # Windows PowerShell 5.1 / native WinRT. Probe requires explicit write approval.
 param(
     [ValidateSet('scan', 'info', 'probe')][string]$Command = 'scan',
-    [ValidateRange(1, 60)][int]$Timeout = 15,
+    [ValidateRange(1, 120)][int]$Timeout = 15,
     [string]$Device = '',
     [ValidateSet('unknown', 'public', 'random')][string]$AddressType = 'unknown',
     [switch]$ConfirmDiagnostics,
@@ -10,6 +10,9 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+if ($Command -ne 'probe' -and $Timeout -gt 60) {
+    throw 'Scan/info timeout must be 1-60 seconds; probe accepts up to 120 seconds'
+}
 if ($Command -eq 'probe') {
     if (-not $ConfirmDiagnostics -or $Confirmation -cne 'NONMOTOR' -or $ExpectedName -eq '' -or $Device -eq '') {
         @{ command = 'probe'; backend = 'windows-winrt'; status = 'error';

@@ -12,7 +12,7 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Implemented; not run on hardware | Profile approval + typed confirmation; raw trace only, never armed |
+| 1.5 nonmotor probe | Two Windows probes completed after explicit approval | Valid bounds; SAFETY changed to NORMAL after normal magnet attachment; no motor commands |
 | 1.6–1.7 calibration/start-stop | Postponed physical validation | No W1 units/mapping/feedback facts assumed |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
@@ -99,7 +99,7 @@ feedback semantics, bounded start/stop, pause if needed, and a conservative full
 session. Unlocking hardware workouts and validating device-specific deadlines
 remain explicit future steps; no automatic enablement from a profile file exists.
 
-Latest offline results: 44 Core tests, 4 isolated-driver tests and 11 CLI/terminal
+Latest offline results: 46 Core tests, 4 isolated-driver tests and 11 CLI/terminal
 tests pass. Core tests pass under address/undefined-behavior sanitizers. The
 selected existing QZ regressions have 32 passes and 3 documented skips. The
 adapter independently latches faults and revokes queued motor authorization when
@@ -148,15 +148,30 @@ Device Information reads returned manufacturer FITSHOW, model FS-BT-C1,
 hardware 1.0 and software 1.3.8. Firmware characteristic 2A26 is absent; software
 revision must not silently replace firmware in the current identity gate.
 Standard FTMS feature/range values were captured as raw bytes; they do not
-validate physical units, controls or incline calibration. No motor commands,
-pairing, writes or subscriptions were sent.
+validate physical units, controls or incline calibration. During this read-only
+checkpoint, no motor commands, pairing, writes or subscriptions were sent.
 The helper compiles on Windows PowerShell 5.1 and rejects malformed addresses
 before opening a device. Scan captures remain local under ignored docs/treadmill.
 The Linux BLE backend and W1 motor/feedback compatibility remain unverified.
 
-A Windows nonmotor probe is prepared but has not been run on hardware. It
+A Windows nonmotor probe was run for 20 seconds after explicit operator approval. It
 requires separate explicit NONMOTOR authorization, exact address/name, matching
 FFF1/FFF2 properties and a bounded duration. Its only framed writes are 5002,
 5003 and 51, plus CCCD notification enable/cleanup. Offline Windows checks pass
 for compilation, address validation, three exact frames, forbidden commands and
 both approval gates. Hardware workout execution remains disabled.
+
+The probe received checksum-valid speed bounds (raw codes 10–60, unit tag 0),
+incline bounds (raw codes 0–8, pause flag set) and repeated status frame
+`025106025503`. QZ classifies status 0x06 as SAFETY; this short response provides
+no motor telemetry and its extra byte 0x02 has no established physical meaning.
+CCCD notification cleanup returned Success. No motor commands or pairing were
+sent. The operator reported a blank display and disconnected safety magnet;
+after normal magnet attachment, a second 20-second probe returned NORMAL (0x00)
+as `0251005103`. Both probes cleaned up notifications successfully. The paired
+observations support the missing magnet as the cause of the earlier safety state;
+sleep behavior has not been established. NORMAL is a short status-only reply:
+it contains no speed/incline feedback and does not certify physical stopping.
+These raw replies do not validate speed units, grade mapping, pause, stop or
+physical movement. Two regression tests use the sanitized observed frames to
+check decoding and revocation of queued control on the safety response.

@@ -358,6 +358,46 @@ TEST(FitShowParser, PreservesNonRunningRawSpeedAndRejectsShortStatus) {
     EXPECT_FALSE(FitShow::decodeResponse(wire("510400" )).valid);
     EXPECT_FALSE(FitShow::decodeResponse(wire("50053c050800" )).valid);
 }
+TEST(FitShowParser, ObservedCapabilityAndSafetyRepliesRetainRawValues) {
+    // Sanitized nonmotor W1 capture: no identity, motion or personal metrics.
+    const auto speed = FitShow::decodeResponse(QByteArray::fromHex("0250023c0a006403"));
+    ASSERT_TRUE(speed.valid);
+    EXPECT_EQ(speed.limits.minSpeed, 10);
+    EXPECT_EQ(speed.limits.maxSpeed, 60);
+    EXPECT_EQ(speed.limits.unit, 0); // Raw tag, not proof of physical km/h/mph.
+    const auto incline = FitShow::decodeResponse(QByteArray::fromHex("0250030800025903"));
+    ASSERT_TRUE(incline.valid);
+    EXPECT_EQ(incline.limits.minIncline, 0);
+    EXPECT_EQ(incline.limits.maxIncline, 8);
+    EXPECT_TRUE(incline.limits.pause); // Advertised flag, not verified pause behavior.
+    const auto safety = FitShow::decodeResponse(QByteArray::fromHex("025106025503"));
+    ASSERT_TRUE(safety.valid);
+    EXPECT_EQ(safety.status.state, 6);
+    EXPECT_FALSE(safety.status.hasMotorData);
+    EXPECT_EQ(safety.status.speedTenths, -1);
+    const auto normal = FitShow::decodeResponse(QByteArray::fromHex("0251005103"));
+    ASSERT_TRUE(normal.valid);
+    EXPECT_EQ(normal.status.state, 0);
+    EXPECT_FALSE(normal.status.hasMotorData); // Idle status cannot invent speed/grade zero.
+    EXPECT_EQ(normal.status.speedTenths, -1);
+}
+TEST(FitShowControl, ObservedSafetyReplyRevokesQueuedControl) {
+    FitShow::Control control;
+    control.setTransport(true); control.allowDiagnostics(true);
+    control.receive(QByteArray::fromHex("0250023c0a006403"));
+    control.receive(QByteArray::fromHex("0250030800025903"));
+    ASSERT_TRUE(control.arm(1));
+    QList<QByteArray> writes;
+    int faults = 0;
+    QObject::connect(&control, &FitShow::Control::payloadReady,
+                     [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    QObject::connect(&control, &FitShow::Control::fault, [&](QString) { ++faults; });
+    control.target(1, 1, 20, 2);
+    control.receive(QByteArray::fromHex("025106025503"));
+    control.target(1, 2, 30, 3); control.pump(200);
+    EXPECT_EQ(faults, 1);
+    for (const auto &payload : writes) EXPECT_NE(uint8_t(payload[0]), 0x53);
+}
 static DeviceProfile syntheticProfile() {
     DeviceProfile profile;
     profile.address = "AA:BB:CC:DD:EE:FF"; profile.name = "Synthetic fixture";

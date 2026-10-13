@@ -25,6 +25,7 @@ namespace TreadmillDiagnostics {
         public string descriptor_status;
         public List<Descriptor> descriptors = new List<Descriptor>();
         public string device_information;
+        public string value_hex;
         public string read_status;
     }
     public class Descriptor { public string uuid; public ushort handle; }
@@ -163,17 +164,22 @@ namespace TreadmillDiagnostics {
                         foreach (var descriptor in descriptors.Descriptors)
                             item.descriptors.Add(new Descriptor { uuid = descriptor.Uuid.ToString(), handle = descriptor.AttributeHandle });
                         string shortUuid = item.uuid.Substring(0, 8);
-                        if (entry.uuid == "0000180a-0000-1000-8000-00805f9b34fb" &&
-                            (shortUuid == "00002a24" || shortUuid == "00002a26" || shortUuid == "00002a27" || shortUuid == "00002a29") &&
+                        bool identityValue = entry.uuid == "0000180a-0000-1000-8000-00805f9b34fb" &&
+                            (shortUuid == "00002a24" || shortUuid == "00002a26" || shortUuid == "00002a27" || shortUuid == "00002a28" || shortUuid == "00002a29");
+                        bool ftmsValue = entry.uuid == "00001826-0000-1000-8000-00805f9b34fb" &&
+                            (shortUuid == "00002acc" || shortUuid == "00002ad4" || shortUuid == "00002ad5" ||
+                             shortUuid == "00002ad6" || shortUuid == "00002ad7" || shortUuid == "00002ad8");
+                        if ((identityValue || ftmsValue) &&
                             (characteristic.CharacteristicProperties & GattCharacteristicProperties.Read) != 0) {
-                            report.last_operation = "read_device_information " + item.uuid;
+                            report.last_operation = "read_standard_value " + item.uuid;
                             var value = Await(characteristic.ReadValueAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
                             item.read_status = value.Status.ToString();
                             if (value.Status == GattCommunicationStatus.Success) {
                                 using (var reader = DataReader.FromBuffer(value.Value)) {
                                     var bytes = new byte[reader.UnconsumedBufferLength];
                                     reader.ReadBytes(bytes);
-                                    item.device_information = System.Text.Encoding.UTF8.GetString(bytes);
+                                    item.value_hex = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+                                    if (identityValue) item.device_information = System.Text.Encoding.UTF8.GetString(bytes);
                                 }
                             }
                         }

@@ -10,7 +10,7 @@ complete simulation are implemented.
 | M0 assessment | Complete | Eight local planning documents under ignored docs/treadmill |
 | 1.1 standalone scan | Implemented; physical scan unverified | Qt 5.15.18 build and argument validation |
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
-| 1.3 exact W1 identity | Pending physical access | First operator checkpoint: scan/info reports |
+| 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
 | 1.5 nonmotor probe | Implemented; not run on hardware | Profile approval + typed confirmation; raw trace only, never armed |
 | 1.6–1.7 calibration/start-stop | Postponed physical validation | No W1 units/mapping/feedback facts assumed |
@@ -136,12 +136,20 @@ approach, a separate Windows PowerShell/WinRT scan/info helper uses Windows'
 native adapter without USB passthrough. Windows interop was restored by the
 operator. A 15-second scan succeeded and found a candidate advertising FitShow
 FFF0 and FTMS 1826. The operator confirmed the candidate is their treadmill.
-Read-only GATT discovery then timed out after 60 seconds, without returning any
-services. A fresh scan still saw the same name/address and advertised services.
-Model, firmware and actual GATT layout remain unknown. Before retrying, check
-whether another host/app holds the connection. Reports now identify the last
-operation so failures can be located. No motor commands, pairing, writes or
-subscriptions were sent.
+Initial read-only GATT discovery in PowerShell's default STA host timed out,
+including after other apps were disconnected. MTA discovery succeeded, then
+succeeded again through automatic MTA re-entry. The helper now uses that mode;
+reports identify the last operation so failures can be located. This is evidence
+for a host threading issue, not proof of the treadmill's sleep/wake behavior.
+
+Discovered FitShow FFF0 contains FFF1 Notify and FFF2 WriteWithoutResponse,
+matching the existing driver mapping. FTMS 1826 is also present. Standard
+Device Information reads returned manufacturer FITSHOW, model FS-BT-C1,
+hardware 1.0 and software 1.3.8. Firmware characteristic 2A26 is absent; software
+revision must not silently replace firmware in the current identity gate.
+Standard FTMS feature/range values were captured as raw bytes; they do not
+validate physical units, controls or incline calibration. No motor commands,
+pairing, writes or subscriptions were sent.
 The helper compiles on Windows PowerShell 5.1 and rejects malformed addresses
 before opening a device. Scan captures remain local under ignored docs/treadmill.
 The Linux BLE backend and W1 motor/feedback compatibility remain unverified.

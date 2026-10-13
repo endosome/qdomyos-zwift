@@ -57,6 +57,8 @@ offline only; use the native Linux executable for the future device checks.
 When WSL has no adapter, use this separate read-only Windows diagnostic helper.
 It uses Windows PowerShell 5.1, .NET Framework and native WinRT metadata already
 present on Windows; it does not require a Windows Qt build or USB passthrough.
+The helper re-enters an MTA PowerShell host automatically: default STA service
+discovery timed out on this machine while MTA completed successfully.
 Windows interop must be active and Windows Bluetooth enabled. From the repo root:
 
 ```sh
@@ -76,7 +78,10 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
 
 Replace address and address type with the scan values. Info performs uncached
 service/characteristic/descriptor discovery and reads only standard Device
-Information model, firmware, hardware and manufacturer strings. It never pairs,
+Information model, firmware, hardware, software and manufacturer strings plus
+standard FTMS feature/supported-range values as raw hex. Software revision is
+not substituted for firmware revision; advertised ranges do not validate physical
+motion, units or calibration. It never pairs,
 writes characteristics/descriptors or enables notifications. Output is JSON
 with `backend: windows-winrt`; Windows property names and numeric bits are
 reported, and FitShow motor capabilities remain unknown. Discovery failure

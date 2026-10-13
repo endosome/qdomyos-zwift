@@ -261,3 +261,12 @@ incline trace's raw status field followed each reported level from 0 to 8 and
 back to 0, showing that the treadmill sends changing incline feedback over
 Bluetooth. The capture does not timestamp individual console target changes, so
 the lag between selecting a level and reaching/reporting it is not yet measured.
+
+A combined 60-second nonmotor capture recorded fresh speed limits of raw 10–60
+with unit tag 0 and incline limits 0–8. During RUNNING, raw speed rose from 10
+to 20, then fell to 15 and remained there while incline telemetry changed from
+0 through 8 and back to 0. Thus this capture did not show speed returning to raw
+10 before the operator's physical Play/Pause. STOP (0x04) then reported speed
+codes 14, 12, 9, 6 and 3 at incline 0, followed by NORMAL (0x00); no zero-speed
+frame appeared. Notification cleanup succeeded. Only nonmotor queries 5002,
+5003 and 51 were sent; motor execution remained disabled.

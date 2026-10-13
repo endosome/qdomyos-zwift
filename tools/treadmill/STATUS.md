@@ -12,7 +12,7 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Three Windows probes completed after explicit approval | Valid bounds; status changed SAFETY→NORMAL after magnet attachment in one probe, then returned SAFETY throughout a later 60-second observation; no motor commands |
+| 1.5 nonmotor probe | Four Windows probes completed after explicit approval | Bounds valid; NORMAL followed operator-reported display wake; another observation had SAFETY throughout; no motor commands or motion telemetry |
 | 1.6–1.7 calibration/start-stop | Postponed physical validation | No W1 units/mapping/feedback facts assumed |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
@@ -170,9 +170,12 @@ sent. The operator reported a blank display and disconnected safety magnet;
 after normal magnet attachment, a second 20-second probe returned NORMAL (0x00)
 as `0251005103`. Both probes cleaned up notifications successfully. A later 60-second nonmotor
 observation returned SAFETY (0x06) on all 104 status replies, with no speed or
-incline telemetry; cleanup succeeded. The status is therefore intermittent or
-dependent on an unknown condition, and the magnet cause is not established.
-Sleep behavior has not been established. NORMAL is a short status-only reply:
+incline telemetry; cleanup succeeded. The operator then reported that one
+Play/Pause button press woke the previously blank display without starting the
+belt. A following 20-second observer received NORMAL (0x00) on all 31 status
+replies, plus the same bounds and no motion telemetry; cleanup succeeded. This
+coincidence suggests display sleep may be related to the SAFETY reply, but does
+not establish causation or motor behavior. The magnet cause is not established. NORMAL is a short status-only reply:
 it contains no speed/incline feedback and does not certify physical stopping.
 These raw replies do not validate speed units, grade mapping, pause, stop or
 physical movement. Two regression tests use the sanitized observed frames to

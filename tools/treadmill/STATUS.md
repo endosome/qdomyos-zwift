@@ -270,3 +270,9 @@ to 20, then fell to 15 and remained there while incline telemetry changed from
 codes 14, 12, 9, 6 and 3 at incline 0, followed by NORMAL (0x00); no zero-speed
 frame appeared. Notification cleanup succeeded. Only nonmotor queries 5002,
 5003 and 51 were sent; motor execution remained disabled.
+
+After this capture, the operator said the console may have reached displayed
+speed 1.0 only after the 60-second observer ended, but was uncertain. This is
+not present in the trace: the last RUNNING speed code was 15, followed by STOP
+codes down to 3 and then NORMAL replies. A longer or renewed observation would
+be needed to correlate any later display change; speed units remain unknown.

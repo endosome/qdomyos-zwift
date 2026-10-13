@@ -113,3 +113,10 @@ Integration fault tests cover changed capabilities, replies after the no-retry
 deadline, missing motor reports and reconnection with old replies. Fault-latched
 feedback or unavailable transport produces stop-unconfirmed, even when the
 synthetic peripheral has stopped; it cannot certify a physical result.
+
+Clean Debian 13 container builds pass the same 44 Core, 4 driver and 11 CLI
+tests. Four separate runtime-package checks validate installed catalogs, both
+full workouts, profile preview/hardware refusal and license/corresponding source.
+Runtime tests have no network, host mounts, Bluetooth bus or source checkout.
+The package recipe pins the base image and records dependency versions; APT
+updates mean byte-for-byte build reproducibility is not claimed.

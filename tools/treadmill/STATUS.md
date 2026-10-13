@@ -254,4 +254,10 @@ frames reported speed codes 8, 6 and 3 at incline 0, followed by short NORMAL
 (0x00) replies; no zero-speed frame appeared. Notification cleanup succeeded.
 Only the approved nonmotor 5002, 5003 and 51 requests were sent, with motor
 execution disabled. The capture confirms the incline telemetry reached code 0
-before the stop sequence; physical stopping still requires operator confirmation.
+before the stop sequence; the operator subsequently confirmed the belt stopped.
+
+The operator subsequently confirmed that the belt is physically stopped. The
+incline trace's raw status field followed each reported level from 0 to 8 and
+back to 0, showing that the treadmill sends changing incline feedback over
+Bluetooth. The capture does not timestamp individual console target changes, so
+the lag between selecting a level and reaching/reporting it is not yet measured.

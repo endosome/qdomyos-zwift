@@ -12,7 +12,7 @@ isEmpty(PREFIX): PREFIX = /usr/local
 target.path = $$PREFIX/bin
 workouts.files = $$PWD/workouts/*.xml
 workouts.path = $$PREFIX/share/treadmill/workouts
-documentation.files = $$PWD/README.md $$PWD/STATUS.md $$PWD/../../LICENSE
+documentation.files = $$PWD/README.md $$PWD/STATUS.md $$PWD/API.md $$PWD/../../LICENSE
 documentation.path = $$PREFIX/share/doc/treadmill
 INSTALLS += target workouts documentation
 

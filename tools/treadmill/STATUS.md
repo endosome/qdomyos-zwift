@@ -17,7 +17,7 @@ complete simulation are implemented.
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
-| M3 workout engine | Implemented for simulator | Generic XML, ramps/repeats/events; external 20-minute and second plan |
+| M3 workout engine | Implemented offline | Simulator and synthetic FitShow full-session tests; generic XML, ramps/repeats/events |
 | M4 CLI | Simulation complete; real run pending | Catalog, controls, logs, shutdown and offline integration tests |
 | M5 hardening/package | Software support implemented; physical release acceptance pending | CI/install/sanitizer support; full QZ library and selected existing regressions validated |
 
@@ -120,3 +120,10 @@ full workouts, profile preview/hardware refusal and license/corresponding source
 Runtime tests have no network, host mounts, Bluetooth bus or source checkout.
 The package recipe pins the base image and records dependency versions; APT
 updates mean byte-for-byte build reproducibility is not claimed.
+
+The installed internal API contract documents borrowed/owned lifetimes, one Qt
+event-loop thread, monotonic clock domains, regular advancement, generation/ID
+semantics, explicit abort-before-shutdown and the future library boundary.
+All four follow-up software tasks (full FitShow sessions, fault races, clean
+packaging and API documentation) are complete. The next planned acceptance
+step requires the postponed physical device: read-only discovery and identity.

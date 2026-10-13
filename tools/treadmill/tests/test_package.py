@@ -52,6 +52,7 @@ class PackageTests(unittest.TestCase):
         result = self.command('-c',
             'test ! -e /source && test ! -e /build && test "$(id -u)" = 65534 '
             '&& test -s /usr/local/share/doc/treadmill/LICENSE '
+            '&& test -s /usr/local/share/doc/treadmill/API.md '
             '&& test -s /usr/local/share/doc/treadmill/build-packages.txt '
             '&& tar -tzf /usr/local/share/doc/treadmill/corresponding-source.tar.gz',
             shell=True)

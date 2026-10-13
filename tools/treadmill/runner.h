@@ -9,6 +9,7 @@ class Runner : public QObject {
 public:
     enum class State { Disconnected, Preflight, Ready, Starting, Running, Pausing, Paused,
                        Stopping, Completed, Aborted, StopUnconfirmed, Fault };
+    // Borrows controller; one session per pair. Destroy Runner before Controller.
     Runner(Controller &controller, Workout workout, QObject *parent = nullptr);
     void prepare(qint64 nowMs);
     void confirmStart();

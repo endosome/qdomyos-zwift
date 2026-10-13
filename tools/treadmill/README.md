@@ -4,6 +4,9 @@ Linux CLI with read-only BLE discovery, explicitly approved nonmotor protocol
 diagnostics, and offline workout simulation. It uses Qt Core, Bluetooth and
 Positioning and does not load QZ's device factory or GUI.
 
+The [internal controller contract](API.md) describes ownership, threading,
+clock advancement, asynchronous command outcomes and the future library boundary.
+
 ## Build
 
 Requires a C++17 compiler, make, qmake and Qt 5.15 Core/Bluetooth/Positioning development

@@ -29,7 +29,8 @@ struct Telemetry {
     bool paused = false;
     Target actual;
 };
-// Requests acknowledge submission only. Outcomes and physical state arrive as events.
+// Requests are asynchronous; command phases and physical state arrive as events.
+// Same Qt event-loop thread; see API.md for lifetimes, clocks and shutdown.
 class Controller : public QObject {
     Q_OBJECT
 public:

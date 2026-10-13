@@ -153,3 +153,10 @@ pairing, writes or subscriptions were sent.
 The helper compiles on Windows PowerShell 5.1 and rejects malformed addresses
 before opening a device. Scan captures remain local under ignored docs/treadmill.
 The Linux BLE backend and W1 motor/feedback compatibility remain unverified.
+
+A Windows nonmotor probe is prepared but has not been run on hardware. It
+requires separate explicit NONMOTOR authorization, exact address/name, matching
+FFF1/FFF2 properties and a bounded duration. Its only framed writes are 5002,
+5003 and 51, plus CCCD notification enable/cleanup. Offline Windows checks pass
+for compilation, address validation, three exact frames, forbidden commands and
+both approval gates. Hardware workout execution remains disabled.

@@ -1,12 +1,25 @@
-# Windows PowerShell 5.1 / native WinRT. No pairing, writes or subscriptions.
+# Windows PowerShell 5.1 / native WinRT. Probe requires explicit write approval.
 param(
-    [ValidateSet('scan', 'info')][string]$Command = 'scan',
+    [ValidateSet('scan', 'info', 'probe')][string]$Command = 'scan',
     [ValidateRange(1, 60)][int]$Timeout = 15,
     [string]$Device = '',
-    [ValidateSet('unknown', 'public', 'random')][string]$AddressType = 'unknown'
+    [ValidateSet('unknown', 'public', 'random')][string]$AddressType = 'unknown',
+    [switch]$ConfirmDiagnostics,
+    [string]$Confirmation = '',
+    [string]$ExpectedName = ''
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+if ($Command -eq 'probe') {
+    if (-not $ConfirmDiagnostics -or $Confirmation -cne 'NONMOTOR' -or $ExpectedName -eq '' -or $Device -eq '') {
+        @{ command = 'probe'; backend = 'windows-winrt'; status = 'error';
+           error = 'Probe requires an explicit Device/ExpectedName, ConfirmDiagnostics and operator Confirmation NONMOTOR. No writes were sent.' } |
+            ConvertTo-Json
+        exit 1
+    }
+} elseif ($ConfirmDiagnostics -or $Confirmation -ne '' -or $ExpectedName -ne '') {
+    throw 'Probe approval options are valid only for probe'
+}
 # WinRT service discovery stalled in the default STA host on this machine.
 # Re-enter a fresh MTA host; keep the same validated, read-only arguments.
 if ([Threading.Thread]::CurrentThread.GetApartmentState() -ne [Threading.ApartmentState]::MTA) {
@@ -14,6 +27,9 @@ if ([Threading.Thread]::CurrentThread.GetApartmentState() -ne [Threading.Apartme
                    '-File', $PSCommandPath, '-Command', $Command, '-Timeout', "$Timeout")
     if ($Device -ne '') { $arguments += @('-Device', $Device) }
     if ($AddressType -ne 'unknown') { $arguments += @('-AddressType', $AddressType) }
+    if ($ConfirmDiagnostics) { $arguments += '-ConfirmDiagnostics' }
+    if ($Confirmation -ne '') { $arguments += @('-Confirmation', $Confirmation) }
+    if ($ExpectedName -ne '') { $arguments += @('-ExpectedName', $ExpectedName) }
     & (Join-Path $PSHOME 'powershell.exe') @arguments
     exit $LASTEXITCODE
 }
@@ -39,8 +55,10 @@ try {
     if ($Command -eq 'scan') {
         if ($Device -ne '' -or $AddressType -ne 'unknown') { throw 'scan does not accept Device/AddressType' }
         $report = [TreadmillDiagnostics.Reader]::Scan($Timeout)
-    } else {
+    } elseif ($Command -eq 'info') {
         $report = [TreadmillDiagnostics.Reader]::Info($Device, $AddressType, $Timeout)
+    } else {
+        $report = [TreadmillDiagnostics.Reader]::Probe($Device, $AddressType, $ExpectedName, $Timeout, $true)
     }
     $report | ConvertTo-Json -Depth 12
     if ($report.status -ne 'complete') { exit 1 }

@@ -1,4 +1,4 @@
-// Read-only Windows bridge for WSL diagnostics. No control protocol is here.
+// Read-only scan/info and explicitly approved, bounded nonmotor FitShow probe.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,6 +29,13 @@ namespace TreadmillDiagnostics {
         public string read_status;
     }
     public class Descriptor { public string uuid; public ushort handle; }
+    public class Frame {
+        public string direction;
+        public long monotonic_ms;
+        public string utc;
+        public string frame_hex;
+        public string write_status;
+    }
     public class Service {
         public string uuid;
         public string characteristic_status;
@@ -41,6 +48,7 @@ namespace TreadmillDiagnostics {
         public string status = "complete";
         public string error;
         public string last_operation;
+        public string notification_cleanup_status;
         public List<Device> devices = new List<Device>();
         public string address;
         public string address_type;
@@ -48,6 +56,8 @@ namespace TreadmillDiagnostics {
         public List<string> service_uuids = new List<string>();
         public List<Service> services = new List<Service>();
         public string motor_capabilities = "unknown: no FitShow queries were sent";
+        public bool motor_execution_enabled = false;
+        public List<Frame> frames = new List<Frame>();
     }
     public static class Reader {
         static T Await<T>(IAsyncOperation<T> operation, Stopwatch clock, int milliseconds) {
@@ -189,6 +199,119 @@ namespace TreadmillDiagnostics {
             finally {
                 foreach (var service in opened) service.Dispose();
                 if (device != null) device.Dispose();
+            }
+            return report;
+        }
+        // Only these three payloads can reach the write path. There is no arm,
+        // initialization replay, motor command, pause, stop or generic raw write.
+        public static byte[] FrameForQuery(int query) {
+            byte[] payload;
+            if (query == 0x5002) payload = new byte[] { 0x50, 0x02 };
+            else if (query == 0x5003) payload = new byte[] { 0x50, 0x03 };
+            else if (query == 0x51) payload = new byte[] { 0x51 };
+            else throw new ArgumentException("Only nonmotor queries 5002, 5003 and 51 are allowed");
+            var frame = new byte[payload.Length + 3];
+            frame[0] = 0x02;
+            byte checksum = 0;
+            for (int i = 0; i < payload.Length; ++i) { frame[i + 1] = payload[i]; checksum ^= payload[i]; }
+            frame[frame.Length - 2] = checksum;
+            frame[frame.Length - 1] = 0x03;
+            return frame;
+        }
+        public static Report Probe(string address, string addressType, string expectedName, int seconds, bool approved) {
+            if (!approved || string.IsNullOrEmpty(expectedName)) throw new ArgumentException("Nonmotor probe approval/name required");
+            if (seconds < 1 || seconds > 60) throw new ArgumentException("Probe duration must be 1-60 seconds");
+            ulong rawAddress = ParseAddress(address);
+            var report = new Report { command = "probe", address = Address(rawAddress), address_type = addressType,
+                motor_capabilities = "unknown: raw diagnostic replies only; no physical behavior verified" };
+            var clock = Stopwatch.StartNew();
+            BluetoothLEDevice device = null;
+            var opened = new List<GattDeviceService>();
+            GattCharacteristic notify = null;
+            object token = null;
+            bool subscribed = false;
+            bool overflow = false, collecting = true;
+            var cancellation = new CancellationTokenSource();
+            int capturedCharacters = 0;
+            var guard = new object();
+            ConsoleCancelEventHandler cancel = (sender, args) => { args.Cancel = true; cancellation.Cancel(); };
+            Console.CancelKeyPress += cancel;
+            try {
+                report.last_operation = "open_device";
+                var operation = addressType == "unknown" ? BluetoothLEDevice.FromBluetoothAddressAsync(rawAddress)
+                    : BluetoothLEDevice.FromBluetoothAddressAsync(rawAddress,
+                        addressType == "random" ? BluetoothAddressType.Random : BluetoothAddressType.Public);
+                device = Await(operation, clock, seconds * 1000);
+                if (device == null || device.Name != expectedName) throw new Exception("Selected device name unavailable or differs from the operator-confirmed name");
+                report.name = device.Name;
+                report.last_operation = "discover_fitshow_service";
+                var services = Await(device.GetGattServicesForUuidAsync(new Guid("0000fff0-0000-1000-8000-00805f9b34fb"), BluetoothCacheMode.Uncached), clock, seconds * 1000);
+                opened.AddRange(services.Services);
+                if (services.Status != GattCommunicationStatus.Success || opened.Count != 1) throw new Exception("Expected exactly one accessible FFF0 service");
+                var characteristics = Await(opened[0].GetCharacteristicsAsync(BluetoothCacheMode.Uncached), clock, seconds * 1000);
+                if (characteristics.Status != GattCommunicationStatus.Success) throw new Exception("FitShow characteristic discovery failed");
+                GattCharacteristic write = null;
+                foreach (var item in characteristics.Characteristics) {
+                    if (item.Uuid == new Guid("0000fff1-0000-1000-8000-00805f9b34fb")) notify = item;
+                    if (item.Uuid == new Guid("0000fff2-0000-1000-8000-00805f9b34fb")) write = item;
+                }
+                if (notify == null || write == null || (notify.CharacteristicProperties & GattCharacteristicProperties.Notify) == 0 ||
+                    (write.CharacteristicProperties & GattCharacteristicProperties.WriteWithoutResponse) == 0)
+                    throw new Exception("Expected FFF1 Notify and FFF2 WriteWithoutResponse properties");
+                var handler = new TypedEventHandler<GattCharacteristic, GattValueChangedEventArgs>((sender, args) => {
+                    using (var reader = DataReader.FromBuffer(args.CharacteristicValue)) {
+                        var bytes = new byte[reader.UnconsumedBufferLength]; reader.ReadBytes(bytes);
+                        string hex = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+                        lock (guard) {
+                            if (!collecting) return;
+                            if (report.frames.Count >= 4096 || capturedCharacters + hex.Length > 6 * 1024 * 1024) { overflow = true; return; }
+                            capturedCharacters += hex.Length;
+                            report.frames.Add(new Frame { direction = "rx", frame_hex = hex, monotonic_ms = clock.ElapsedMilliseconds, utc = DateTime.UtcNow.ToString("o") });
+                        }
+                    }
+                });
+                token = notify.GetType().GetMethod("add_ValueChanged").Invoke(notify, new object[] { handler });
+                report.last_operation = "enable_notifications";
+                var subscription = Await(notify.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify), clock, seconds * 1000);
+                if (subscription != GattCommunicationStatus.Success) throw new Exception("Notification subscription failed: " + subscription);
+                subscribed = true;
+                int information = 0;
+                long nextQuery = clock.ElapsedMilliseconds;
+                while (!cancellation.IsCancellationRequested && clock.ElapsedMilliseconds < seconds * 1000) {
+                    lock (guard) { if (overflow) throw new Exception("Diagnostic trace limit reached; closing connection"); }
+                    if (clock.ElapsedMilliseconds < nextQuery) { Thread.Sleep(20); continue; }
+                    int query = information == 0 ? 0x5002 : (information == 1 ? 0x5003 : 0x51);
+                    information = Math.Min(2, information + 1);
+                    var bytes = FrameForQuery(query);
+                    report.last_operation = "nonmotor_query " + query.ToString("x");
+                    using (var writer = new DataWriter()) {
+                        writer.WriteBytes(bytes);
+                        var status = Await(write.WriteValueAsync(writer.DetachBuffer(), GattWriteOption.WriteWithoutResponse), clock, seconds * 1000);
+                        lock (guard) report.frames.Add(new Frame { direction = "tx", frame_hex = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant(),
+                            write_status = status.ToString(), monotonic_ms = clock.ElapsedMilliseconds, utc = DateTime.UtcNow.ToString("o") });
+                        if (status != GattCommunicationStatus.Success) throw new Exception("Diagnostic write failed: " + status);
+                    }
+                    nextQuery = clock.ElapsedMilliseconds + 500;
+                }
+            } catch (Exception error) { report.status = "error"; report.error = error.Message; }
+            finally {
+                lock (guard) { collecting = false; }
+                Console.CancelKeyPress -= cancel;
+                if (subscribed) {
+                    try { report.notification_cleanup_status = Await(notify.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None), Stopwatch.StartNew(), 2000).ToString(); }
+                    catch (Exception error) { report.notification_cleanup_status = "unconfirmed: " + error.Message; }
+                }
+                if (notify != null && token != null) {
+                    try { notify.GetType().GetMethod("remove_ValueChanged").Invoke(notify, new object[] { token }); }
+                    catch { /* Always dispose services/device even if event teardown fails. */ }
+                }
+                foreach (var service in opened) {
+                    try { service.Dispose(); } catch { /* Continue releasing all resources. */ }
+                }
+                if (device != null) {
+                    try { device.Dispose(); } catch { /* No more requests can be sent. */ }
+                }
+                cancellation.Dispose();
             }
             return report;
         }

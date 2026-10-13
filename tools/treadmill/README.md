@@ -91,6 +91,53 @@ does not enable hardware workouts or replace the Linux controller backend.
 
 WinRT discovery follows Microsoft's [GATT client API](https://learn.microsoft.com/en-us/windows/apps/develop/devices-sensors/gatt-client).
 
+#### Approved Windows nonmotor probe
+
+The next hardware checkpoint changes BLE state: FFF1 notifications are enabled
+through CCCD, then FFF2 receives only three whitelisted FitShow queries. Review
+and obtain separate operator approval before using this mode. Keep the belt
+stopped, other controlling apps disconnected and physical controls available.
+
+| Request | Payload | Complete frame |
+|---|---|---|
+| Speed limits, once | `5002` | `0250025203` |
+| Incline limits, once | `5003` | `0250035303` |
+| Status, every 500 ms | `51` | `02515103` |
+
+The frame encoding matches QZ's `fitshowpacket.h`. No start/stop, target, pause,
+initialization replay, pairing or arbitrary-payload path is provided. The probe
+uses only the observed FFF0/FFF1/FFF2 mapping and verifies the selected device
+name and characteristic properties before subscribing. It never arms a motor
+controller. Notification cleanup requests CCCD None, with a two-second deadline,
+then closes services/device regardless of cleanup success.
+
+After approval, pass the operator's exact `NONMOTOR` confirmation explicitly:
+
+```sh
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+  -File "$(wslpath -w tools/treadmill/windows-diagnostics.ps1)" \
+  -Command probe -Device AA:BB:CC:DD:EE:FF -AddressType public \
+  -ExpectedName 'confirmed device name' -Timeout 20 \
+  -ConfirmDiagnostics -Confirmation NONMOTOR > new-probe-report.json
+```
+
+Use the confirmed scan values and a new report path. Duration is 1–60 seconds
+and includes connection/discovery/querying, plus at most two seconds for cleanup.
+Raw notifications and requested frames, elapsed time, UTC and Windows write
+status are retained in the JSON report. Write success is not a device ACK or
+proof of movement. Responses are not converted into verified physical metrics.
+Capture is bounded to 4096 notifications/6 MiB of hex; overflow closes the probe.
+Ctrl+C requests cleanup when delivered to the Windows console; a killed process
+can lose its report. This observer never sends a stop command; physical controls
+remain with the operator. Missing approval is refused before creating transport.
+
+Offline Windows checks (no BLE calls):
+
+```sh
+powershell.exe -Mta -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+  -File "$(wslpath -w tools/treadmill/tests/test_windows_diagnostics.ps1)"
+```
+
 ### Native Linux Bluetooth
 
 ```sh

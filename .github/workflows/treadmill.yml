@@ -60,6 +60,10 @@ jobs:
           cd /tmp/treadmill-build
           make INSTALL_ROOT=/tmp/treadmill-stage install
           /tmp/treadmill-stage/usr/local/bin/treadmill workout list
+      - name: Build and check clean Linux package
+        run: |
+          docker build -f tools/treadmill/Dockerfile -t treadmill-offline:ci .
+          python3 tools/treadmill/tests/test_package.py treadmill-offline:ci
       - name: Build and run sanitizer tests
         run: |
           mkdir -p /tmp/treadmill-sanitizers

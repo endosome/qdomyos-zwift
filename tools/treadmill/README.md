@@ -22,6 +22,31 @@ make -j2
 This target does not include QZ's full application project or require translation
 artifacts.
 
+### Clean Linux package check
+
+From the repository root, with Docker/BuildKit and Python 3 available:
+
+```sh
+docker build -f tools/treadmill/Dockerfile -t treadmill-offline:local .
+python3 tools/treadmill/tests/test_package.py treadmill-offline:local
+docker build -f tools/treadmill/Dockerfile --target package \
+  --output type=local,dest=/tmp/treadmill-package .
+```
+
+The build uses a pinned Debian 13 base digest, runs Core/driver/CLI tests, then
+installs the binary, plans, example profile, license and documentation. The
+exported installation tree also includes corresponding source and the installed
+build-package versions. The final runtime image has only runtime dependencies;
+tests run as an unprivileged user with no network, host mounts or Bluetooth bus.
+Both workouts must complete using the installed XML, without a source checkout.
+The exported binary requires compatible Debian 13 Qt runtime libraries; it is
+not a universal standalone executable or a physical-device release.
+
+This is a repeatable clean-build recipe, not a claim of identical binary hashes:
+APT repositories receive updates, and compiler/source paths can affect output.
+The package manifest records the versions actually used. Container tests are
+offline only; use the native Linux executable for the future device checks.
+
 ## Scan
 
 ```sh

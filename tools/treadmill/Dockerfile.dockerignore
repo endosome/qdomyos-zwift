@@ -1,0 +1,25 @@
+# Only the standalone tool and its Linux QZ source closure enter the build.
+**
+!LICENSE
+!tools/
+!tools/treadmill/
+!tools/treadmill/**
+!src/
+!src/*.h
+!src/fit-sdk/
+!src/fit-sdk/fit.hpp
+!src/fit-sdk/fit_profile.hpp
+!src/fit-sdk/fit_config.hpp
+!src/metric.cpp
+!src/qzsettings.cpp
+!src/devices/
+!src/devices/bluetoothdevice.cpp
+!src/devices/bluetoothdevice.h
+!src/devices/treadmill.cpp
+!src/devices/treadmill.h
+!src/devices/fitshowtreadmill/
+!src/devices/fitshowtreadmill/**
+!src/virtualdevices/
+!src/virtualdevices/virtualdevice.cpp
+!src/virtualdevices/virtualdevice.h
+**/__pycache__/

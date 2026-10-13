@@ -235,3 +235,14 @@ at raw speed code 10 and incline code 0 throughout, so those displayed values
 were not reflected in the captured BLE telemetry. It is unknown whether the
 console changes occurred within the observer window or why the values differ.
 Incline has not yet been adjusted.
+
+A repeat 60-second nonmotor capture subsequently recorded RUNNING speed codes
+increasing from 10 through 20 and returning to 10. The reported speed-code
+sequence therefore changed during this capture; display units and the console
+reading during this specific run still need operator confirmation. Incline
+telemetry changed from code 0 up to 8 and back to 1 during the same run; whether
+the operator adjusted incline needs confirmation. Physical pause produced STOP
+(0x04) speed codes 9, 6, 4 and 1 at incline code 8, then short NORMAL (0x00)
+replies. No zero-speed frame was received. Notification cleanup succeeded. Only
+the approved nonmotor 5002, 5003 and 51 requests were sent; motor execution
+remained disabled.

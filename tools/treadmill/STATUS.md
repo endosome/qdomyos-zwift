@@ -12,8 +12,8 @@ complete simulation are implemented.
 | 1.2 read-only info | Implemented; physical GATT unverified | Bounded explicit-address inspection, no write/subscription calls |
 | 1.3 exact W1 identity | Operator confirmed selected treadmill; BLE module identified | FITSHOW FS-BT-C1, hardware 1.0, software 1.3.8; firmware revision not exposed |
 | 1.4 QZ link spike | Isolated driver compiled and linked | Seven QZ sources plus the adapter; Core/Bluetooth/Positioning; no GUI or virtual peripheral |
-| 1.5 nonmotor probe | Five Windows probes completed after explicit approval | Bounds valid; status NORMAL after display wake; one blank-display observation had SAFETY throughout; latest manual movement capture includes start/running/stop telemetry; no motor commands |
-| 1.6–1.7 calibration/start-stop | Manual physical start/pause observed; software control and calibration unverified | Raw RUNNING and decelerating STOP reports received; no confirmed zero-speed telemetry or calibrated units/mapping |
+| 1.5 nonmotor probe | Six Windows probes completed after explicit approval | Bounds valid; one capture has manual start/running/stop telemetry; latest capture returned SAFETY throughout despite operator-reported console speed changes; discrepancy unresolved; no motor commands |
+| 1.6–1.7 calibration/start-stop | Manual physical start/pause reported; software control and calibration unverified | One capture has raw RUNNING/STOP data; latest capture has SAFETY only, so console and BLE correlation is unresolved; no confirmed raw zero or calibrated unit |
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
@@ -192,3 +192,14 @@ Only the nonmotor 5002, 5003 and 51 queries were sent; no software start, stop,
 pause or target command was sent. This validates receipt of live FitShow status
 frames during operator-controlled movement, not the Linux Qt backend or
 software motor control. Raw speed units and incline calibration remain unknown.
+
+
+In the latest 60-second observer capture, the operator reported that the console
+showed speed 1.0 and incline 0 after physical Play, then speed decreasing from
+1.0 to 0.0 in 0.1 steps after physical Pause; the speed unit was not specified.
+The accompanying BLE trace completed and cleaned up successfully but contained
+only 106 SAFETY (0x06) status replies after the bounds responses, with no
+RUNNING, STOP or speed telemetry frames. It is unresolved whether the physical
+button sequence occurred during the capture or why the console report and BLE
+status differ. Do not use the reported display values as BLE calibration until
+a capture correlates them.

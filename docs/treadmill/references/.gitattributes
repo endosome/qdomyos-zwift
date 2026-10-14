@@ -1,0 +1,3 @@
+# Preserve original downloaded bytes and avoid source-site whitespace diffs.
+*.pdf binary
+*.html binary

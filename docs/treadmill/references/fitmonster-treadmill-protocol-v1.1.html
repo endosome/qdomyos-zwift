@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健身怪兽跑步机蓝牙通讯协议</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .company {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 30px;
+        }
+        h1 {
+            font-size: 24px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 20px;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 8px;
+        }
+        h3 {
+            font-size: 18px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        td:last-child {
+            border-right: none;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            border-left: 4px solid #0066cc;
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+        .sub-section {
+            margin: 20px 0;
+        }
+        .sub-section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .note {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+        .code {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            margin: 10px 0;
+        }
+        .blue-table th, .blue-table td {
+            background-color: #e6f0ff;
+        }
+        .green-table th, .green-table td {
+            background-color: #e6ffe6;
+        }
+    </style>
+</head>
+<body>
+   
+
+ <h1>健身怪兽跑步机通讯协议</h1>
+    <p><strong>英文名称</strong>: FIT MONSTER Fitness Device BLE Protocol for Treadmill</p>
+
+    <!-- 文档信息 -->
+    <h2>文档信息<br>Document Information</h2>
+    <table>
+        <tr>
+            <th>项目 / Item</th>
+            <th>内容 / Content</th>
+        </tr>
+        <tr>
+            <td>当前版本 / Current Version</td>
+            <td>V1.1</td>
+        </tr>
+        <tr>
+            <td>修订日期 / Revision Date</td>
+            <td>2026.6.12</td>
+        </tr>
+        <tr>
+            <td>修订人 / Editor</td>
+            <td>Sam</td>
+        </tr>
+    </table>
+
+    <!-- 修订记录 -->
+    <h3>修订记录 / Revision History</h3>
+    <table>
+        <tr>
+            <th>版本号 / Version</th>
+            <th>修订日期 / Revision Date</th>
+            <th>修订人 / Editor</th>
+            <th>修订内容 / Revision Content</th>
+        </tr>
+        <tr>
+            <td>V1.0</td>
+            <td>2024.12.01</td>
+            <td>Sam</td>
+            <td>新建 / New File</td>
+        </tr>
+      <tr>
+          <td>V1.1</td>
+          <td>2026.6.12</td>
+          <td>Sam</td>
+          <td>更新 / Update</td>
+        </tr>
+    </table>
+
+    </div>
+
+    <!-- UUID介绍 -->
+    <div class="section">
+        <div class="section-title">UUID介绍（非必要）</div>
+        <div class="note">1、开发APP时，用以下服务进行数据交互即可：协议一致</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>类型</th>
+                    <th>UUID</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Service 服务</td>
+                    <td>FFF0</td>
+                    <td>连接后可获取</td>
+                </tr>
+                <tr>
+                    <td>Characteristic 接收</td>
+                    <td>FFF1</td>
+                    <td>支持Notify、Indicate</td>
+                </tr>
+                <tr>
+                    <td>Characteristic 发送</td>
+                    <td>FFF2</td>
+                    <td>支持Write、WriteWithoutResponse</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 1. 协议说明 -->
+    <div class="section">
+        <div class="section-title">1. 协议说明</div>
+        <div class="content">蓝牙通讯协议采用帧进行通讯，每一帧采用了起始头、校验码、终止尾的方式进行数据校验。</div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.1 UART配置</div>
+            <ul>
+                <li>协议：baud, N, 8, 1（无校验，8位数据，1位停止）</li>
+                <li>波特率：4800、9600、19200、38400、115200 自适应</li>
+            </ul>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.2 数据帧格式</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>0x02</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>0x03</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>起始码</td>
+                        <td>指令</td>
+                        <td>子指令</td>
+                        <td>数据</td>
+                        <td>校验码</td>
+                        <td>终止码</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.3 字段描述</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>字段</th>
+                        <th>长度</th>
+                        <th>取值</th>
+                        <th>描述</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>起始码</td>
+                        <td>1Byte</td>
+                        <td>0x02</td>
+                        <td>表征通讯帧开头，固定的1字节数据，为十六进制</td>
+                    </tr>
+                    <tr>
+                        <td>指令</td>
+                        <td>1Byte</td>
+                        <td>0x50（示例）</td>
+                        <td>指令标识</td>
+                    </tr>
+                    <tr>
+                        <td>子指令</td>
+                        <td>1Byte</td>
+                        <td>0x00（示例）</td>
+                        <td>子指令标识</td>
+                    </tr>
+                    <tr>
+                        <td>数据</td>
+                        <td>不定</td>
+                        <td>不定</td>
+                        <td>写入或读取的数据，长度依指令不同而不同。数据采用【小端】对齐方式，即低字节在前，高字节在后。<br>例：数据0x1234，数据码为0x34 0x12；数据0x12345678，数据码为0x78 0x56 0x34 0x12</td>
+                    </tr>
+                    <tr>
+                        <td>校验码</td>
+                        <td>1Byte</td>
+                        <td>不定</td>
+                        <td>帧校验，所有指令码（CMD、SCMD）与数据码（DATA）字节按位异或后的值</td>
+                    </tr>
+                    <tr>
+                        <td>终止码</td>
+                        <td>1Byte</td>
+                        <td>0x03</td>
+                        <td>表征通讯帧结束，固定的1字节数据，为十六进制</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="note">注：数据采用【小端】对齐方式，即低字节在前、高字节在后。</div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.4 数据类型</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>表示符</th>
+                        <th>类型</th>
+                        <th>长度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>B</td>
+                        <td>无符号字节</td>
+                        <td>1Byte</td>
+                    </tr>
+                    <tr>
+                        <td>W</td>
+                        <td>无符号整型</td>
+                        <td>2Byte</td>
+                    </tr>
+                    <tr>
+                        <td>L</td>
+                        <td>无符号长整型</td>
+                        <td>4Byte</td>
+                    </tr>
+                    <tr>
+                        <td>N</td>
+                        <td>无符号多字节</td>
+                        <td>nByte</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="note">注：未指定类型数据均为字节型。</div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.5 示例说明</div>
+            <div class="content">若设备收到未在本协议中出现的指令（格式符合标准并验证成功）时，应返回包含当前指令的帧，如下所示：</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">蓝牙模块下发给设备指令：</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x7F</td>
+                            <td>0x00</td>
+                            <td>0x01</td>
+                            <td>0x02</td>
+                            <td>0x7C</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回：</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x7F</td>
+                            <td>0x7F</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">1.6 表格颜色说明</div>
+            <ul>
+                <li>蓝色表格：蓝牙模块下发给设备的指令（下同）</li>
+                <li>绿色表格：设备返回给蓝牙模块的指令（下同）</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 2. 获取设备信息 -->
+    <div class="section">
+        <div class="section-title">2. 获取设备信息</div>
+        <div class="content">本协议制定了允许上位机读取设备所支持的信息数据，包括设备的一些参数，如最高速度。若设备不支持指定参数，设备只需返回指令（02 50 xx FCS 03）即可。</div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">2.1 获取设备信息指令（0x50 - 0x00）</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">蓝牙模块下发指令：</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x00</td>
+                            <td>0x50</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回指令：</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x00</td>
+                            <td>厂商(W)</td>
+                            <td>机型(W)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>字段</th>
+                            <th>取值/说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>起始码</td>
+                            <td>0x02</td>
+                        </tr>
+                        <tr>
+                            <td>指令</td>
+                            <td>0x50</td>
+                        </tr>
+                        <tr>
+                            <td>子指令</td>
+                            <td>0x00</td>
+                        </tr>
+                        <tr>
+                            <td>厂商码</td>
+                            <td>16位的无符号数，厂商代码由蓝牙模块供应商分配后固定</td>
+                        </tr>
+                        <tr>
+                            <td>机型码</td>
+                            <td>16位的无符号数，需由制造商向蓝牙模块供应商官方申请</td>
+                        </tr>
+                        <tr>
+                            <td>FCS</td>
+                            <td>帧校验，所有指令码（CMD、SCMD）与数据码（DATA）字节按位异或后的值</td>
+                        </tr>
+                        <tr>
+                            <td>结束码</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">2.2 示例说明</div>
+            <div class="content">
+                <p>厂商码：0x1234（其中高4位为设备类型，示例1为椭圆机）</p>
+                <p>机型码：0x5678</p>
+                <p>蓝牙发送：02 50 00 50 03</p>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">蓝牙模块下发指令：</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x00</td>
+                            <td>0x50</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回数据：02 50 00 34 12 78 56 xx 03</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>字节</th>
+                            <th>0</th>
+                            <th>1</th>
+                            <th>2</th>
+                            <th>3</th>
+                            <th>4</th>
+                            <th>5</th>
+                            <th>6</th>
+                            <th>7</th>
+                            <th>8</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>类型</td>
+                            <td>START</td>
+                            <td>CMD</td>
+                            <td>SCMD</td>
+                            <td colspan="4">DATA</td>
+                            <td>FCS</td>
+                            <td>END</td>
+                        </tr>
+                        <tr>
+                            <td>值</td>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x00</td>
+                            <td>34</td>
+                            <td>12</td>
+                            <td>78</td>
+                            <td>56</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备类型（小端对齐）</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>设备类型</th>
+                            <th>十进制</th>
+                            <th>十六进制</th>
+                            <th>字节</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>跑步机</td>
+                            <td>0</td>
+                            <td>0x0</td>
+                            <td>4位</td>
+                        </tr>
+                        <tr>
+                            <td>椭圆机</td>
+                            <td>1</td>
+                            <td>0x1</td>
+                            <td>4位</td>
+                        </tr>
+                        <tr>
+                            <td>健身车</td>
+                            <td>2</td>
+                            <td>0x2</td>
+                            <td>4位</td>
+                        </tr>
+                        <tr>
+                            <td>划船机</td>
+                            <td>3</td>
+                            <td>0x3</td>
+                            <td>4位</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">若设备无法在上电瞬间回复机型码（超时约5-10s），请发重启命令：02 60 0A 6A 03（注：波特率要对应得上，发送后模块不回复，直接进行重启）</div>
+        </div>
+    </div>
+
+    <!-- 3. 获取设备速度参数 -->
+    <div class="section">
+        <div class="section-title">3. 获取设备速度参数</div>
+        <div class="sub-section">
+            <div class="sub-section-title">获取设备速度参数指令（0x50 - 0x02）</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">蓝牙模块下发指令：</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+<th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x02</td>
+                            <td>0x52</td>
+<td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x50 - 0x02）：[速度上限 <=25 KM/H]</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                          <th></th>
+<th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x02</td>
+                            <td>最高速度(B)</td>
+                            <td>最低速度(B)</td>
+<td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>最高速度</td>
+                            <td>单位：0.1km/h 或0.1mi/h，100代表10.0km/h 或10.0mi/h</td>
+                        </tr>
+                        <tr>
+                            <td>最低速度</td>
+                            <td>单位：0.1km/h 或0.1mi/h，100代表10.0km/h 或10.0mi/h</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">注意：以下内容是为了兼容大于25.5KM/H的设备，若最高速度小于等于25KM/H可忽略</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x50 - 0x02）：[速度上限> 25KM/H]</div>
+                <div class="content">1、若需要支持最高速度大于25KM/H，则该协议所有传速度的地方，速度由原本的1个字节（B）改为2个字节（W）。</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x50</td>
+                            <td>0x02</td>
+                            <td>最高速度(W)</td>
+                            <td>最低速度(W)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="note">注意：支持最高速度大于25KM/H时，如需使用KINOMAP请尽量使用FTMS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 获取设备坡度参数 -->
+    <div class="section">
+        <div class="section-title">4. 获取设备坡度参数</div>
+        <div class="sub-section">
+            <div class="sub-section-title">获取设备坡度参数指令（0x50 - 0x03）</div>
+            <table class="blue-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                      <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                      <td>0x50</td>
+                        <td>0x03</td>
+                        <td>0x53</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+          <div class="sub-sub-title">设备返回（0x50 - 0x03）</div>
+          <table class="green-table">
+              <thead>
+                <tr>
+                  <th>START</th>
+                  <th>CMD</th>
+                  <th>SCMD</th>
+                  <th>DATA</th>
+                  <th></th>
+                  <th></th>
+                  <th>FCS</th>
+                  <th>END</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>0x02</td>
+                  <td>0x50</td>
+                  <td>0x03</td>
+                  <td>最高坡度(B)</td>
+                  <td>最低坡度(B)</td>
+                  <td>配置(B)</td>
+                  <td>xx</td>
+                  <td>0x03</td>
+                </tr>
+              </tbody>
+            </table>
+<table>
+      <thead>
+                <tr>
+                  <th>参数</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>最高坡度</td>
+                  <td>设备所支持的最大坡度&nbsp;</td>
+                </tr>
+                <tr>
+                  <td>最低坡度</td>
+                  <td>若为负坡度，则报对应的补码。例如-5报251</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="sub-sub-title">配置表&nbsp;</div>
+            <div class="sub-sub-section">
+<table>
+          <thead>
+                        <tr>
+                            <th>位</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td>预留</td>
+                        </tr>
+                      <tr>
+                          <td>1</td>
+                          <td>0：不支持暂停；1：支持暂停</td>
+                        </tr>
+                        <tr>
+                          <td>2</td>
+                            <td>1：支持心率预警</td>
+                        </tr>
+                        <tr>
+                            <td>3-7&nbsp;</td>
+                            <td>预留</td>
+                        </tr>
+</tbody>
+                </table>
+                <div class="note">备注：若为公制设备，则通讯的均为公制数据。若为英制数据，则通讯的均为英制数据。</div>
+            </div>
+</div>
+    </div>
+
+    <!-- 5. 获取设备状态 -->
+    <div class="section">
+        <div class="section-title">5. 获取设备状态</div>
+        <div class="sub-section">
+            <div class="sub-section-title">获取设备状态指令（0x51）</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">蓝牙模块下发指令：</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x51</td>
+                            <td>0x51</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x51）：[速度上限<= 25KM/H]</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x51</td>
+                            <td>状态(B)</td>
+                            <td>数据(N)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>状态(B)</th>
+                            <th>数据(N)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>(0x00) 待机</td>
+                            <td>NA</td>
+                        </tr>
+                        <tr>
+                            <td>(0x02) 倒计时启动</td>
+                            <td>启动倒计时-秒(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x01) 停机、(0x03) 运行中、(0x04) 减速停止、(0x0A) 暂停</td>
+                            <td>当前速度(B)、当前坡度(B)、当前时间(W)、当前距离(W)、当前热量(W)、当前步数(W)、当前心率(B)、预留(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x05) 故障</td>
+                            <td>故障码(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x06) 禁用</td>
+                            <td>禁用码(B)：1-安全锁脱落；2-设备睡眠</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>数据</th>
+                            <th>单位</th>
+                            <th>数据</th>
+                            <th>单位</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>速度</td>
+                            <td>0.1km/h 或0.1mi/h</td>
+                            <td>热量</td>
+                            <td>0.1 千卡</td>
+                        </tr>
+                        <tr>
+                            <td>坡度</td>
+                            <td>1 档</td>
+                            <td>步数</td>
+                            <td>步</td>
+                        </tr>
+                        <tr>
+                            <td>时间</td>
+                            <td>秒</td>
+                            <td>心率</td>
+                            <td>1 次</td>
+                        </tr>
+                        <tr>
+                            <td>距离</td>
+                            <td>0.001km 或0.001mile</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">注意：以下内容是为了兼容大于25.5KM/H的设备，若最高速度小于等于25KM/H可忽略</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x51）：[速度上限&gt; 25KM/H]（指定版本支持）</div>
+                <div class="content">1、若需要支持最高速度大于25KM/H，则该协议所有传速度的地方，速度由原本的1个字节（B）改为2个字节（W）。</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x51</td>
+                            <td>状态(B)</td>
+                            <td>数据(N)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>状态(B)</th>
+                            <th>数据(N)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>(0x00) 待机</td>
+                            <td>NA</td>
+                        </tr>
+                        <tr>
+                            <td>(0x02) 倒计时启动</td>
+                            <td>启动倒计时-秒(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x01) 停机、(0x03) 运行中、(0x04) 减速停止、(0x0A) 暂停</td>
+                            <td>当前速度(W)、当前坡度(B)、当前时间(W)、当前距离(W)、当前热量(W)、当前步数(W)、当前心率(B)、预留(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x05) 故障</td>
+                            <td>故障码(B)</td>
+                        </tr>
+                        <tr>
+                            <td>(0x06) 禁用</td>
+                            <td>禁用码(B)：1-安全锁脱落；2-设备睡眠</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="note">注意：支持最高速度大于25KM/H时，使用KINOMAP请使用FTMS入口</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. 设备控制 -->
+    <div class="section">
+        <div class="section-title">6. 设备控制</div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">6.1 设备启动/恢复指令</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备启动/恢复指令（0x53 - 0x01）：蓝牙模块下发</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x01</td>
+                            <td>预留</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x53 - 0x01）</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x01</td>
+                            <td>倒计时(B)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">6.2 设置速度和坡度</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设置速度和坡度指令（0x53 - 0x02）：[速度上限<= 25KM/H]（蓝牙模块下发）</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x02</td>
+                            <td>目标速度(B)</td>
+                            <td>目标坡度(B)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x53 - 0x02）：[速度上限<= 25KM/H]</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x02</td>
+                            <td>当前实际速度(B)</td>
+                            <td>当前实际坡度(B)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">注意：以下内容是为了兼容大于25.5KM/H的设备，若最高速度小于等于25KM/H可忽略</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设置速度和坡度指令（0x53 - 0x02）：[速度上限> 25KM/H]（蓝牙模块下发）</div>
+                <div class="content">1、若需要支持最高速度大于25KM/H，则该协议所有传速度的地方，速度由原本的1个字节（B）改为2个字节（W）。</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x02</td>
+                            <td>目标速度(W)</td>
+                            <td>目标坡度(B)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x53 - 0x02）：[速度上限> 25KM/H]</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>DATA</th>
+                            <th></th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x02</td>
+                            <td>目标速度(W)</td>
+                            <td>目标坡度(B)</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="note">注意：支持最高速度大于25KM/H时，如需使用KINOMAP请使用FTMS入口</div>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">6.3 设备停止指令</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备停止指令（0x53 - 0x03）：蓝牙模块下发</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x03</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x53 - 0x03）</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x03</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">补充：运行中(3)→减速停止中(4)→已停机(1)→待机(0)；暂停(10)→已停机(1)→待机(0)</div>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">6.4 设备暂停指令</div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备暂停指令（0x53 - 0x0A）：蓝牙模块下发</div>
+                <table class="blue-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x0A</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sub-sub-section">
+                <div class="sub-sub-title">设备返回（0x53 - 0x0A）</div>
+                <table class="green-table">
+                    <thead>
+                        <tr>
+                            <th>START</th>
+                            <th>CMD</th>
+                            <th>SCMD</th>
+                            <th>FCS</th>
+                            <th>END</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0x02</td>
+                            <td>0x53</td>
+                            <td>0x0A</td>
+                            <td>xx</td>
+                            <td>0x03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">补充：运行中(3)→减速停止中(4)→暂停(10)</div>
+        </div>
+    </div>
+
+    <!-- 7. 设备扩展特征值 -->
+    <div class="section">
+        <div class="section-title">7. 设备扩展特征值（非必要）</div>
+        <div class="content">此功能仅作为设备控制（0x53）的补充项！例如手环数据通过APP下发到设备心率下发、步数下发、卡路里下发。<br>e.g. 02 53 9f (02 00) 9A FCS 03 此时仅下发心率。</div>
+        <div class="sub-section">
+            <div class="sub-section-title">设备扩展特征值指令（0x53 - 0x9f）</div>
+            <table class="blue-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x53</td>
+                        <td>0x9f</td>
+                        <td>标志位(W)、数据(N)</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>格式</th>
+                        <th>大小</th>
+                        <th>取值</th>
+                        <th>解释</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="6">Flags</td>
+                        <td rowspan="6">16Bits</td>
+                        <td rowspan="6">2 Octets</td>
+                        <td>Bit0</td>
+                        <td>参数包含解锁码</td>
+                    </tr>
+                    <tr>
+                        <td>Bit1</td>
+                        <td>参数包含心率</td>
+                    </tr>
+                    <tr>
+                        <td>Bit2</td>
+                        <td>参数包含总卡路里</td>
+                    </tr>
+                    <tr>
+                        <td>Bit3</td>
+                        <td>参数包含动态卡路里</td>
+                    </tr>
+                    <tr>
+                        <td>Bit4</td>
+                        <td>参数包含计步</td>
+                    </tr>
+                    <tr>
+                        <td>Bit5-15</td>
+                        <td>保留</td>
+                    </tr>
+                    <tr>
+                        <td>UnlockCode</td>
+                        <td>Octets</td>
+                        <td>6</td>
+                        <td>0-F的6个数字</td>
+                        <td>厂家自定义，6字节解锁码</td>
+                    </tr>
+                    <tr>
+                        <td>Heart Rate</td>
+                        <td>Unit8</td>
+                        <td>1</td>
+                        <td>心率值</td>
+                        <td>心率值</td>
+                    </tr>
+                    <tr>
+                        <td>Total Energy</td>
+                        <td>Unit16</td>
+                        <td>2</td>
+                        <td>总卡路里</td>
+                        <td>总卡路里</td>
+                    </tr>
+                    <tr>
+                        <td>Dynamic Energy</td>
+                        <td>Unit16</td>
+                        <td>2</td>
+                        <td>动态卡路里</td>
+                        <td>动态卡路里</td>
+                    </tr>
+                    <tr>
+                        <td>Step Count</td>
+                        <td>Unit16</td>
+                        <td>2</td>
+                        <td>实时步数</td>
+                        <td>实时步数</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 8. 音频控制 -->
+    <div class="section">
+        <div class="section-title">8. 音频控制（非必要）</div>
+        <div class="content">音频控制需要下位机“主动”上报！在程序设计上，该功能优先级应该处于低优先级的状态。</div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.1 播放、暂停</div>
+            <div class="content">设备上报播放、暂停指令（0x62 - 0x01）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x01</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.2 停止</div>
+            <div class="content">设备上报停止指令（0x62 - 0x02）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x02</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.3 下一首</div>
+            <div class="content">设备上报下一首指令（0x62 - 0x03）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x03</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.4 上一首</div>
+            <div class="content">设备上报上一首指令（0x62 - 0x04）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x04</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.5 音量+</div>
+            <div class="content">设备上报音量+指令（0x62 - 0x0B）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x0B</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sub-section">
+            <div class="sub-section-title">8.6 音量-</div>
+            <div class="content">设备上报音量-指令（0x62 - 0x0C）</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x62</td>
+                        <td>0x0C</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 9. 连接状态位 -->
+    <div class="section">
+        <div class="section-title">9. 连接状态位（非必要）</div>
+        <div class="sub-section">
+            <div class="content">1、设备主动发送该指令查询蓝牙连接状态（0x44 - 0xC3）：</div>
+            <table class="green-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC3</td>
+                        <td>0x87</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="sub-section">
+            <div class="content">2、BLE发送连接状态（0x44 - 0xC3）：</div>
+            <table class="blue-table">
+                <thead>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC3</td>
+                        <td>连接状态(B)</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="note">连接状态：0=未连接，1=已连接。设备无需回复。</div>
+        </div>
+    </div>
+
+        <div class="section">
+        <div class="section-title">10. 蓝牙信息查询(非必要)</div>
+
+        <!-- 10.1 查询蓝牙名称(0x44-0xC5) -->
+        <div class="cmd-item">
+            <div class="cmd-title">1、设备主动发送该指令查询蓝牙名称(0x44-0xC5)</div>
+            <div class="version-note">
+              支持版本：V1.1及以上 
+               
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC5</td>
+                        <td>0x81</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式(0x44-0xC5)</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(N Bytes)(大端)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC5</td>
+                        <td>示例："FM-xxxxxx" XXXX</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10.2 查询蓝牙MAC地址(0x44-0xC6) -->
+        <div class="cmd-item">
+            <div class="cmd-title">2、设备主动发送该指令查询蓝牙MAC地址(0x44-0xC6)</div>
+            <div class="version-note">
+              支持版本：V1.1及以上
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC6</td>
+                        <td>0x82</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式(0x44-0xC6)</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(6 Bytes)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC6</td>
+                        <td>XX:XX:XX:XX:XX:XX</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10.3 修改蓝牙名称(0x44-0xC7) -->
+        <div class="cmd-item">
+            <div class="cmd-title">3、设备主动修改蓝牙名称(0x44-0xC7)</div>
+            <div class="version-note">
+              支持版本：V1.1及以上 
+             
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(N Bytes)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC7</td>
+                        <td>xx</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式(0x44-0xC7)</div>
+                <div class="version-note">
+                    支持回复版本：V3X（1.1.7、2.0.5 及以上版本），D2/C1/T4（1.4.0 及以上版本）
+                </div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC7</td>
+                        <td>确认码(B)</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="data-desc">确认码说明：若为0，则修改成功</div>
+            </div>
+        </div>
+
+        <!-- 10.4 查询音频名称(0x44-0xD1) -->
+        <div class="cmd-item">
+            <div class="cmd-title">4、设备主动发送该指令查询音频名称(0x44-0xD1)</div>
+            <div class="version-note">
+              支持版本：暂不支持 
+        
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xD1</td>
+                        <td>0x80</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式(0x44-0xD1)</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(N Bytes)(大端)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xD1</td>
+                        <td>示例："FM-xxxxxx"（XXXX）</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10.5 修改音频名称(0x44-0xC8) -->
+        <div class="cmd-item">
+            <div class="cmd-title">5、设备主动修改音频名称(0x44-0xC8)</div>
+            <div class="version-note">
+              支持版本：暂无 
+ 
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(N Bytes)(大端)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC8</td>
+                        <td>xx</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+<th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC8</td>
+<td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="important-note">
+                    重要说明：之后必须要发送修改蓝牙名称的指令才会进行保存；如果蓝牙名称不修改，直接发送 02 44 c7 83 03
+                </div>
+            </div>
+        </div>
+
+        <!-- 10.6 查询蓝牙型号(0x44-0xC9) -->
+        <div class="cmd-item">
+            <div class="cmd-title">6、设备主动查询蓝牙型号(0x44-0xC9)</div>
+            <div class="version-note">
+              支持版本：V1.0及以上
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC9</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(大端)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC9</td>
+                        <td>示例：FM-T101（xxx）</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="data-desc">说明：查询后蓝牙回复型号，例如 FM-T101</div>
+            </div>
+        </div>
+
+        <!-- 10.7 查询蓝牙编号(0x44-0xCA) -->
+        <div class="cmd-item">
+            <div class="cmd-title">7、设备主动查询蓝牙编号(0x44-0xCA)</div>
+            <div class="version-note">
+              支持版本：V1.0及以上
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCA</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(大端)</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCA</td>
+                        <td>示例：FM240528001（xxx）</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="data-desc">说明：查询后蓝牙回复编号，例如 FM240528001</div>
+            </div>
+        </div>
+
+        <!-- 10.8 蓝牙音频状态查询(0x44-0xCB) -->
+        <div class="cmd-item">
+            <div class="cmd-title">8、设备主动进行蓝牙音频状态查询(0x44-0xCB)</div>
+            <div class="version-note">
+              支持版本：V1.0及以上
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCB</td>
+                        <td>0x8F</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="cmd-receive">
+                <div class="cmd-title">蓝牙模块反馈格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA(音频连接状态(B))</th>
+                        <th>DATA(播放状态(B))</th>
+                        <th>预留</th>
+                        <th>预留</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCB</td>
+                        <td>0=未连接，1=已连接</td>
+                        <td>0=未播放，1=正在播放</td>
+                        <td>0x00</td>
+                        <td>0x00</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="data-desc">
+                    - 音频连接状态：0 表示未连接，1 表示已连接<br>
+                    - 播放状态(B)：0 表示未播放，1 表示正在播放
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. LED屏心率阈值设置(非必要) -->
+    <div class="section">
+        <div class="section-title">11. LED 屏心率阈值设置(非必要)</div>
+
+        <div class="cmd-item">
+            <div class="cmd-title">1、设备发送的数据(0x46-0x03)</div>
+            <div class="cmd-send">
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x46</td>
+                        <td>0x03</td>
+                        <td>心率阈值(B)</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="cmd-title">2、蓝牙模块发送的数据(0x46-0x03)</div>
+            <div class="cmd-receive">
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x46</td>
+                        <td>0x03</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12. 附加功能配置(非必要) -->
+    <div class="section">
+        <div class="section-title">12. 附加功能配置(非必要)</div>
+
+        <div class="cmd-item">
+            <div class="cmd-title">1、设备主动发送该指令配置蓝牙的附加功能(0x44-0xD2)</div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD（0x44）</th>
+                        <th>SCMD（0xD2）</th>
+                        <th>DATA1（1 Byte 配置数据）</th>
+                        <th>DATA2（5 Bytes 配置数据）</th>
+                        <th>DATA3（1 Byte 配置数据）</th>
+                        <th>DATA4（1 Byte 配置数据）</th>
+                        <th>FCS（0x95）</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xD2</td>
+                        <td>配置数据1</td>
+                        <td>配置数据2</td>
+                        <td>配置数据3</td>
+                        <td>配置数据4</td>
+                        <td>0x95</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+
+                <!-- 配置数据1说明 -->
+                <div class="data-desc" style="margin-top:10px;">
+                    <strong>配置数据1说明：</strong><br>
+                  支持版本：暂无
+              </div>
+                <table style="margin-top:5px;">
+                    <tr>
+                        <th>位</th>
+                        <th>说明</th>
+                        <th>位</th>
+                        <th>说明</th>
+                    </tr>
+                    <tr>
+                        <td>0</td>
+                        <td>1:无线心率打开；0:无线心率关闭</td>
+                        <td>4</td>
+                        <td>RFU（保留）</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>RFU（保留）</td>
+                        <td>5</td>
+                        <td>RFU（保留）</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>RFU（保留）</td>
+                        <td>6</td>
+                        <td>RFU（保留）</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>RFU（保留）</td>
+                        <td>7</td>
+                        <td>RFU（保留）</td>
+                    </tr>
+                </table>
+
+                <!-- 配置数据2说明 -->
+                <div class="data-desc" style="margin-top:10px;">
+                    <strong>配置数据2说明：</strong><br>
+                    支持版本：F5 型号（V1.0.0 及以上固件版本），C1/T4 型号（V1.4.0 及以上固件版本），其他型号及版本均不支持<br>
+                    说明：设置密码为“0000”时，默认为不需要密码
+                </div>
+                <table style="margin-top:5px;">
+                    <tr>
+                        <th>Byte</th>
+                        <th>说明</th>
+                    </tr>
+                    <tr>
+                        <td>Byte 0</td>
+                        <td>1:音频配对需要密码；0:音频配对不需要密码</td>
+                    </tr>
+                    <tr>
+                        <td>Byte 1~4</td>
+                        <td>配对密码：例如 1234（只能是 0~9 的数字）</td>
+                    </tr>
+                </table>
+
+                <!-- 配置数据3、4说明 -->
+                <div class="data-desc" style="margin-top:10px;">
+                    <strong>配置数据3说明：</strong>预留，按 0 填充<br>
+                    <strong>配置数据4说明：</strong>预留，按 0 填充
+                </div>
+            </div>
+
+            <div class="cmd-receive" style="margin-top:15px;">
+                <div class="cmd-title">蓝牙模块反馈格式(0x44-0xD2)</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xD2</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="important-note">
+                    重要说明：配置之后蓝牙模块需要重新上电后方可生效
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13. 休眠控制(非必要) -->
+    <div class="section">
+        <div class="section-title">13. 休眠控制(非必要)</div>
+
+        <div class="cmd-item">
+            <div class="cmd-title">1、APP 或设备发送都可以控制蓝牙模块进入休眠模式(0x44-0xC2)</div>
+            <div class="version-note">
+              支持版本：暂无
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">发送指令格式（APP/设备）</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xC2</td>
+                        <td>0x86</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="data-desc">
+                说明：蓝牙模块接收到该指令后直接进入休眠，不做反馈
+            </div>
+        </div>
+    </div>
+
+    <!-- 14. OTA 模式切换(下控OTA,非蓝牙模块OTA)(非必要) -->
+    <div class="section">
+        <div class="section-title">14. OTA 模式切换(下控OTA，非蓝牙模块OTA) (非必要)</div>
+
+        <div class="cmd-item">
+            <div class="cmd-title">1、设备主动发送该指令切换OTA模式</div>
+            <div class="version-note">
+              支持版本：暂无
+          </div>
+            <div class="cmd-send">
+                <div class="cmd-title">设备发送指令格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>DATA</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCC</td>
+                        <td>0X01:开启OTA模式；0X00:关闭OTA模式</td>
+                        <td>XX</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="cmd-receive" style="margin-top:15px;">
+                <div class="cmd-title">蓝牙模块反馈格式</div>
+                <table>
+                    <tr>
+                        <th>START</th>
+                        <th>CMD</th>
+                        <th>SCMD</th>
+                        <th>FCS</th>
+                        <th>END</th>
+                    </tr>
+                    <tr>
+                        <td>0x02</td>
+                        <td>0x44</td>
+                        <td>0xCC</td>
+                        <td>xx</td>
+                        <td>0x03</td>
+                    </tr>
+                </table>
+                <div class="important-note" style="margin-top:5px;">
+                    重要说明：该功能需要前期与蓝牙模块供应商联调完成后，将需要OTA的固件上传至蓝牙模块供应商后台即可完成，下控部分需要能够支持该方式升级
+                </div>
+            </div>
+
+            <!-- 透传模式说明 -->
+            <div class="data-desc" style="margin-top:15px;">
+                <strong>蓝牙回复该指令后进入透传模式，透传通道信息：</strong><br>
+                - serverUUID: FFE0<br>
+                - Notify: FFE4（蓝牙串口接收的部分通过其透传给APP）<br>
+                - Write: FFE1（接收其数据后通过串口发送给设备）
+            </div>
+        </div>
+    </div>
+    </body>
+</html>

@@ -1,0 +1,105 @@
+{
+  "documents": [
+    {
+      "file": "bluetooth-assigned-numbers.html",
+      "title": "Bluetooth SIG Assigned Numbers",
+      "source_url": "https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/index-en.html",
+      "resolved_url": "https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/index-en.html",
+      "retrieved_utc": "2026-10-14T15:50:36.462309+00:00",
+      "sha256": "4d88a9f64f1d3624f28e1d14056f8257e03b097c6f6c20f55534605778b5eee8",
+      "bytes": 4039223,
+      "notes": "Standard service and characteristic identifiers, including FTMS."
+    },
+    {
+      "file": "bluetooth-ftms-ics-p5.pdf",
+      "title": "Bluetooth SIG Fitness Machine Service ICS p5",
+      "source_url": "https://files.bluetooth.com/wp-content/uploads/dlm_uploads/2024/10/FTMS.ICS.p5.pdf",
+      "resolved_url": "https://files.bluetooth.com/wp-content/uploads/dlm_uploads/2024/10/FTMS.ICS.p5.pdf",
+      "retrieved_utc": "2026-10-14T15:50:34.527595+00:00",
+      "sha256": "f510649d87703e19edf8772ac68ad347eec746552bcb6276ce4fbf18330f8131",
+      "bytes": 394044,
+      "notes": "FTMS supported feature and status conformance checklist."
+    },
+    {
+      "file": "bluetooth-ftms-test-suite-p6.pdf",
+      "title": "Bluetooth SIG Fitness Machine Service Test Suite p6",
+      "source_url": "https://files.bluetooth.com/wp-content/uploads/dlm_uploads/2024/10/FTMS.TS_.p6.pdf",
+      "resolved_url": "https://files.bluetooth.com/wp-content/uploads/dlm_uploads/2024/10/FTMS.TS_.p6.pdf",
+      "retrieved_utc": "2026-10-14T15:50:34.371201+00:00",
+      "sha256": "04964e9b676d817362330062a41d5fd138bdbd251b3b74a36d9040678c93ed52",
+      "bytes": 668984,
+      "notes": "FTMS test definitions and target status semantics."
+    },
+    {
+      "file": "bluetooth-gatt-specification-supplement.pdf",
+      "title": "Bluetooth SIG GATT Specification Supplement",
+      "source_url": "https://btprodspecificationrefs.blob.core.windows.net/gatt-specification-supplement/GATT_Specification_Supplement.pdf",
+      "resolved_url": "https://btprodspecificationrefs.blob.core.windows.net/gatt-specification-supplement/GATT_Specification_Supplement.pdf",
+      "retrieved_utc": "2026-10-14T15:50:35.777414+00:00",
+      "sha256": "34ad6b5f2e48c29759c2ef17f01502cb60080aff5d213712a6f581c56c9150b8",
+      "bytes": 612415,
+      "notes": "Standard Treadmill Data and inclination units; does not validate device conformance or physical calibration."
+    },
+    {
+      "file": "fitmonster-treadmill-protocol-v1.1.html",
+      "title": "Fit Monster treadmill protocol v1.1",
+      "source_url": "https://www.fitmonster.club/SDK/FM-Protocol-Treadmill.html",
+      "resolved_url": "https://www.fitmonster.club/SDK/FM-Protocol-Treadmill.html",
+      "retrieved_utc": "2026-10-14T15:50:39.170462+00:00",
+      "sha256": "2ca997918c199634a029f799ac12e1bfd2254e760d21c62b8b61fe9fac292b3d",
+      "bytes": 86301,
+      "notes": "Newer primary provider document with related framing; opcode differences mean it is not verified W1 firmware documentation."
+    },
+    {
+      "file": "fitshow-fs-ble-v3x-user-manual.pdf",
+      "title": "FitShow FS-BLE-V3x manufacturer manual",
+      "source_url": "https://fccid.io/2AUIEFS-BLEV3X/User-Manual/User-Manual-5753770.pdf",
+      "resolved_url": "https://fccid.io/m/c58076cb59d4290065a097a34334aa77e48169a18cd937a48095dd27caffd8be.pdf",
+      "retrieved_utc": "2026-10-14T15:52:35.831713+00:00",
+      "sha256": "c58076cb59d4290065a097a34334aa77e48169a18cd937a48095dd27caffd8be",
+      "bytes": 2458832,
+      "notes": "Manufacturer FCC exhibit 5753770; different module/protocol family, not W1 instructions. Original device.report download returned HTTP 403."
+    },
+    {
+      "file": "fitshow-treadmill-protocol-v1.1-2017.pdf",
+      "title": "FitShow treadmill protocol v1.1 (2017-08-20)",
+      "source_url": "https://fitshow.com/download/%E8%BF%90%E5%8A%A8%E7%A7%80%E7%94%B5%E8%B7%91%E8%93%9D%E7%89%99%E9%80%9A%E8%AE%AF%E5%8D%8F%E8%AE%AE.pdf",
+      "resolved_url": "https://fitshow.com/download/%E8%BF%90%E5%8A%A8%E7%A7%80%E7%94%B5%E8%B7%91%E8%93%9D%E7%89%99%E9%80%9A%E8%AE%AF%E5%8D%8F%E8%AE%AE.pdf",
+      "retrieved_utc": "2026-10-14T15:50:34.157603+00:00",
+      "sha256": "a02d3ee3291fde0cb496c2a3554560d760641f55b086dd80687fa675e1136227",
+      "bytes": 444287,
+      "notes": "Official FitShow source; command framing, sleep reason and READY compatibility bit. Firmware applicability requires trials."
+    },
+    {
+      "file": "microsoft-gattsession-fromdeviceid.html",
+      "title": "Microsoft GattSession.FromDeviceIdAsync API",
+      "source_url": "https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.fromdeviceidasync?view=winrt-26100",
+      "resolved_url": "https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.fromdeviceidasync?view=winrt-26100",
+      "retrieved_utc": "2026-10-14T15:50:34.860678+00:00",
+      "sha256": "478305c84a1fbadf412ebadef10a34b7a090a0c3a4f401b0f3c089013915740e",
+      "bytes": 52488,
+      "notes": "Windows GATT session creation API, reviewed during keepalive research."
+    },
+    {
+      "file": "microsoft-gattsession-maintainconnection.html",
+      "title": "Microsoft GattSession.MaintainConnection API",
+      "source_url": "https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.maintainconnection?view=winrt-26100",
+      "resolved_url": "https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.maintainconnection?view=winrt-26100",
+      "retrieved_utc": "2026-10-14T15:50:34.796908+00:00",
+      "sha256": "9295f4d63aec66a75d001f55152097960919b9802638629e52398bb8c615458d",
+      "bytes": 51955,
+      "notes": "Windows connection lifetime API; does not promise to prevent treadmill console sleep."
+    },
+    {
+      "file": "runpad-w1-product.html",
+      "title": "RunPad W1 manufacturer product specifications",
+      "source_url": "https://runpad.eu/en/products/bieznia-z-biurkiem-w1-runpad-walkingpad-regulowana",
+      "resolved_url": "https://runpad.eu/en/products/bieznia-z-biurkiem-w1-runpad-walkingpad-regulowana",
+      "retrieved_utc": "2026-10-14T15:50:35.168019+00:00",
+      "sha256": "d18a50bf4c4cfe8411ea8b56b5a3f534deaba72f7bed1b1564607c6deec63abf",
+      "bytes": 1144046,
+      "notes": "Manufacturer advertisement; maximum 11% and eight levels, no intermediate grade table."
+    }
+  ],
+  "download_failures": []
+}

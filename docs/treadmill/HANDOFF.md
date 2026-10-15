@@ -792,3 +792,42 @@ the operator resumes experimentation. `--observe-ftms` was enabled for
 Windows-backed workout runs so future logs can capture 2ACD/2ADA alongside
 FitShow; this change was built and the exact dry-run plan and simulator run
 passed.
+
+## Resume checkpoint: STOPPING follow-up trials (2026-10-15)
+
+The operator resumed testing and reported the W1 on. A five-second read-only
+Windows status probe found the exact FS-0F7A32 awake at FitShow NORMAL, with
+speed bounds 10–60/unit tag 0, incline bounds 0–8, and successful notification
+cleanup. A second read-only probe after one transient module-identity lookup
+failure returned the same bounds and NORMAL status. The identity failure blocked
+the raw-21 attempt before any motor writes; that same target was retried only
+after the successful read-only probe.
+
+Four short Windows workouts ran without FTMS subscriptions: raw 20/0 for 30
+seconds, raw 20/0 for 60 seconds, raw 10/0 for 60 seconds, and raw 21/0 for 60
+seconds. Each reported RUNNING at its requested code for the full hold. In every
+case the host then requested STOP, FitShow entered status 4 (decelerating),
+reported descending speed codes through 1, returned to NORMAL, and completed
+notification cleanup. The host sequence completed, but physical stopping was
+not independently verified. Logs are local under `/tmp`:
+`runpad-constant-speed20-30s-20261015-01.jsonl`,
+`runpad-constant-speed20-60s-20261015-01.jsonl`,
+`runpad-constant-speed10-60s-20261015-01.jsonl`, and
+`runpad-constant-speed21-60s-20261015-02.jsonl`. The first raw-21 attempt was
+`...-01.jsonl` and contains no motor writes.
+
+A final two-stage run held raw 20/0 for 10 seconds, then raw 21/0 for 30 seconds.
+Both reported targets remained RUNNING for their full holds. Status 4 began only
+after the host's explicit STOP, followed by deceleration to raw 1, NORMAL, and
+successful cleanup. Log: `/tmp/runpad-transition-speed20-to21-20261015-01.jsonl`.
+
+These controls do not reproduce the unexplained status-4 event in the earlier
+workout: the prior trace showed raw 20/0 STOPPING several seconds after a
+raw-21 target was requested, before any host STOP; the same 20→21 transition
+and a static raw-21 hold now completed. The earlier stable raw-10 session also
+ended with status 4 before host STOP, while the new raw-10 control completed its
+full minute and stopped only after the host request. The trigger remains
+unknown; operator input, an intermittent device condition, or another cause
+cannot be distinguished from these logs. No physical belt-stop confirmation was
+recorded for these latest runs. The display was not reported to need waking.
+No further experiment should infer physical stop from NORMAL protocol replies.

@@ -27,21 +27,83 @@
     "requested_speed_kmh": 1.0,
     "requested_incline_percent": 1.0,
     "commands": [
-      {"request_hex": "00", "write": "Success", "response_hex": "800001"},
-      {"request_hex": "026400", "meaning": "Set Target Speed 1.00 km/h", "write": "Success", "response_hex": "800201"},
-      {"request_hex": "07", "meaning": "Start/Resume", "write": "Success", "response_hex": "800701"},
-      {"request_hex": "030a00", "meaning": "Set Target Inclination 1.0%", "write": "Success", "response_hex": "800301"},
-      {"request_hex": "030000", "meaning": "Set Target Inclination 0%", "write": "Success", "response_hex": "800301"},
-      {"request_hex": "0801", "meaning": "Stop", "write": "Success", "response_hex": "800801"},
-      {"request_hex": "01", "meaning": "Release Control", "write": "Success", "response_hex": "800101"}
+      {
+        "request_hex": "00",
+        "write": "Success",
+        "response_hex": "800001"
+      },
+      {
+        "request_hex": "026400",
+        "meaning": "Set Target Speed 1.00 km/h",
+        "write": "Success",
+        "response_hex": "800201"
+      },
+      {
+        "request_hex": "07",
+        "meaning": "Start/Resume",
+        "write": "Success",
+        "response_hex": "800701"
+      },
+      {
+        "request_hex": "030a00",
+        "meaning": "Set Target Inclination 1.0%",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "030000",
+        "meaning": "Set Target Inclination 0%",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "0801",
+        "meaning": "Stop",
+        "write": "Success",
+        "response_hex": "800801"
+      },
+      {
+        "request_hex": "01",
+        "meaning": "Release Control",
+        "write": "Success",
+        "response_hex": "800101"
+      }
     ],
-    "ftms_status_notifications_hex": ["04", "04"],
+    "ftms_status_notifications_hex": [
+      "04",
+      "04"
+    ],
     "treadmill_data_samples": [
-      {"elapsed_ms": 2336, "frame_hex": "8c050000000000000000000000ffffff000000", "speed_kmh": 0.0, "incline_percent": 0.0},
-      {"elapsed_ms": 3429, "frame_hex": "8c056400000000000000000000ffffff000000", "speed_kmh": 1.0, "incline_percent": 0.0},
-      {"elapsed_ms": 10450, "frame_hex": "8c056400010000000000000000ffffff000400", "speed_kmh": 1.0, "incline_percent": 0.0},
-      {"elapsed_ms": 16449, "frame_hex": "8c056400020000000000000000ffffff000800", "speed_kmh": 1.0, "incline_percent": 0.0},
-      {"elapsed_ms": 21430, "frame_hex": "8c056400040000000000000000ffffff000f00", "speed_kmh": 1.0, "incline_percent": 0.0}
+      {
+        "elapsed_ms": 2336,
+        "frame_hex": "8c050000000000000000000000ffffff000000",
+        "speed_kmh": 0.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 3429,
+        "frame_hex": "8c056400000000000000000000ffffff000000",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 10450,
+        "frame_hex": "8c056400010000000000000000ffffff000400",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 16449,
+        "frame_hex": "8c056400020000000000000000ffffff000800",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 21430,
+        "frame_hex": "8c056400040000000000000000ffffff000f00",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      }
     ],
     "fallback_fitshow_stop": "not needed",
     "subscription_cleanup": [
@@ -59,5 +121,105 @@
     "ftms_protocol_sequence_complete": true,
     "physical_speed_or_deck_movement_verified": false,
     "notes": "FTMS accepted all commands. Treadmill Data showed 1.0 km/h while running. The inclination command and reset both succeeded, but reported incline remained 0.0% throughout; physical deck movement was not checked. No target above 1.0 km/h or 1.0% was sent. The advertised 2ACC target-setting bitmap does not claim speed-target support even though Set Target Speed succeeded."
+  },
+  "follow_up_trial": {
+    "purpose": "Check whether setting incline before versus after Start/Resume affects FTMS Treadmill Data.",
+    "requested_speed_kmh": 1.0,
+    "requested_incline_percent_before_start": 1.0,
+    "commands": [
+      {
+        "request_hex": "00",
+        "meaning": "Request Control",
+        "write": "Success",
+        "response_hex": "800001"
+      },
+      {
+        "request_hex": "026400",
+        "meaning": "Set Target Speed 1.00 km/h",
+        "write": "Success",
+        "response_hex": "800201"
+      },
+      {
+        "request_hex": "030a00",
+        "meaning": "Set Target Inclination 1.0% before Start/Resume",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "07",
+        "meaning": "Start/Resume",
+        "write": "Success",
+        "response_hex": "800701"
+      },
+      {
+        "request_hex": "030000",
+        "meaning": "Set Target Inclination 0%",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "0801",
+        "meaning": "Stop",
+        "write": "Success",
+        "response_hex": "800801"
+      },
+      {
+        "request_hex": "01",
+        "meaning": "Release Control",
+        "write": "Success",
+        "response_hex": "800101"
+      }
+    ],
+    "treadmill_data_samples": [
+      {
+        "elapsed_ms": 3103,
+        "frame_hex": "8c0564000000000a0000000000ffffff000000",
+        "speed_kmh": 1.0,
+        "incline_percent": 1.0
+      },
+      {
+        "elapsed_ms": 5143,
+        "frame_hex": "8c0564000000000a0000000000ffffff000000",
+        "speed_kmh": 1.0,
+        "incline_percent": 1.0
+      },
+      {
+        "elapsed_ms": 7123,
+        "frame_hex": "8c056400000000000000000000ffffff000100",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 10122,
+        "frame_hex": "8c056400010000000000000000ffffff000400",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 19123,
+        "frame_hex": "8c055a00030000000000000000ffffff000d00",
+        "speed_kmh": 0.9,
+        "incline_percent": 0.0
+      }
+    ],
+    "ftms_status_notifications_hex": [
+      "04",
+      "04"
+    ],
+    "subscription_cleanup": [
+      "00002ada-0000-1000-8000-00805f9b34fb: Success",
+      "00002acd-0000-1000-8000-00805f9b34fb: Success",
+      "00002ad9-0000-1000-8000-00805f9b34fb: Success"
+    ],
+    "post_trial_fitshow_status": {
+      "status": "NORMAL (0x00), repeated",
+      "speed_bounds": "10-60, unit tag 0",
+      "incline_bounds": "0-8",
+      "notification_cleanup": "Success"
+    },
+    "elapsed_ms": 19514,
+    "protocol_sequence_complete": true,
+    "physical_deck_movement_verified": false,
+    "notes": "Unlike the previous trial, which sent 1.0% after starting and saw 0.0% in Treadmill Data, this trial set 1.0% before Start/Resume and Treadmill Data reported 1.0%. After the 0% command, it reported 0.0%. All control-point responses were successful. Physical deck movement was not observed or measured."
   }
 }

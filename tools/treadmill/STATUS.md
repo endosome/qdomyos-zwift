@@ -523,12 +523,17 @@ capability-reporting mismatch needs to be retained. Current production motor
 control remains on FitShow FFF0/FFF2.
 
 In the first low-speed trial, Set Target Inclination 1.0% was sent after
-Start/Resume; it was accepted, but 2ACD stayed at 0.0%. A follow-up sent the
-same 1.0% target before Start/Resume. 2ACD then reported 1.0%; after a 0%
-target it reported 0.0%. All FTMS responses and cleanup succeeded. This shows
-the W1's FTMS-reported incline is order-sensitive and supports a pre-start
-incline target at the protocol level. Physical deck movement was not observed
-or measured. No target above 1.0 km/h or 1.0% was sent over FTMS.
+Start/Resume; it was accepted, but 2ACD stayed at 0.0%. Pre-start trials at
+1%, 4%, and 8% initially echoed the requested incline in 2ACD, then returned
+to 0.0% about three seconds after Start/Resume, before the explicit return-to-0
+command. Thus a success response and brief data echo do not establish that the
+deck followed or held the FTMS target. Physical deck movement was not observed
+or measured. FTMS Set Target Speed remains confirmed at 1.0 km/h; FTMS incline
+actuation remains unverified.
+
+The 8% trial's helper deadline expired before FTMS Stop was confirmed. The
+known FitShow stop fallback returned Success, FTMS control was released, and
+the next FitShow probe reported repeated NORMAL with successful cleanup.
 
 The bounded six-minute FitShow ramp that previously stopped unexpectedly was
 repeated with passive FTMS observation. It completed all 13 planned steps from
@@ -546,6 +551,5 @@ The previously authorized prepared `remaining` batch is complete: its speed
 50/60 and incline 1–8 trials were completed, and pause was separately found not
 to pause the treadmill. No prepared speed/incline trial remains. Next useful
 FTMS work is to resolve the 2ACC speed-capability mismatch and physically
-verify the low incline target. Do not treat the 2ACD inclination field as
-proof of deck position: it followed the requested target in the pre-start case,
-but actual deck movement was not measured.
+verify the low incline target. Do not treat the temporary 2ACD inclination
+echo as proof of deck position; it returned to 0.0% during startup.

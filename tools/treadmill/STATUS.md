@@ -542,6 +542,14 @@ inclinometer baseline but did not report readings during the hold or after the
 return, so physical deck movement is still unverified. The earlier repeat
 helper's stop timeout was a deadline issue; this run stopped normally.
 
+A longer 60-second 4% hold was repeated with the phone inclinometer on the
+rigid side rail. The operator reported 2° throughout (same as baseline, within
+the app's suspected error margin), so no physical change was measurable. FTMS
+accepted the target; 2ACD showed 0.0% initially and a late sample of 0.1%,
+never the requested 4%. A helper deadline expired before the return-to-0
+command, but FTMS Stop and Release succeeded. A separate 0% command was then
+acknowledged; passive FTMS samples confirmed 0.0 km/h and 0.0% incline.
+
 The bounded six-minute FitShow ramp that previously stopped unexpectedly was
 repeated with passive FTMS observation. It completed all 13 planned steps from
 raw speed 10 to 30 and incline code 0 to 2. FitShow remained RUNNING through

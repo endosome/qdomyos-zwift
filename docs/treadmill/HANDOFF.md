@@ -864,15 +864,21 @@ physical stop was not independently verified. Log:
 All prepared speed 50/60 and incline 1–8 trials have already been completed;
 pause was also tested and did not pause. No prepared W1 motor trials remain.
 In the first FTMS run, Set Target Inclination 1.0% was sent after Start/Resume:
-the command succeeded, but 2ACD stayed at 0.0%. A follow-up sent the same 1.0%
-target before Start/Resume; 2ACD reported 1.0%, then returned to 0.0% after the
-0% target. All control-point responses and subscription cleanup succeeded.
-This points to an order-sensitive incline command path. The deck was not
-physically checked, so these reports do not prove its position. No higher FTMS
-targets were sent. Capture:
+the command succeeded, but 2ACD stayed at 0.0%. Pre-start trials at 1%, 4% and
+8% initially echoed their requested inclines in 2ACD, then returned to 0.0%
+about three seconds after Start/Resume, before the explicit return-to-0
+command. A success response and brief data echo do not establish that the deck
+followed or held an FTMS target. Physical deck movement was not checked. FTMS
+speed control at 1.0 km/h is confirmed; incline actuation remains unverified.
+Capture:
 `docs/treadmill/ftms-control-point-results-20261015.json`.
+
+The 8% helper run could not confirm FTMS Stop because its deadline expired.
+The established FitShow stop fallback returned Success, FTMS control was
+released, and a subsequent FitShow probe reported repeated NORMAL with
+successful notification cleanup.
 
 No prepared motor trials remain. Further useful work is a physical low-incline
 check with the operator's inclinometer and a software investigation of the
 2ACC speed-capability mismatch; do not infer incline attainment from a success
-response or the reported 2ACD target alone.
+response or the temporary 2ACD incline echo alone.

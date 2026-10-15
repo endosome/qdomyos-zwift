@@ -28,6 +28,7 @@ class MotorTrialTests(unittest.TestCase):
 from pathlib import Path
 mode = os.environ['MOTOR_MODE']
 trial = sys.argv[sys.argv.index('-Trial') + 1]
+expected_name = sys.argv[sys.argv.index('-ExpectedName') + 1]
 if mode == 'batch-fault':
     mode = 'bounds' if trial == 'speed-60' else 'normal'
 observe_ftms = '-ObserveFtms' in sys.argv
@@ -36,6 +37,7 @@ moving = False
 ready = False
 ready_at = 0
 stopped = False
+target_count = 0
 speed, incline, paused = 10, 0, False
 normal_at = 0
 def send(line):
@@ -46,7 +48,7 @@ def rx(payload):
         checksum ^= byte
     send('RX\\t' + (bytes([2]) + payload + bytes([checksum,3])).hex())
 send('IDENTITY\\tFITSHOW\\tFS-BT-C1\\t1.3.8')
-send('READY\\tFS-TEST')
+send('READY\\t' + expected_name)
 if observe_ftms:
     send('FTMS\\t00002acd-0000-1000-8000-00805f9b34fb\\t00000a00')
 for line in sys.stdin:
@@ -87,8 +89,9 @@ for line in sys.stdin:
     elif payload[:2] == bytes.fromhex('5302'):
         moving = True
         speed, incline = payload[2], payload[3]
+        target_count += 1
         rx(bytes.fromhex('5302'))
-        if mode == 'safety':
+        if mode == 'safety' or (mode == 'workout-fault' and target_count == 2):
             rx(bytes.fromhex('510602'))
     elif payload == bytes.fromhex('5303'):
         stopped = True
@@ -176,6 +179,58 @@ send(json.dumps(dict(command='control-test', backend='windows-winrt', status='co
         self.assertGreaterEqual(stopped['monotonic_ms'] - running['monotonic_ms'], 5000)
         self.assertTrue(events[-1]['sequence_observed'])
         self.assertFalse(events[-1]['physical_stop_verified'])
+
+    def workout(self, mode='normal'):
+        self.environment['MOTOR_MODE'] = mode
+        workout = self.directory / 'short-w1.xml'
+        workout.write_text('''<rows version="1" id="short-w1" name="Short W1 schedule" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Baseline" duration="00:00:01" forcespeed="1" speed="1" inclination="0" />
+  <row name="Speed step" duration="00:00:01" forcespeed="1" speed="2" inclination="0" />
+  <row name="Incline step" duration="00:00:01" forcespeed="1" speed="2" inclination="1.375" />
+</rows>''')
+        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', 'windows',
+                     '--device', 'DD:87:70:39:74:20', '--expected-name', 'FS-0F7A32',
+                     '--confirm-motor', '--log', str(self.log)]
+        master, slave = pty.openpty()
+        before = termios.tcgetattr(slave)
+        process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   env=self.environment)
+        try:
+            os.write(master, b'MOTOR\n')
+            output, errors = process.communicate(timeout=45)
+            self.assertEqual(termios.tcgetattr(slave), before)
+            return process.returncode, output, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def test_windows_workout_runs_ordered_targets_and_stops(self):
+        code, _, errors = self.workout()
+        self.assertEqual(code, 0, errors)
+        motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
+        self.assertEqual(motor, ['02530100000000000000005203', '0253020a005b03',
+                                 '02530214004503', '02530214014403', '0253035003'])
+        rows = self.events()
+        requested = [row for row in rows if row['event'] == 'target_requested']
+        self.assertEqual([(row['stage'], row['speed_code'], row['incline_code']) for row in requested],
+                         [(1, 20, 0), (2, 20, 1)])
+        self.assertTrue(rows[-1]['sequence_observed'])
+        self.assertFalse(rows[-1]['physical_stop_verified'])
+
+    def test_windows_workout_safety_fault_stops_before_later_targets(self):
+        code, _, _ = self.workout(mode='workout-fault')
+        self.assertEqual(code, 1)
+        motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
+        self.assertEqual(motor, ['02530100000000000000005203', '0253020a005b03',
+                                 '02530214004503', '0253035003'])
+        rows = self.events()
+        self.assertTrue(any(row['event'] == 'fault' for row in rows))
+        self.assertFalse(any(row.get('stage') == 2 for row in rows if row['event'] == 'target_requested'))
+        self.assertFalse(rows[-1]['sequence_observed'])
+        self.assertFalse(rows[-1]['physical_stop_verified'])
 
     def test_changed_limits_refuse_before_motor(self):
         code, _, _ = self.trial(mode='bounds')

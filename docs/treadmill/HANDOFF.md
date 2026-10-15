@@ -878,6 +878,14 @@ The established FitShow stop fallback returned Success, FTMS control was
 released, and a subsequent FitShow probe reported repeated NORMAL with
 successful notification cleanup.
 
+A repeat sent the 4% target while running at 1.0 km/h. The target, return to
+0%, FTMS Stop and Release Control all received successful responses, while
+2ACD continued reporting 0.0% incline. The operator provided a 2° baseline,
+but did not report the readings during the hold or after return; deck motion
+therefore remains unverified. The stop timeout in the prior repeat was an
+insufficient helper deadline; this run stopped normally. Results are in the
+FTMS capture JSON.
+
 No prepared motor trials remain. Further useful work is a physical low-incline
 check with the operator's inclinometer and a software investigation of the
 2ACC speed-capability mismatch; do not infer incline attainment from a success

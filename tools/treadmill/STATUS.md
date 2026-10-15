@@ -535,6 +535,13 @@ The 8% trial's helper deadline expired before FTMS Stop was confirmed. The
 known FitShow stop fallback returned Success, FTMS control was released, and
 the next FitShow probe reported repeated NORMAL with successful cleanup.
 
+A 4% repeat sent Set Target Inclination while running at FTMS 1.0 km/h. The
+command, return-to-0, FTMS Stop and Release Control were all acknowledged;
+2ACD continued reporting 0.0% incline throughout. The operator gave a 2°
+inclinometer baseline but did not report readings during the hold or after the
+return, so physical deck movement is still unverified. The earlier repeat
+helper's stop timeout was a deadline issue; this run stopped normally.
+
 The bounded six-minute FitShow ramp that previously stopped unexpectedly was
 repeated with passive FTMS observation. It completed all 13 planned steps from
 raw speed 10 to 30 and incline code 0 to 2. FitShow remained RUNNING through

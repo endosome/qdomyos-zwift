@@ -405,5 +405,98 @@
     "protocol_sequence_complete": true,
     "physical_deck_movement_verified": false,
     "notes": "Treadmill Data initially echoed the requested 8.0% incline, then reported 0.0% about three seconds after Start/Resume and before the explicit 0% target. The helper deadline expired before it could confirm the FTMS Stop; the known FitShow stop fallback returned Success, control was released, and all subscriptions cleaned up. A subsequent FitShow probe saw repeated NORMAL replies. Physical deck movement was not measured."
+  },
+  "incline_4_percent_while_running_repeat": {
+    "purpose": "Repeat the physical 0% to 4% to 0% incline check with the FTMS target sent while the belt was running at 1.0 km/h.",
+    "commands": [
+      {
+        "request_hex": "00",
+        "meaning": "Request Control",
+        "write": "Success",
+        "response_hex": "800001"
+      },
+      {
+        "request_hex": "026400",
+        "meaning": "Set Target Speed 1.00 km/h",
+        "write": "Success",
+        "response_hex": "800201"
+      },
+      {
+        "request_hex": "07",
+        "meaning": "Start/Resume at 0%",
+        "write": "Success",
+        "response_hex": "800701"
+      },
+      {
+        "request_hex": "032800",
+        "meaning": "Set Target Inclination 4.0% while running",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "030000",
+        "meaning": "Set Target Inclination 0%",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "0801",
+        "meaning": "FTMS Stop",
+        "write": "Success",
+        "response_hex": "800801"
+      },
+      {
+        "request_hex": "01",
+        "meaning": "Release Control",
+        "write": "Success",
+        "response_hex": "800101"
+      }
+    ],
+    "physical_inclinometer": {
+      "baseline_degrees": 2,
+      "during_4_percent_hold_degrees": null,
+      "after_return_to_0_degrees": null,
+      "physical_deck_movement_verified": false,
+      "note": "Operator did not report the readings during the trial as of this record."
+    },
+    "treadmill_data_samples": [
+      {
+        "elapsed_ms": 3659,
+        "frame_hex": "8c056400000000000000000000ffffff000000",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 21659,
+        "frame_hex": "8c056400040000000000000000ffffff000f00",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 42660,
+        "frame_hex": "8c056400090000000000000000ffffff002400",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 46681,
+        "frame_hex": "8c055a000b0000000000000000ffffff002800",
+        "speed_kmh": 0.9,
+        "incline_percent": 0.0
+      }
+    ],
+    "ftms_status_notifications_hex": [
+      "04",
+      "04"
+    ],
+    "fitshow_stop_fallback_status": "not needed",
+    "subscription_cleanup": [
+      "00002ada-0000-1000-8000-00805f9b34fb: Success",
+      "00002acd-0000-1000-8000-00805f9b34fb: Success",
+      "00002ad9-0000-1000-8000-00805f9b34fb: Success"
+    ],
+    "elapsed_ms": 47054,
+    "protocol_sequence_complete": true,
+    "notes": "The 4% target was sent after Start/Resume and acknowledged. FTMS Treadmill Data continued reporting 0.0% inclination throughout the trial. The return-to-0 target, FTMS Stop and Release Control were acknowledged. The previous FTMS Stop timeout was caused by an insufficient helper deadline; this repeat completed normally. Physical angle readings during the hold and after return were not reported, so deck movement remains unverified."
   }
 }

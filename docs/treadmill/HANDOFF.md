@@ -845,9 +845,13 @@ The W1's FTMS support is now directly confirmed: advertising includes service
 0x1826; GATT discovery exposed Treadmill Data 2ACD (Notify), Fitness Machine
 Status 2ADA (Notify), and Fitness Machine Control Point 2AD9 (Write + Indicate).
 Live 2ACD notifications tracked speed and incline during Windows-backed
-workouts, and 2ADA status notifications were received. No 2AD9 opcode has been
-sent, so FTMS telemetry is confirmed while FTMS motor control remains untested.
-The working motor-control path is still FitShow FFF0/FFF2.
+workouts, and 2ADA status notifications were received. A no-motion Request
+Control / Release Control exchange succeeded. A subsequent low-speed test
+accepted FTMS Set Target Speed 1.0 km/h, Start/Resume, Stop, and Release Control;
+2ACD reported 1.0 km/h while running. This confirms FTMS speed control for that
+one tested target. However, the 2ACC target-setting bitmap does not advertise
+speed targeting, despite the accepted command. The working production motor
+path remains FitShow FFF0/FFF2.
 
 The six-minute repeat of `runpad-stop-context-6min` completed every ramp target
 (raw speed 10–30; incline 0–2) with passive FTMS observation. The unexpected
@@ -859,6 +863,14 @@ physical stop was not independently verified. Log:
 
 All prepared speed 50/60 and incline 1–8 trials have already been completed;
 pause was also tested and did not pause. No prepared W1 motor trials remain.
-The next useful protocol check, if proceeding, is a no-target FTMS Request
-Control / Release Control exchange using 2AD9. Do not send speed or incline
-targets over FTMS until that response path is validated.
+The same 1.0 km/h FTMS test sent Set Target Inclination 1.0% then 0%; both
+commands returned success, but 2ACD reported 0.0% throughout. The deck was not
+physically checked, so incline control is unresolved. No higher FTMS targets
+were sent. The run stopped through FTMS, released control, and cleaned up all
+three subscriptions successfully. Capture:
+`docs/treadmill/ftms-control-point-results-20261015.json`.
+
+No prepared motor trials remain. Further useful work is a physical low-incline
+check with the operator's inclinometer and a software investigation of the
+2ACC speed-capability mismatch; do not infer incline attainment from a success
+response or 2ACD here.

@@ -513,9 +513,19 @@ GATT discovery found Treadmill Data (2ACD, Notify), Fitness Machine Status
 Point (2AD9, Write + Indicate), among other FTMS characteristics. During live
 Windows trials, 2ACD notifications delivered changing speed and incline data;
 2ADA status notifications were also received. This confirms an FTMS service
-and working telemetry path. No FTMS control-point opcode has been sent, so
-speed/incline control through FTMS is not yet functionally confirmed. Current
-motor control uses FitShow FFF0/FFF2.
+and working telemetry path. A no-motion Request Control / Release Control
+exchange succeeded. A subsequent low-speed trial also received successful
+FTMS responses for Set Target Speed 1.0 km/h, Start/Resume, Stop, and Release;
+2ACD reported 1.0 km/h while running. This functionally confirms FTMS speed
+control at that one target. The 2ACC target-setting bitmap does not advertise
+speed targeting, despite the successful response and telemetry, so this
+capability-reporting mismatch needs to be retained. Current production motor
+control remains on FitShow FFF0/FFF2.
+
+In the same low-speed trial, Set Target Inclination 1.0% and return to 0% both
+received successful responses. FTMS 2ACD continued to report 0.0% throughout;
+physical deck movement was not checked, so FTMS incline control is not yet
+confirmed. No higher speed or incline targets were sent over FTMS.
 
 The bounded six-minute FitShow ramp that previously stopped unexpectedly was
 repeated with passive FTMS observation. It completed all 13 planned steps from
@@ -531,6 +541,7 @@ but did not recur in this replay. Local log:
 
 The previously authorized prepared `remaining` batch is complete: its speed
 50/60 and incline 1–8 trials were completed, and pause was separately found not
-to pause the treadmill. No prepared speed/incline trial remains. A next FTMS
-control-point check, if performed, should be limited first to the standard
-Request Control / Release Control exchange, with no speed or incline target.
+to pause the treadmill. No prepared speed/incline trial remains. Next useful
+FTMS work is to resolve the 2ACC speed-capability mismatch and verify whether a
+low incline target changes the physical deck; the captured 2ACD field did not
+change during the first low-level attempt.

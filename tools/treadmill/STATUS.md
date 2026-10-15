@@ -503,3 +503,34 @@ the ignored local `docs/treadmill/captures/windows-idle-wake-correlation-*.json`
 files. This is the best wake-to-sleep alignment so far, but the physical wake
 timestamp came from the operator's message rather than a synchronized button
 mark. Polling did not prevent protocol sleep.
+
+## FTMS support and STOPPING repeat (2026-10-15)
+
+The confirmed W1 module (FS-0F7A32 / FITSHOW FS-BT-C1, public address
+DD:87:70:39:74:20) advertises the standard FTMS service UUID 0x1826. Windows
+GATT discovery found Treadmill Data (2ACD, Notify), Fitness Machine Status
+(2ADA, Notify), Fitness Machine Feature (2ACC), and Fitness Machine Control
+Point (2AD9, Write + Indicate), among other FTMS characteristics. During live
+Windows trials, 2ACD notifications delivered changing speed and incline data;
+2ADA status notifications were also received. This confirms an FTMS service
+and working telemetry path. No FTMS control-point opcode has been sent, so
+speed/incline control through FTMS is not yet functionally confirmed. Current
+motor control uses FitShow FFF0/FFF2.
+
+The bounded six-minute FitShow ramp that previously stopped unexpectedly was
+repeated with passive FTMS observation. It completed all 13 planned steps from
+raw speed 10 to 30 and incline code 0 to 2. FitShow remained RUNNING through
+all target changes; FTMS 2ACD tracked the changes, reporting speed 1.0–3.0 km/h
+and incline 0–2.0%. FitShow STOPPING and declining speed began only after the
+host's explicit stop at 6:22; FTMS speed fell to 0.0, then FitShow returned to
+NORMAL. Both FTMS notification subscriptions and FitShow notifications cleaned
+up successfully. `sequence_observed=true`; physical belt stopping was not
+independently verified. The earlier unsolicited STOPPING remains unexplained,
+but did not recur in this replay. Local log:
+`/tmp/runpad-stop-context-6min-repeat-ftms-20261015-01.jsonl`.
+
+The previously authorized prepared `remaining` batch is complete: its speed
+50/60 and incline 1–8 trials were completed, and pause was separately found not
+to pause the treadmill. No prepared speed/incline trial remains. A next FTMS
+control-point check, if performed, should be limited first to the standard
+Request Control / Release Control exchange, with no speed or incline target.

@@ -840,3 +840,25 @@ reported their stopped/normal state. FitShow and both FTMS notification
 cleanups succeeded; `sequence_observed=true`. This controlled replay does not
 reproduce an FTMS-subscription-related stop. Log:
 `/tmp/runpad-transition-speed20-to21-ftms-20261015-01.jsonl`.
+
+The W1's FTMS support is now directly confirmed: advertising includes service
+0x1826; GATT discovery exposed Treadmill Data 2ACD (Notify), Fitness Machine
+Status 2ADA (Notify), and Fitness Machine Control Point 2AD9 (Write + Indicate).
+Live 2ACD notifications tracked speed and incline during Windows-backed
+workouts, and 2ADA status notifications were received. No 2AD9 opcode has been
+sent, so FTMS telemetry is confirmed while FTMS motor control remains untested.
+The working motor-control path is still FitShow FFF0/FFF2.
+
+The six-minute repeat of `runpad-stop-context-6min` completed every ramp target
+(raw speed 10–30; incline 0–2) with passive FTMS observation. The unexpected
+FitShow STOPPING did not recur: STOPPING began only after the explicit host STOP
+at +6:22, FTMS speed then fell to 0.0 km/h, and FitShow returned to NORMAL.
+FTMS and FitShow notification cleanup succeeded. `sequence_observed=true`, but
+physical stop was not independently verified. Log:
+`/tmp/runpad-stop-context-6min-repeat-ftms-20261015-01.jsonl`.
+
+All prepared speed 50/60 and incline 1–8 trials have already been completed;
+pause was also tested and did not pause. No prepared W1 motor trials remain.
+The next useful protocol check, if proceeding, is a no-target FTMS Request
+Control / Release Control exchange using 2AD9. Do not send speed or incline
+targets over FTMS until that response path is validated.

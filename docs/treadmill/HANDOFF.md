@@ -831,3 +831,12 @@ unknown; operator input, an intermittent device condition, or another cause
 cannot be distinguished from these logs. No physical belt-stop confirmation was
 recorded for these latest runs. The display was not reported to need waking.
 No further experiment should infer physical stop from NORMAL protocol replies.
+
+The same 10-second raw-20 then 30-second raw-21 transition was repeated with
+FTMS observation enabled. FitShow and FTMS both tracked the target change and
+remained RUNNING through both holds. After host STOP, FTMS speed fell from 2.1
+to 0.0 km/h while FitShow status 4 counted down raw speed to 1, then both
+reported their stopped/normal state. FitShow and both FTMS notification
+cleanups succeeded; `sequence_observed=true`. This controlled replay does not
+reproduce an FTMS-subscription-related stop. Log:
+`/tmp/runpad-transition-speed20-to21-ftms-20261015-01.jsonl`.

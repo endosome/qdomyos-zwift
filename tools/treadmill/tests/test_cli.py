@@ -75,6 +75,32 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)
 
+    def test_windows_w1_workout_dry_run_maps_the_full_bounded_schedule(self):
+        result = self.command('workout', 'run', 'runpad-w1-discovery-demo', '--backend', 'windows',
+                              '--device', 'DD:87:70:39:74:20', '--expected-name', 'FS-0F7A32', '--dry-run')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plan = json.loads(result.stdout)
+        self.assertFalse(plan['motor_execution_enabled'])
+        self.assertFalse(plan['physical_units_verified'])
+        self.assertFalse(plan['physical_stop_verified'])
+        self.assertEqual(plan['workout_id'], 'runpad-w1-discovery-demo')
+        self.assertEqual(plan['windows_motor_deadline_seconds'], 430)
+        self.assertEqual(plan['speed_ceiling_code'], 60)
+        self.assertEqual(plan['incline_ceiling_code'], 8)
+        steps = plan['workout_steps']
+        self.assertEqual(len(steps), 23)
+        self.assertEqual([step['speed_code'] for step in steps[:7]], [10, 20, 30, 40, 50, 60, 10])
+        self.assertEqual([step['incline_code'] for step in steps[7:]], list(range(1, 9)) + list(range(7, -1, -1)))
+        for step in steps:
+            self.assertGreaterEqual(step['speed_code'], 10)
+            self.assertLessEqual(step['speed_code'], 60)
+            self.assertGreaterEqual(step['incline_code'], 0)
+            self.assertLessEqual(step['incline_code'], 8)
+            self.assertAlmostEqual(step['grade_percent_assumption'], step['incline_code'] * 11 / 8)
+        self.assertEqual(plan['frames'][0], '02530100000000000000005203')
+        self.assertEqual(plan['frames'][-1], '0253035003')
+        self.assertEqual(len(plan['frames']), 25)  # READY/start, baseline, 22 changed targets, STOP.
+
     def test_protocol_diagnostics_cannot_start_without_approval_and_terminal(self):
         profile_path = Path(__file__).resolve().parent.parent / 'profiles' / 'unverified-example.json'
         result = self.command('status', '--profile', str(profile_path))

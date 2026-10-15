@@ -7,5 +7,5 @@
     <row name="Walking" duration="00:00:20" speed="2.0" inclination="1" forcespeed="1"/>
     <row name="Recovery" duration="00:00:20" speed="1.0" inclination="0" forcespeed="1"/>
   </repeat>
-  <row name="Cooldown" duration="00:00:20" speedfrom="1.0" speedto="0.5" inclination="0" forcespeed="1"/>
+  <row name="Cooldown" duration="00:00:20" speed="1.0" inclination="0" forcespeed="1"/>
 </rows>

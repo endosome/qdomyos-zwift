@@ -22,6 +22,7 @@ Response decodeResponse(const QByteArray &frame) {
         }
     } else if (response.command == 0x51) {
         response.status.state = response.parameter;
+        if (response.parameter == 6 && frame.size() >= 6) response.status.disabledReason = bytes[3];
         if (response.parameter == 1 || response.parameter == 3 || response.parameter == 4 || response.parameter == 10) {
             if (frame.size() < 16) return response;
             response.status.hasMotorData = true;
@@ -87,6 +88,12 @@ void Control::start(quint64 generation, quint64 id, int speed, int incline) {
     QByteArray pair = QByteArray::fromHex("5302"); pair.append(char(speed)); pair.append(char(incline));
     enqueue(Kind::InitialTarget, pair, id);
 }
+void Control::prepareReady(quint64 generation, quint64 id) {
+    if (!motorRequest(generation, id, limits_.minSpeed, limits_.minIncline)) return;
+    // FitShow v1.1: mode bit 0x80 requests READY instead of compatibility START.
+    // Still motor-capable on an unverified device; never add this to diagnostics.
+    enqueue(Kind::Start, QByteArray::fromHex("53010000000080000000"), id);
+}
 void Control::target(quint64 generation, quint64 id, int speed, int incline) {
     if (!motorRequest(generation, id, speed, incline)) return;
     QList<quint64> canceled;
@@ -124,6 +131,11 @@ void Control::pump(qint64 nowMs) {
             cancel();
             emit commandEvent(expired.id, "timed_out");
             emit fault("FitShow response deadline exceeded; command was not retried");
+        } else if (nowMs_ - lastPollMs_ >= 500) {
+            // A missing motor echo must not prevent fresh status observation.
+            // The pending command keeps its deadline and is never retransmitted.
+            lastPollMs_ = nowMs_;
+            emit payloadReady(QByteArray::fromHex("51"), generation_, 0);
         }
         return;
     }

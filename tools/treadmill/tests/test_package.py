@@ -21,7 +21,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         catalog = json.loads(result.stdout)
         self.assertEqual({row['id']: row['duration_seconds'] for row in catalog},
-                         {'uphill-walk-20': 1200, 'interval-demo': 120})
+                         {'uphill-walk-20': 1200, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310})
         for row in catalog:
             self.assertTrue(row['path'].startswith('/usr/local/share/treadmill/workouts/'))
 

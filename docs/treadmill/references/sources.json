@@ -41,6 +41,16 @@
       "notes": "Standard Treadmill Data and inclination units; does not validate device conformance or physical calibration."
     },
     {
+      "file": "conlin-fitshow-treadmill-manual-not-runpad-w1.pdf",
+      "title": "Conlin treadmill manual with FitShow and sound controls (not RunPad W1)",
+      "source_url": "https://www.conlinfitness.com/uploads/soft/230726/1-230H6143238.pdf",
+      "resolved_url": "https://www.conlinfitness.com/uploads/soft/230726/1-230H6143238.pdf",
+      "retrieved_utc": "2026-10-14T20:53:55Z",
+      "sha256": "acfd6df0c455e5160a78d5be71e1508dba43796b022829b4da50285da7953ddc",
+      "bytes": 1353259,
+      "notes": "Different treadmill model. Describes console volume +/- and sound switch; no Bluetooth sound/mute protocol command is documented, and this does not establish W1 support."
+    },
+    {
       "file": "fitmonster-treadmill-protocol-v1.1.html",
       "title": "Fit Monster treadmill protocol v1.1",
       "source_url": "https://www.fitmonster.club/SDK/FM-Protocol-Treadmill.html",

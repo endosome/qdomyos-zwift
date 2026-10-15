@@ -1,6 +1,8 @@
 #include "diagnostics.h"
 #include "session.h"
 #include "probe.h"
+#include "windowsbackend.h"
+#include "motortrial.h"
 #include <QBluetoothAddress>
 #include <QCommandLineParser>
 #include <QCoreApplication>
@@ -10,21 +12,85 @@ int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("treadmill"));
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Linux BLE diagnostics and simulated treadmill workouts."));
+    parser.setApplicationDescription(QStringLiteral("Linux/Windows BLE diagnostics, bounded Windows control trials and W1 workouts."));
     parser.addHelpOption();
-    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan, info, status --simulate, workout list, or workout run <id-or-path>."));
-    QCommandLineOption timeoutOption(QStringLiteral("timeout"), QStringLiteral("Scan duration (1–60 seconds)."),
+    parser.addPositionalArgument(QStringLiteral("command"), QStringLiteral("scan, info, status, control-test, workout list, or workout run <id-or-path>."));
+    QCommandLineOption timeoutOption(QStringLiteral("timeout"), QStringLiteral("Diagnostic duration: 1–60 seconds; Windows status supports 1–600, or 900 with --measure-sleep-timer."),
                                     QStringLiteral("seconds"), QStringLiteral("10"));
-    QCommandLineOption deviceOption(QStringLiteral("device"), QStringLiteral("Explicit Bluetooth address for info."),
+    QCommandLineOption deviceOption(QStringLiteral("device"), QStringLiteral("Explicit Bluetooth address for info or Windows status/control-test."),
                                    QStringLiteral("address"));
     parser.addOption(timeoutOption);
     parser.addOption(deviceOption);
+    parser.addOption(QCommandLineOption("backend", "BLE backend: linux (default) or windows via WSL.", "backend", "linux"));
+    parser.addOption(QCommandLineOption("address-type", "Windows BLE address type: unknown, public or random.", "type", "unknown"));
+    parser.addOption(QCommandLineOption("expected-name", "Exact confirmed name for Windows status/control-test with --device.", "name"));
+    parser.addOption(QCommandLineOption("confirm-motor", "Approve the separately bounded motor control trial."));
+    parser.addOption(QCommandLineOption("dry-run", "Print the bounded control trial without opening Bluetooth."));
+    parser.addOption(QCommandLineOption("trial", "Prepared control trial ID; see --list-trials.", "id", "start-stop"));
+    parser.addOption(QCommandLineOption("list-trials", "List all prepared control trials without Bluetooth I/O."));
+    parser.addOption(QCommandLineOption("batch", "Prepared batch: remaining, speeds, inclines or all.", "set", "remaining"));
+    parser.addOption(QCommandLineOption("confirm-batch", "Approve the printed sequential batch with stop between trials."));
+    parser.addOption(QCommandLineOption("observe-ftms", "Also capture FTMS data/status notifications without FTMS motor writes."));
+    parser.addOption(QCommandLineOption("status-heart-rate-zero", "Experimental Windows status query with the documented zero heart-rate byte."));
+    parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
+    parser.addOption(QCommandLineOption("measure-sleep-timer", "Windows nonmotor observer: start asleep, wake physically, measure first NORMAL to next sleep."));
     addWorkoutOptions(parser);
     parser.process(app);
     const auto arguments = parser.positionalArguments();
+    const bool hardwareWorkout = arguments.size() == 3 && arguments[0] == "workout" && arguments[1] == "run" && !parser.isSet("simulate");
+    const QString backend = parser.value("backend");
+    if (backend != "linux" && backend != "windows") {
+        QTextStream(stderr) << "--backend must be linux or windows.\n"; return 2;
+    }
+    const QString addressType = parser.value("address-type");
+    if (addressType != "unknown" && addressType != "public" && addressType != "random") {
+        QTextStream(stderr) << "--address-type must be unknown, public or random.\n"; return 2;
+    }
+    if (parser.isSet("address-type") && backend != "windows") {
+        QTextStream(stderr) << "--address-type requires --backend windows.\n"; return 2;
+    }
+    if (parser.isSet("measure-sleep-timer") && (parser.isSet("status-data-sport") || parser.isSet("status-heart-rate-zero") ||
+        backend != "windows" || arguments.size() != 1 || arguments.first() != "status" || parser.isSet("simulate"))) {
+        QTextStream(stderr) << "--measure-sleep-timer requires Windows protocol status and excludes experimental query variants.\n"; return 2;
+    }
+    if (parser.isSet("status-data-sport") && (parser.isSet("status-heart-rate-zero") || backend != "windows" || arguments.size() != 1 ||
+        arguments.first() != "status" || parser.isSet("simulate"))) {
+        QTextStream(stderr) << "--status-data-sport requires Windows protocol status and excludes --status-heart-rate-zero.\n"; return 2;
+    }
+    if (parser.isSet("status-heart-rate-zero") && (backend != "windows" || arguments.size() != 1 ||
+        arguments.first() != "status" || parser.isSet("simulate"))) {
+        QTextStream(stderr) << "--status-heart-rate-zero requires Windows protocol status.\n"; return 2;
+    }
+    if (parser.isSet("observe-ftms") && (backend != "windows" ||
+        (!hardwareWorkout && (arguments.size() != 1 ||
+         (arguments.first() != "status" && arguments.first() != "control-test" && arguments.first() != "control-batch"))) ||
+        parser.isSet("simulate"))) {
+        QTextStream(stderr) << "--observe-ftms requires Windows protocol status or control trials/workouts.\n"; return 2;
+    }
+    if (arguments.size() == 1 && arguments.first() == "control-batch") return motorBatch(app, parser);
+    if (parser.isSet("batch") || parser.isSet("confirm-batch")) {
+        QTextStream(stderr) << "Batch options apply only to control-batch.\n"; return 2;
+    }
+    if (arguments.size() == 1 && arguments.first() == "control-test") return motorTrial(app, parser);
+    if ((parser.isSet("confirm-motor") || parser.isSet("dry-run")) && !hardwareWorkout) {
+        QTextStream(stderr) << "Motor approval/dry-run options apply to control trials or hardware workouts.\n"; return 2;
+    }
+    if (parser.isSet("trial") || parser.isSet("list-trials")) {
+        QTextStream(stderr) << "Control trial options apply only to control-test.\n"; return 2;
+    }
+    if ((parser.isSet("backend") || parser.isSet("address-type")) && parser.isSet("simulate")) {
+        QTextStream(stderr) << "Backend options cannot be used with simulation.\n"; return 2;
+    }
+    if (parser.isSet("expected-name") && (backend != "windows" || parser.isSet("simulate") || !parser.isSet("device") ||
+        (!hardwareWorkout && (arguments.size() != 1 || arguments.first() != "status")))) {
+        QTextStream(stderr) << "--expected-name requires Windows status or hardware workout with --device.\n"; return 2;
+    }
     if (!arguments.isEmpty() && arguments.first() == "status") {
         if (arguments.size() == 1 && !parser.isSet("simulate")) {
-            for (const QString option : {"device", "fast", "workouts-dir", "inject", "inject-at"}) {
+            if (backend != "windows" && parser.isSet("device")) {
+                QTextStream(stderr) << "Linux protocol status uses --profile rather than --device.\n"; return 2;
+            }
+            for (const QString option : {"fast", "workouts-dir", "inject", "inject-at"}) {
                 if (parser.isSet(option)) { QTextStream(stderr) << "Unsupported protocol status option: " << option << '\n'; return 2; }
             }
             return probeStatus(app, parser);
@@ -43,8 +109,8 @@ int main(int argc, char *argv[]) {
     }
     if (!arguments.isEmpty() && arguments.first() == "workout") {
         if (parser.isSet("confirm-diagnostics")) { QTextStream(stderr) << "--confirm-diagnostics applies to protocol status only.\n"; return 2; }
-        if (parser.isSet(deviceOption) || parser.isSet(timeoutOption)) {
-            QTextStream(stderr) << "--device/--timeout apply to BLE diagnostics.\n";
+        if (parser.isSet(timeoutOption) || (parser.isSet(deviceOption) && !hardwareWorkout)) {
+            QTextStream(stderr) << "--timeout applies to BLE diagnostics; --device is accepted only for a Windows hardware workout here.\n";
             return 2;
         }
         return workoutCommand(app, parser, arguments);
@@ -66,10 +132,11 @@ int main(int argc, char *argv[]) {
         return 2;
     }
     if (arguments.first() == "scan") {
-        if (parser.isSet(deviceOption)) {
-            QTextStream(stderr) << "--device applies to info.\n";
+        if (parser.isSet(deviceOption) || parser.isSet("address-type")) {
+            QTextStream(stderr) << "--device/--address-type apply to info or protocol status.\n";
             return 2;
         }
+        if (backend == "windows") return windowsDiagnostics(app, "scan", timeout);
         return scanDevices(app, timeout);
     }
     const QBluetoothAddress address(parser.value(deviceOption));
@@ -77,5 +144,6 @@ int main(int argc, char *argv[]) {
         QTextStream(stderr) << "info requires --device with a valid Bluetooth address.\n";
         return 2;
     }
+    if (backend == "windows") return windowsDiagnostics(app, "info", timeout, address.toString(), addressType);
     return inspectDevice(app, address, timeout);
 }

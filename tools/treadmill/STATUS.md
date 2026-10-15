@@ -1,9 +1,128 @@
 # Implementation status
 
-This project is not yet a validated W1 motor controller. Hardware execution is
-explicitly disabled. Read-only hardware discovery has now started at the user's request.
-Read-only discovery, approved nonmotor diagnostics, real-adapter software and
-complete simulation are implemented.
+Experimental Windows/WSL playback for predefined W1 workouts is implemented,
+but has not been physically run end to end. It uses the user's provisional
+linear grade assumption and exact-device/raw-limit gates. Native Linux workout
+playback is not connected. See the current checkpoint in
+[HANDOFF.md](../../docs/treadmill/HANDOFF.md#resume-checkpoint-w1-workout-playback-implemented).
+
+Bounded Windows/WSL motor control is physically confirmed for start/stop,
+walking speeds 1.0–6.0 km/h and incline codes 1–8. Pause did not work in the
+verified path. Experimental W1 workout playback is now implemented through the
+Windows/WSL bridge; it has not yet been physically run end to end. Playback is
+pinned to the exact W1, raw bounds and 1.0–6.0 km/h, and requires manual wake,
+interactive MOTOR approval and physical stop access. The RunPad W1
+specification provides only a maximum 11% grade and eight levels, not a percent
+for each level; firmware revision and raw speed zero are also unknown. Native
+Linux remains available. The display requires manual wake. In a synchronized
+idle observation, the operator's reported wake aligned with FitShow NORMAL at
+20:19:48 UTC; status changed back to protocol sleep at 20:29:43 UTC, 594.7s
+later. The display had previously been observed to turn off at 9:53. Polling
+did not prevent sleep. This supports a roughly 10-minute inactivity timer, but
+physical button and display timestamps are approximate; no keepawake mechanism
+is known. Historical observations below are superseded by this current summary
+where later trials provide stronger evidence.
+
+`incline-timing-4` and `incline-timing-8` are prepared and tested offline with local B/U/B/D marks;
+the first marked full traversal measured rise motion 13.832 seconds and return
+motion 12.344 seconds, with operator reaction-time uncertainty. Level reports
+preceded arrival by 13.702/13.019 seconds; no arrival flag was identified. It requires a physically settled
+level-0 baseline, bounds each direction to 60 seconds and is excluded from
+batches. `--observe-ftms` records 2ACD/2ADA with source UUIDs without FTMS motor
+writes. A real eight-second nonmotor probe passed with both subscription cleanups
+Success; stopped 2ACD data arrived but no 2ADA events. Movement/arrival detection
+remains unproven. The technical specs list maximum 11% and eight levels without
+per-level percentages. The discovery-demo workout applies the user's explicitly
+provisional equal-spacing assumption; it is not a measured W1 grade mapping.
+
+## Dedicated READY wake trial
+
+ready-wake adds a separately bounded motor-capable trial which accepts documented
+sleep 06/02 only before READY, while safety-key and unknown disabled reasons
+stay refused. Other trials and generic FitShow control retain their guards.
+Core49, bridge9, CLI11, Windows gates and focused wake/refusal/reversion/catalog
+checks pass after rebuilding in the resumed environment. Live attempt01 failed
+at device open with no writes. Rescan rediscovered W1. Attempts02/03 sent
+READY from sleep but received continued06/02, no READY acknowledgement/state9.
+The latter waited the two-second response window and stopped after2.002s.
+Native stop/CCCD cleanup succeeded; no countdown/running feedback appeared.
+Physical zero/NORMAL was not verified. Await an ordinary physical wake for
+ready-idle from NORMAL; keepawake behavior remains unverified.
+
+## Sleep investigation
+
+Windows nonmotor status now supports a continuous 1–600-second observation,
+retaining the default 30 seconds. Linux status and scan/info stay 1–60 seconds.
+Only verified information/status queries are used, with existing confirmation,
+input/signal cleanup and output limits. Nine bridge regressions and Windows
+compilation/allowlist/bounded-duration checks pass. This supports a ten-minute
+idle polling experiment; actual polling failed to prevent sleep: 625 NORMAL replies then 101 disabled
+06/02, 343.3 s after first NORMAL, with all query writes successful and BLE
+still responsive. No motor commands; cleanup Success. The official FitShow
+protocol identifies detail 2 as sleep and provides an untested READY-mode
+candidate (53/01 with mode bit 0x80), still treated as motor-capable.
+
+## Windows backend follow-up (2026-10-14)
+
+The operator selected Windows Bluetooth through WSL while retaining native
+Linux support. The CLI now dispatches scan/info/status with `--backend windows`;
+the existing Qt/BlueZ path remains the default (`--backend linux`). The Windows
+backend invokes the installed PowerShell/WinRT helper in MTA mode with argument
+arrays, bounds execution/report size, preserves existing logs, and checks the
+report's backend/command/nonmotor scope. Protocol status accepts the confirmed
+address/name or a reviewed profile, and requires interactive NONMOTOR confirmation.
+Identity-only probes do not need or supply calibration data. Cancellation requests notification cleanup
+through the child's input pipe; missing cleanup cannot produce a successful exit.
+Windows reports contain exact raw frames and final cleanup status, with no
+calibration or physical-stop inference. A separate `control-test` command now
+reuses the production QZ FitShow queue/encoder through a streaming Windows
+transport for one bounded raw 10/0 start/target/stop trial. It has dry-run and
+interactive MOTOR approval, exact live module identity/bounds gates, host and
+Windows watchdogs, and bounded attempt/completion logs. It never claims physical
+stopping and does not enable workout execution or calibrated target changes.
+
+Eight offline child-process tests and the eleven existing CLI tests pass;
+Windows PowerShell compilation/query allowlist/approval checks also pass.
+A real five-second read-only scan through the CLI found FS-0F7A32 at the
+previously confirmed public address, advertising FFF0 and FTMS 1826. No motor
+commands were sent. Subsequent read-only info saw the same name but GATT service
+discovery returned Unreachable; the report is saved locally as
+`docs/treadmill/captures/windows-bridge-info-20261014.json`.
+The operator subsequently confirmed the display was awake and the belt stopped.
+Broad GATT info remained Unreachable, but an eight-second targeted nonmotor
+FFF0 probe succeeded, reporting speed 10–60/tag 0, incline 0–8, repeated NORMAL
+and successful notification cleanup. No motor commands were sent. Six fake-peer
+motor trial tests and the expanded Windows-side gate/watchdog tests pass offline.
+The first authorized MOTOR trial passed: exactly one start, raw 10/0 target and
+stop, with weak replies, countdown, RUNNING at raw 10/0 for 5.014 seconds, STOP
+speeds 9/7/4/1, then three NORMAL reports and successful cleanup. The operator
+confirmed start/stop, console 1.0/incline 0 and untouched physical controls.
+No raw zero was reported. Capture:
+`docs/treadmill/captures/windows-motor-trial-20261014-01.jsonl`.
+
+Seventeen named trial plans are prepared: start-stop; speed steps to raw
+12/15/20/30/40/50/60 and back to 10; incline codes 1–8 and back to 0 at raw
+speed 10; and pause observation followed by explicit stop. All launches are
+individually bounded, with exact printed plans and independent Windows-side
+sequence/ceiling/deadline gates. The operator later authorized all remaining
+trials in one sequential batch with combined review afterward. Ten fake-peer trial
+tests and Windows-side ordered gate tests pass. A matching incline report is
+not attained position or calibrated grade. Resume semantics, stop repeatability,
+interruption/link-loss behavior, conflicting capability replies, full speed
+calibration and all incline grades remain outstanding.
+
+Operator-confirmed trials now include start-stop and speed-12/15/20/30/40.
+Speed-40 completed all commands, but its five-second stop observer received only
+two NORMAL replies before ending; the operator confirmed physical stop. The
+observer now allows ten seconds. RUNNING raw 10 followed by STOP raw 17 also
+leaves setpoint versus attained belt-speed semantics unresolved. Two new offline
+checks pass for delayed stopping and batch fault isolation. `control-batch`
+runs a selected group with fresh preflight and explicit stop between trials,
+preserves existing logs, and halts after any failure. The remaining 11-trial
+batch was authorized and launched, but its first speed-50 preflight returned
+SAFETY 0x06. No motor commands or later trials were sent; cleanup succeeded.
+The operator has been asked to wake the display and leave the belt stopped;
+the same authorized batch is ready for immediate retry. Physical review is pending.
 
 | Roadmap task | Status | Evidence / next dependency |
 |---|---|---|
@@ -17,8 +136,8 @@ complete simulation are implemented.
 | 2.1–2.3 controller/simulator | Implemented | Core-only deterministic and failure tests |
 | 2.4–2.7 restricted driver policy/queue/parser | Implemented; hardware unverified | Offline queue/parser tests and actual isolated-driver tests |
 | 2.8 real adapter/profile validation | Implemented; physical acceptance pending | Offline injected-frame tests; actual Qt binding compiled/linked; live identity/bounds/evidence gates |
-| M3 workout engine | Implemented offline | Simulator and synthetic FitShow full-session tests; generic XML, ramps/repeats/events |
-| M4 CLI | Simulation complete; real run pending | Catalog, controls, logs, shutdown and offline integration tests |
+| M3 workout engine | Implemented offline; W1 Windows playback connected | Generic XML/ramp sampling, linear grade assumption, bounded 10-second target steps |
+| M4 CLI | Simulation and experimental Windows W1 run path implemented; physical run pending | Catalog, controls, logs, interactive approval, exact identity/bounds and explicit stop |
 | M5 hardening/package | Software support implemented; physical release acceptance pending | CI/install/sanitizer support; full QZ library and selected existing regressions validated |
 
 ## First hardware checkpoint: ready for read-only discovery
@@ -299,3 +418,88 @@ For subsequent walking-mode analysis, the operator explicitly instructs us to
 assume displayed speed 1.0 equals 1 km/h and 6.0 equals 6 km/h. Use that as the
 working scale for walking mode; it does not resolve the separate raw-120/tag-0x20
 response.
+
+
+2026-10-14 keepawake checkpoint: ordinary 500 ms status polling did not prevent
+sleep (first NORMAL to 06/02 about 343 s). READY mode 0x80 did not wake sleeping
+W1 and started countdown on awake W1; its guard stopped the attempt. READY is
+unsuitable as an idle keepalive. Manual wake is expected by the operator.
+Windows-only `--status-heart-rate-zero` is prepared as a documented nonmotor
+51/00 status-query experiment, without changes to default or motor queries.
+Offline bridge suite 11 and Windows framing/gate checks pass; live ten-minute
+observation is pending. No keepawake solution has been verified.
+
+
+Follow-up: the 51/00 capture started in RUNNING (24 replies at speed code10),
+so it cannot measure idle standby. Physical stop confirmation is pending.
+READY live trials are retired before Bluetooth I/O; their successful STOP
+write had not established a stopped state. The explicit zero-heart-rate idle
+experiment now aborts on non-NORMAL status and ends on validated sleep06/02.
+It records initial state, NORMAL count and elapsed time from first NORMAL to
+sleep. Keepawake remains unresolved.
+
+
+The live zero-heart-rate status probe reached sleep06/02 after 471.530 s from
+first NORMAL (862 NORMAL replies), with successful BLE cleanup; the operator
+later reported the display off, with no timestamp for when it went dark. This variant does not prevent protocol sleep. The Windows-only
+`--status-data-sport` experiment alternates documented status51 and read-only
+current-exercise-data52/00 at a combined 500 ms cadence, from a manually woken
+NORMAL baseline. It is bounded to 600 s, stops on explicit sleep or motion,
+and remains an unverified keepawake hypothesis.
+
+
+The documented DATA_SPORT 52/00 query also did not keep the W1 awake: it
+replied 478 times, but sleep06/02 followed 524.120 s after first NORMAL.
+`--measure-sleep-timer` is a separate nonmotor Windows observer for measuring
+standby: connect while asleep, wait for its confirmed-sleep cue, wake with
+physical controls, and record first NORMAL to next sleep06/02 (up to 600 s).
+The elapsed time is protocol-observed and has roughly polling-interval
+uncertainty relative to the physical button press.
+
+
+The first sleep-timer run saw 728 sleep06/02 replies, no NORMAL transition,
+and was cancelled after the operator confirmed the display stayed off. No timer
+value was measured. Future runs close after 90 s without a physical wake after
+the first sleep reply, while retaining the 600 s total limit.
+
+
+The operator did not watch the display continuously. All reported 343.3,
+471.530 and 524.120-second intervals end at protocol sleep06/02, not at a
+measured display-off event. They start at the first protocol NORMAL reply,
+not the physical wake action. The differing values do not establish that
+any query format changed the standby timer.
+
+
+A synchronized timer run connected while the W1 was asleep and the operator
+physically woke it during observation. The first NORMAL reply was at30.127s;
+there were 1032 NORMAL replies over the next569.467s with no next protocol
+sleep before the 600s cutoff. This is a lower bound, not an exact standby
+time. Display-off and post-disconnect observations are pending. Connection
+before wake is an unverified possible factor.
+
+
+The after-wake ordinary-status comparison reported protocol sleep while BLE
+was still connected, 572.136 s after first NORMAL. In the synchronized prior
+run, the operator saw display-off at9:53 from physical wake, after a 600s
+observer had ended. A longer repeat was attempted, but no physical wake was
+performed and it closed at its90s no-wake deadline; this adds no standby
+measurement. Current evidence is consistent with roughly10min inactivity
+sleep. No read-only keepawake query or remote wake has been verified.
+
+
+A new 5:10 `runpad-w1-discovery-demo` workout sweeps the operator-approved
+linear assumption (0% at level0, 11% at level8, 1.375% per level), speed1–6
+km/h at level0, and all incline levels up/down at1km/h. It is marked for
+simulation and experimental Windows hardware playback. The percentage mapping
+is provisional and applies to W1 workout conversion; it is not a measured W1
+grade table. Native Linux workout playback remains pending.
+
+The latest idle correlation captured NORMAL at20:19:48.728 UTC after the
+operator reported waking the display, then first protocol sleep06/02 at
+20:29:43.395 UTC (594.7s later). The follow-up observer began 1:51 after that
+reported wake and saw sleep after 483.3s of its own runtime. A preceding trace
+captured 3:52 of protocol sleep before the same wake. Raw traces are kept in
+the ignored local `docs/treadmill/captures/windows-idle-wake-correlation-*.json`
+files. This is the best wake-to-sleep alignment so far, but the physical wake
+timestamp came from the operator's message rather than a synchronized button
+mark. Polling did not prevent protocol sleep.

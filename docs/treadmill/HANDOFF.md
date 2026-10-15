@@ -894,7 +894,13 @@ before the return-to-0 command; FTMS Stop and Release succeeded. A separate
 0% target was acknowledged, and passive FTMS data afterward showed 0.0 km/h
 and 0.0% incline. The long-hold capture is recorded in the FTMS JSON artifact.
 
-No prepared motor trials remain. Further useful work is a physical low-incline
-check with the operator's inclinometer and a software investigation of the
-2ACC speed-capability mismatch; do not infer incline attainment from a success
-response or the temporary 2ACD incline echo alone.
+No prepared motor trials remain. The next hardware check should be a FitShow
+positive control at incline level 4, using the same phone position on the rigid
+side rail and enough hold time for the reading to settle, then return to level
+0. Earlier readings were 2° at level 0 and 4° at level 4; the FTMS 4% trial
+stayed at 2° throughout. Repeating the known FitShow level-4 movement will show
+whether this inclinometer setup can detect the deck change. FitShow incline
+levels and FTMS percentages are different command scales and should not be
+treated as equivalent. After this physical comparison, investigate the 2ACC
+speed-capability mismatch in software. Never infer incline attainment from a
+success response or a temporary 2ACD target echo alone.

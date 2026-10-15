@@ -44,7 +44,7 @@ class CliTests(unittest.TestCase):
         result = self.command('workout', 'list')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual({row['id']: row['duration_seconds'] for row in json.loads(result.stdout)},
-                         {'uphill-walk-20': 1200, 'interval-demo': 120})
+                         {'uphill-walk-20': 1200, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310})
         result = self.command('workout', 'run', 'uphill-walk-20', '--simulate', '--fast', '--log', str(self.log))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         events = self.events()
@@ -70,7 +70,7 @@ class CliTests(unittest.TestCase):
     def test_hardware_gate_and_invalid_options(self):
         result = self.command('workout', 'run', 'interval-demo')
         self.assertEqual(result.returncode, 2)
-        self.assertIn('disabled', result.stderr)
+        self.assertIn('requires --backend windows', result.stderr)
         self.assertEqual(self.command('info').returncode, 2)
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)

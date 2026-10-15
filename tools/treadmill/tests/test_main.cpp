@@ -350,6 +350,54 @@ TEST(FitShowControl, DisconnectClearsCapabilitiesAndAuthorization) {
     EXPECT_FALSE(control.limits().complete());
     EXPECT_FALSE(control.arm(3));
 }
+TEST(FitShowControl, DisabledReasonsAreDecodedWithoutMotorData) {
+    const auto sleep = FitShow::decodeResponse(wire("510602"));
+    ASSERT_TRUE(sleep.valid);
+    EXPECT_EQ(sleep.status.disabledReason, 2);
+    EXPECT_FALSE(sleep.status.hasMotorData);
+    const auto key = FitShow::decodeResponse(wire("510601"));
+    EXPECT_EQ(key.status.disabledReason, 1);
+    const auto missing = FitShow::decodeResponse(wire("5106"));
+    EXPECT_EQ(missing.status.disabledReason, -1);
+}
+TEST(FitShowControl, ReadyModeDoesNotQueueAStartOrTarget) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    QObject::connect(&control, &FitShow::Control::payloadReady,
+                     [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    control.prepareReady(1, 1); control.pump(0);
+    ASSERT_EQ(writes.size(), 1);
+    EXPECT_EQ(writes[0].toHex(), "53010000000080000000");
+    control.receive(wire("5301")); control.receive(wire("5109")); control.pump(500);
+    ASSERT_EQ(writes.size(), 2);
+    EXPECT_EQ(writes[1].toHex(), "51");
+    control.stop(1, 2);
+    EXPECT_EQ(writes.last().toHex(), "5303");
+}
+TEST(FitShowControl, PendingPauseKeepsStatusPollingWithoutRetryingMotorCommand) {
+    FitShow::Control control;
+    QList<QByteArray> writes;
+    bool timedOut = false;
+    control.setTransport(true); control.allowDiagnostics(true); reportedLimits(control);
+    ASSERT_TRUE(control.arm(1));
+    QObject::connect(&control, &FitShow::Control::payloadReady, [&](QByteArray payload, quint64, quint64) { writes.append(payload); });
+    QObject::connect(&control, &FitShow::Control::commandEvent, [&](quint64 id, QString phase) {
+        if (id == 17 && phase == "timed_out") timedOut = true;
+    });
+    control.pause(1, 17); control.pump(0);
+    control.pump(500); control.pump(1000); control.pump(1500);
+    ASSERT_EQ(writes.size(), 4);
+    EXPECT_EQ(writes[0].toHex(), "5306");
+    for (int i = 1; i < writes.size(); ++i) EXPECT_EQ(writes[i].toHex(), "51");
+    EXPECT_FALSE(timedOut);
+    control.pump(2000);
+    EXPECT_TRUE(timedOut);
+    EXPECT_EQ(writes.size(), 4); // A timeout does not retry pause or poll after fault.
+    control.stop(2, 18);
+    EXPECT_EQ(writes.last().toHex(), "5303");
+}
 TEST(FitShowParser, PreservesNonRunningRawSpeedAndRejectsShortStatus) {
     auto response = FitShow::decodeResponse(wire("51040502000000000000000000"));
     ASSERT_TRUE(response.valid);

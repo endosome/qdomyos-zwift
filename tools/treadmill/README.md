@@ -3,6 +3,9 @@
 Linux CLI with read-only BLE discovery, explicitly approved nonmotor protocol
 diagnostics, and offline workout simulation. It uses Qt Core, Bluetooth and
 Positioning and does not load QZ's device factory or GUI.
+Choose `--backend linux` (the default) for native Linux Qt/BlueZ, or
+`--backend windows` for local Windows Bluetooth through WSL. Backend selection
+is explicit; connection failures never switch to another backend automatically.
 
 The [internal controller contract](API.md) describes ownership, threading,
 clock advancement, asynchronous command outcomes and the future library boundary.
@@ -54,7 +57,210 @@ offline only; use the native Linux executable for the future device checks.
 
 ### WSL host with Windows Bluetooth
 
-When WSL has no adapter, use this separate read-only Windows diagnostic helper.
+The CLI's Windows backend runs the bundled PowerShell/WinRT diagnostic helper.
+Scan and info are read-only; protocol status requires `--confirm-diagnostics`
+and interactive `NONMOTOR` confirmation. Examples:
+
+```sh
+treadmill scan --backend windows --timeout 15
+treadmill info --backend windows --device AA:BB:CC:DD:EE:FF --address-type public --timeout 30
+treadmill status --backend windows --device AA:BB:CC:DD:EE:FF --expected-name FS-EXAMPLE \
+  --address-type public --confirm-diagnostics --timeout 30 --log /tmp/new-windows-report.json
+```
+
+`--address-type` accepts `unknown` (default), `public`, or `random` and applies
+only to Windows info/status. Windows status accepts either an explicit
+address/expected name or an existing reviewed `--profile`; the identity-only
+form needs no speed/grade mapping. It checks FFF0/FFF1/FFF2 and their properties
+before writes. It returns the helper's raw JSON report, including exact
+transmitted/received frames and notification cleanup result; Linux status uses
+its existing JSON Lines format. The Windows log is written at probe completion
+and must be a new file. Q/S, EOF, and termination signals request graceful
+probe cleanup. A helper that fails to exit within five seconds is killed and
+cleanup is reported as unconfirmed. Cancellation returns a nonzero exit code.
+
+Install includes both helper sources under `share/treadmill/windows`; builds
+in a checkout use the source helper if the installed copy is absent. WSL interop,
+`wslpath`, and Windows PowerShell 5.1 must be available. `TREADMILL_POWERSHELL`
+can select an explicit PowerShell executable path. Experimental W1 workouts can
+run through this backend with the separate MOTOR approval and W1-specific limits
+below. Native Linux remains the default for Linux BLE diagnostics; hardware
+workout execution through the native Linux transport is not connected yet.
+
+### First bounded motor trial (Windows)
+
+This is an experimental start/stop check, not a calibrated workout. Inspect the
+exact frames without creating any Bluetooth transport:
+
+```sh
+treadmill control-test --backend windows --device DD:87:70:39:74:20 \
+  --expected-name FS-0F7A32 --address-type public --dry-run
+```
+
+The only permitted motor frames are QZ's start `02530100000000000000005203`,
+one paired raw-speed-10/incline-0 target `0253020a005b03`, and stop
+`0253035003`. Raw 10 being 1 km/h remains the operator's walking-mode working
+assumption; this trial does not establish speed units or physical incline.
+No QZ initialization sequence, repeated start/target, pause or arbitrary raw
+write is permitted. Repeated motor requests are rejected rather than retried.
+
+After separate review of this exact raw-code trial, add `--confirm-motor` and a
+new `--log <path>` instead of `--dry-run`. Interactive MOTOR confirmation
+asserts a stopped/clear belt, normally attached safety key, no other controller,
+and an operator at the physical stop. Do not launch while nobody is attending.
+
+Both processes check raw limits 10–60/unit tag 0 and incline 0–8, plus three
+fresh NORMAL reports; NORMAL does not prove physical stopping. The Windows
+helper also rereads FITSHOW/FS-BT-C1/software revision 1.3.8 before enabling
+queries/control. Firmware remains unknown, and module revisions are not
+substituted for treadmill firmware. Different limits/identity refuse the trial.
+
+The CLI stops after five seconds of reported running at raw 10/0, or sooner on
+Q/S, EOF, signals, faults or stale status. Windows independently attempts stop
+after 12 seconds from the start attempt, on stale/unsafe feedback, or if its
+input pipe closes. It drops queued targets before emergency stop. Loss of BLE
+or termination of the Windows helper itself can prevent stop delivery; physical
+stop remains necessary. Native writes have a one-second timeout; attempted
+writes are recorded before I/O. All raw frames, weak ACKs, submission/completion,
+module identity and outcomes go to a bounded JSON Lines log.
+
+A successful exit means the start/target/stop communication sequence and three
+NORMAL reports after a successful stop write were observed. It always records
+`physical_stop_verified: false`. Confirm actual belt movement, console speed,
+incline and physical stopping separately. Full workouts and calibrated speed/
+incline changes remain gated on both Linux and Windows.
+
+### Prepared validation suite
+
+```sh
+treadmill control-test --backend windows --list-trials
+treadmill control-test --backend windows --device DD:87:70:39:74:20 \
+  --expected-name FS-0F7A32 --address-type public --trial speed-12 --dry-run
+```
+
+There are 23 fixed plans: start-stop; speed-12/15/20/30/40/50/60; incline-1
+through incline-8; pause; incline-timing-4/8; incline-measure-4/8; ready-idle/wake. Select one with `--trial`; the default is start-stop.
+Each launch prints its exact frames, raw ceilings, holds and Windows deadline
+before MOTOR confirmation. Individual mode supports physical review after each
+trial; the separately confirmed batch mode below runs a specified group.
+
+Speed plans change from raw 10/0 to the named speed at incline 0, return to
+10/0 and stop. Speed-12 holds three seconds per matching target; other speeds
+hold 3/5/3 seconds. Incline plans keep raw speed 10, change incline 0 → named
+code → 0, with 3/15/15-second observation holds, then stop. Reported incline
+is not proof of attained deck position or calibrated grade. Pause starts at
+10/0, holds three seconds, requests pause, observes five seconds, then explicitly
+stops. It does not infer or attempt resume semantics.
+
+Later steps wait up to 15 seconds for matching feedback; mismatches restart
+the hold. Windows independently enforces fixed targets/order and deadlines
+of 60 seconds for speed, 80 for incline and 18 for pause. Start-stop retains
+12 seconds. BLE loss can prevent physical stopping. Higher targets are
+prepared for individual review, not validated by a lower trial.
+
+### Physical incline timing and extra notifications
+
+`incline-timing-8` runs at console speed 1.0, requests level 8, returns to
+level 0 and stops. `incline-timing-4` follows the same sequence to level 4
+with a raw incline ceiling of 4. Begin with the deck physically settled at level 0. In the
+local terminal press B when the deck starts rising, U when it finishes; on the
+return press B when lowering begins, then D when it finishes. No Enter is needed
+for these keys. U/D without a preceding B is ignored. Q/S aborts.
+
+The trial waits for physical marks instead of advancing on the reported level,
+observes two seconds after each arrival, and stops on missing marks after
+60 seconds per direction. The independent Windows motor deadline is 150 seconds.
+It is excluded from automatic batches. Log events distinguish target_requested,
+target_reported, moving_observed and attained_observed; the last two explicitly
+come from operator keys with reaction-time uncertainty. They measure command-to-
+motion delay, motion duration, command-to-arrival time and report-to-arrival lag.
+These are experimental observations, not automatic position sensing.
+
+`incline-measure-4` and `incline-measure-8` use the same B/U/B/D sequence
+to levels 4 and 8 respectively, then hold
+30 seconds after each operator-marked arrival to allow three inclinometer
+readings. Keep the phone aligned front to back on a rigid side rail that rises
+with the deck. Record baseline readings before MOTOR, raised-level readings during
+the upper hold and level-0 readings during the lower hold. Do not zero at level 0.
+The belt runs at console 1.0; this is not a stationary-belt incline trial.
+Motor deadline is 210 seconds, with the same 60-second arrival mark deadlines.
+It is excluded from automatic batches. Angles are operator observations reported
+separately, and no percent mapping is silently derived from a noisy reading.
+
+`--observe-ftms` on Windows status/control-test/control-batch and hardware
+workouts also subscribes to FTMS Treadmill Data (2ACD) and Fitness Machine Status
+(2ADA). It records raw data with characteristic UUIDs alongside FitShow, writes
+no FTMS control-point commands and cleans up all subscriptions. FTMS does not refresh the FitShow
+motor watchdog and is not yet interpreted as proof of physical arrival.
+
+The W1 technical specification advertises 11% maximum and eight levels but does
+not provide percentages per level or confirm an exactly 0% minimum. W1 workout
+translation uses the operator's explicit provisional assumption that level 0 =
+0%, level 8 = 11%, and each level is 1.375% apart. This is not a measured or
+manufacturer mapping. Physical angle measurement is separate from travel timing.
+
+### Bounded READY compatibility experiment
+
+`ready-idle` requires the usual MOTOR confirmation, exact module identity and
+walking limits, three fresh NORMAL reports, and operator-confirmed stopped
+belt. It sends only `53/01` with mode bit `0x80`, waits for READY status 9,
+observes 15 seconds, then explicitly stops and waits for three NORMAL replies.
+It sends no speed/incline target or explicit `53/09` start. Countdown, RUNNING
+or any unexpected state triggers immediate stop in both host and Windows gate.
+The Windows watchdog is 30 seconds. No command retry or reconnect is added.
+This trial is excluded from automatic batches and nonmotor diagnostics.
+
+The archived official FitShow v1.1 protocol describes this bit as preparing
+without starting. W1 support is unverified; it may ignore the bit and begin
+starting. A successful short trial would verify reported READY behavior only,
+not physical stationary status or prevention of sleep over several minutes.
+
+`ready-wake` is a separate bounded experiment with the same READY frame and
+15-second observation. It permits preflight from three fresh NORMAL or explicit
+sleep `06/02` reports, together with the exact module identity, reviewed bounds
+and operator-confirmed stopped belt. Safety-key `06/01`, missing/unknown disabled
+reason still fault. Documented sleep is allowed for at most the two-second
+READY response window; failure to enter READY then stops the trial. Any disabled
+state after READY is established still faults. Both the host
+and Windows gate enforce this policy. Generic FitShow control and other trials
+retain their existing disabled-state refusal. This experiment does not bypass a
+safety-key state and does not imply a verified keepawake policy.
+
+### Idle observation during experiments
+
+Windows protocol `status --timeout 600` keeps one nonmotor connection open for
+up to ten minutes, querying speed/incline bounds once and status every 500 ms.
+Its default remains 30 seconds; Linux status and scan/info remain bounded to
+60 seconds. NONMOTOR confirmation, Q/S/EOF/signal cleanup, new logs and the
+8 MiB recording limit still apply. No wake, start, target, stop, pause or raw
+write is added to this observer. Continuous polling is a keepalive experiment;
+a real W1 experiment showed that it does not prevent console sleep. Do not run a
+second controller concurrently with a motor trial; close the observer first.
+
+### Sequential batches
+
+```sh
+treadmill control-batch --backend windows --device DD:87:70:39:74:20 \
+  --expected-name FS-0F7A32 --address-type public --batch remaining --dry-run
+# After reviewing the batch, replace --dry-run with:
+# --confirm-batch --log /path/to/new-batch-directory
+```
+
+`remaining` runs speed-50, speed-60, incline-1 through incline-8, then pause.
+It is the defined follow-up to the already completed lower-speed trials;
+it does not infer completion from saved logs. `speeds`, `inclines`, and `all`
+select their fixed prepared groups. One interactive BATCH confirmation approves
+the printed sequence. Physical stop must remain accessible throughout.
+
+Each trial runs its own identity/limit/status preflight, uses a separate new
+JSON Lines log, returns to baseline where applicable, sends explicit stop,
+and waits for three NORMAL replies before the next trial starts. Stop observation
+allows ten seconds; NORMAL remains status-only, not physical zero-speed proof.
+Q/S, input closure, signals, report/log errors or any failed trial halt the
+entire batch. Existing selected logs are rejected before the first trial.
+Batch completion requires a combined operator review of physical behavior.
+
+The helper can also be used directly.
 It uses Windows PowerShell 5.1, .NET Framework and native WinRT metadata already
 present on Windows; it does not require a Windows Qt build or USB passthrough.
 The helper re-enters an MTA PowerShell host automatically: default STA service
@@ -122,7 +328,7 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
 ```
 
 Use the confirmed scan values and a new report path. Windows nonmotor probe
-duration is 1–120 seconds and includes connection/discovery/querying, plus at
+duration is 1–600 seconds and includes connection/discovery/querying, plus at
 most two seconds for cleanup.
 Raw notifications and requested frames, elapsed time, UTC and Windows write
 status are retained in the JSON report. Write success is not a device ACK or
@@ -256,6 +462,43 @@ and must be calibrated before any hardware backend is enabled.
 ./treadmill workout run interval-demo --simulate --fast --inject stop-failure
 ```
 
+The W1 discovery sampler is a 5:10 workout of verified walking speeds 1–6 km/h
+and incline codes 0–8 with the provisional linear grade assumption. Run it in
+simulation with:
+
+```sh
+./treadmill workout run runpad-w1-discovery-demo --simulate
+```
+
+`--simulate` does not connect to Bluetooth. For the experimental Windows hardware
+path, first inspect the exact W1-mapped target sequence without connecting:
+
+```sh
+./treadmill workout run runpad-w1-discovery-demo --backend windows \
+  --device DD:87:70:39:74:20 --expected-name FS-0F7A32 --dry-run
+```
+
+After reviewing the plan, run:
+
+```sh
+./treadmill workout run runpad-w1-discovery-demo --backend windows \
+  --device DD:87:70:39:74:20 --expected-name FS-0F7A32 \
+  --confirm-motor --log /tmp/runpad-workout.jsonl
+```
+
+The CLI also requires typing `MOTOR`. Wake the treadmill manually, clear the belt,
+keep the safety key attached, and stay at the controls with the physical stop
+reachable. Playback refuses any device except the exact W1 identity and live
+walking bounds (raw speed 10–60, unit tag 0, incline 0–8). Speeds are limited to
+the physically confirmed 1.0–6.0 km/h range. Grade percent is converted to the
+nearest assumed 1.375% level; ramp rows become 10-second target steps. The hold
+for each step starts after three matching reported target statuses, which does
+not prove physical incline arrival. Pause is unavailable. Q/S, EOF and signals
+request stop; successful completion also requires three NORMAL reports after
+the stop write. A lost Bluetooth link can still prevent stop delivery. Hardware
+playback currently uses Windows Bluetooth through WSL; native Linux workout
+transport is still pending.
+
 Select by ID or explicit XML path. `--workouts-dir` overrides the catalog directory.
 Without an override, the installed `../share/treadmill/workouts` directory is used
 when present, with the checkout workout directory as a development fallback.
@@ -282,6 +525,8 @@ Run offline CLI/terminal integration tests after building:
 
 ```sh
 python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
+python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
+python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
 ```
 
 These exercise both full workouts, fault outcomes, log preservation, EOF,
@@ -300,10 +545,12 @@ validation. Combined info requires its complete payload before fields are read.
 These checks do not establish W1 compatibility.
 
 The complete QZ static library now builds with the broader local Qt toolchain.
-Restricted driver/adapter support is implemented and tested offline; physical W1
-compatibility and feedback verification remain pending. Hardware workout
-execution is disabled until that validation and an explicit launch approval path
-are complete.
+Restricted driver/adapter support is implemented. Experimental Windows W1
+workout playback is now connected to the bounded FitShow control queue, with
+exact device/module identity checks, live raw limits, interactive MOTOR approval,
+an 8-level/6 km/h ceiling, bounded target lists and explicit stop confirmation.
+Physical grade remains provisional; protocol target reports do not prove physical
+deck arrival. Native Linux hardware workout transport is not connected yet.
 
 ## Install and CI
 
@@ -426,7 +673,8 @@ It records complete raw notifications (including malformed frames), requested
 payloads, weak ACKs, raw bounds/unit tags, status codes and observed identity.
 No speed units, attained incline or physical stop are inferred from these traces.
 
-Q/S, EOF, termination signals and the 1–60 second deadline close the connection.
+Q/S, EOF, termination signals and the bounded deadline close the connection
+(1–60 seconds on Linux; 1–600 seconds on Windows).
 This is an observer; physical belt operation remains with the operator.
 Existing trace files are preserved and recording is bounded to 8 MiB. The
 ordinary `scan` and `info` commands remain read-only and require no write approval.
@@ -455,6 +703,75 @@ DBUS_SYSTEM_BUS_ADDRESS=unix:path=/tmp/no-bluetooth-bus \
   ./qdomyos-zwift-tests --gtest_filter='TrainProgramTestSuite.*:*Metric*:*FitShow*'
 ```
 
-No physical W1 test was performed. Hardware-specific commands/limits, feedback,
-initialization requirements and response deadlines still require the postponed
-validation, and hardware workout launching remains disabled.
+Physical W1 bounded start/stop, walking speeds 1.0–6.0 and incline codes 1–8
+were confirmed by the operator. Pause did not work in the verified path. Physical
+incline travel times and percentage mappings remain unresolved. Experimental
+Windows/WSL workout playback is implemented, but physical end-to-end acceptance
+is still pending; native Linux workout playback is not connected yet.
+
+
+Windows nonmotor status additionally accepts `--status-heart-rate-zero` to test
+FitShow v1.1's documented appended heart-rate byte, set to zero. It sends status
+frame `0251005103` instead of `02515103`; capability queries are unchanged.
+This experiment requires the usual NONMOTOR approval, exact device/name and
+bounded timeout. It does not yet establish keepawake. Ordinary status polling
+allowed the W1 to enter sleep while Bluetooth still responded. Wake manually.
+Do not use the READY command to keep the W1 idle: the awake W1 entered countdown
+during that guarded experiment, which immediately requested stop.
+
+
+Follow-up: the 51/00 capture started in RUNNING (24 replies at speed code10),
+so it cannot measure idle standby. Physical stop confirmation is pending.
+READY live trials are retired before Bluetooth I/O; their successful STOP
+write had not established a stopped state. The explicit zero-heart-rate idle
+experiment now aborts on non-NORMAL status and ends on validated sleep06/02.
+It records initial state, NORMAL count and elapsed time from first NORMAL to
+sleep. Keepawake remains unresolved.
+
+
+The live zero-heart-rate status probe reached sleep06/02 after 471.530 s from
+first NORMAL (862 NORMAL replies), with successful BLE cleanup; the operator
+later reported the display off, with no timestamp for when it went dark. This variant does not prevent protocol sleep. The Windows-only
+`--status-data-sport` experiment alternates documented status51 and read-only
+current-exercise-data52/00 at a combined 500 ms cadence, from a manually woken
+NORMAL baseline. It is bounded to 600 s, stops on explicit sleep or motion,
+and remains an unverified keepawake hypothesis.
+
+
+The documented DATA_SPORT 52/00 query also did not keep the W1 awake: it
+replied 478 times, but sleep06/02 followed 524.120 s after first NORMAL.
+`--measure-sleep-timer` is a separate nonmotor Windows observer for measuring
+standby: connect while asleep, wait for its confirmed-sleep cue, wake with
+physical controls, and record first NORMAL to next sleep06/02 (up to 600 s).
+The elapsed time is protocol-observed and has roughly polling-interval
+uncertainty relative to the physical button press.
+
+
+The first sleep-timer run saw 728 sleep06/02 replies, no NORMAL transition,
+and was cancelled after the operator confirmed the display stayed off. No timer
+value was measured. Future runs close after 90 s without a physical wake after
+the first sleep reply, while retaining the 600 s total limit.
+
+
+The operator did not watch the display continuously. All reported 343.3,
+471.530 and 524.120-second intervals end at protocol sleep06/02, not at a
+measured display-off event. They start at the first protocol NORMAL reply,
+not the physical wake action. The differing values do not establish that
+any query format changed the standby timer.
+
+
+A synchronized timer run connected while the W1 was asleep and the operator
+physically woke it during observation. The first NORMAL reply was at30.127s;
+there were 1032 NORMAL replies over the next569.467s with no next protocol
+sleep before the 600s cutoff. This is a lower bound, not an exact standby
+time. Display-off and post-disconnect observations are pending. Connection
+before wake is an unverified possible factor.
+
+
+The after-wake ordinary-status comparison reported protocol sleep while BLE
+was still connected, 572.136 s after first NORMAL. In the synchronized prior
+run, the operator saw display-off at9:53 from physical wake, after a 600s
+observer had ended. A longer repeat was attempted, but no physical wake was
+performed and it closed at its90s no-wake deadline; this adds no standby
+measurement. Current evidence is consistent with roughly10min inactivity
+sleep. No read-only keepawake query or remote wake has been verified.

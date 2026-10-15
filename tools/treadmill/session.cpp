@@ -2,6 +2,7 @@
 #include "runner.h"
 #include "profile.h"
 #include "terminal.h"
+#include "motortrial.h"
 #include <QDateTime>
 #include <QDir>
 #include <QElapsedTimer>
@@ -62,10 +63,11 @@ static bool catalog(const QString &directory, QMap<QString, QString> &paths, QJs
 int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, const QStringList &arguments) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
     if (arguments.size() < 2 || (arguments[1] != "list" && arguments[1] != "run" && arguments[1] != "inspect"))
-        return fail("Usage: treadmill workout list | run <id-or-path> --simulate [--fast]");
+        return fail("Usage: treadmill workout list | run <id-or-path> --simulate [--fast] | run <id-or-path> --backend windows --device <address> --expected-name <name> [--dry-run | --confirm-motor --log <new-file>]");
     if (arguments[1] == "list") {
         if (arguments.size() != 2 || parser.isSet("simulate") || parser.isSet("fast") ||
-            parser.isSet("log") || parser.isSet("inject") || parser.isSet("inject-at") || parser.isSet("profile")) return fail("Invalid workout list options");
+            parser.isSet("log") || parser.isSet("inject") || parser.isSet("inject-at") || parser.isSet("profile") ||
+            parser.isSet("backend") || parser.isSet("device") || parser.isSet("expected-name") || parser.isSet("confirm-motor") || parser.isSet("dry-run")) return fail("Invalid workout list options");
         QMap<QString, QString> paths;
         QJsonArray entries;
         QString error;
@@ -75,11 +77,18 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
     }
     if (arguments.size() != 3) return fail("workout run requires one workout ID or file path");
     const bool inspect = arguments[1] == "inspect";
-    if (!inspect && !parser.isSet("simulate"))
-        return fail("Hardware workout execution is disabled: W1 compatibility, capabilities and stop feedback are unverified. Use --simulate.");
-    if (!inspect && parser.isSet("profile")) return fail("--profile is for offline workout inspect; simulation uses its own explicit model");
+    if (!inspect && !parser.isSet("simulate")) {
+        if (!parser.isSet("backend") || parser.value("backend") != "windows" || !parser.isSet("device") ||
+            !parser.isSet("expected-name"))
+            return fail("Hardware workout requires --backend windows, --device and exact --expected-name");
+        if (parser.isSet("profile") || parser.isSet("fast") || parser.isSet("inject") || parser.isSet("inject-at") ||
+            parser.isSet("confirm-diagnostics")) return fail("Unsupported hardware workout option");
+    }
+    if (!inspect && parser.isSet("simulate") && (parser.isSet("profile") || parser.isSet("backend") || parser.isSet("device") || parser.isSet("expected-name") || parser.isSet("confirm-motor") || parser.isSet("dry-run")))
+        return fail("Hardware options cannot be used with simulation");
     if (inspect && (!parser.isSet("profile") || parser.isSet("simulate") || parser.isSet("fast") || parser.isSet("log") ||
-                    parser.isSet("inject") || parser.isSet("inject-at"))) return fail("workout inspect requires --profile and no execution options");
+                    parser.isSet("inject") || parser.isSet("inject-at") || parser.isSet("backend") || parser.isSet("device") ||
+                    parser.isSet("expected-name") || parser.isSet("confirm-motor") || parser.isSet("dry-run"))) return fail("workout inspect requires --profile and no execution options");
     QString path = arguments[2];
     if (!QFileInfo::exists(path)) {
         QMap<QString, QString> paths;
@@ -91,6 +100,7 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
     }
     const auto loaded = loadWorkout(path);
     if (!loaded.error.isEmpty()) return fail(loaded.error);
+    if (!inspect && !parser.isSet("simulate")) return runWindowsWorkout(app, parser, loaded.workout);
     if (inspect) {
         const auto profile = loadProfile(parser.value("profile"));
         if (!profile.error.isEmpty()) return fail(profile.error);

@@ -21,7 +21,9 @@ RUN qmake /source/tools/treadmill/treadmill.pro && make -j2
 WORKDIR /build/tests
 RUN qmake /source/tools/treadmill/tests/tests.pro && make -j2 \
     && ./treadmill-tests --gtest_output=xml:/build/core-results.xml \
-    && python3 /source/tools/treadmill/tests/test_cli.py /build/cli/treadmill
+    && python3 /source/tools/treadmill/tests/test_cli.py /build/cli/treadmill \
+    && python3 /source/tools/treadmill/tests/test_windows_bridge.py /build/cli/treadmill \
+    && python3 /source/tools/treadmill/tests/test_motortrial.py /build/cli/treadmill
 WORKDIR /build/driver
 RUN qmake /source/tools/treadmill/driver/driver.pro && make -j2
 WORKDIR /build/driver-tests

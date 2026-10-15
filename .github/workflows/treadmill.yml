@@ -62,6 +62,8 @@ jobs:
           /tmp/treadmill-tests/treadmill-tests --gtest_output=xml:/tmp/treadmill-tests/results.xml
           /tmp/treadmill-driver-tests/qz-fitshow-tests --gtest_output=xml:/tmp/treadmill-driver-tests/results.xml
           python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
+          python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
+          python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
       - name: Check staged installation
         run: |
           cd /tmp/treadmill-build

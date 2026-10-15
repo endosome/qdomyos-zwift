@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="runpad-w1-discovery-demo" name="RunPad W1 discovery sampler — assumed linear grade" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Warm-up — level 0" duration="00:00:10" speed="1.0" inclination="0" forcespeed="1">
+    <textevent timeoffset="0" message="W1 grade mapping assumption: level 0 = 0%, level 8 = 11%, equal 1.375% steps. This is not a measured calibration."/>
+    <textevent timeoffset="0" message="Wake the treadmill manually, keep the belt clear, and stay at the controls with the physical stop reachable."/>
+  </row>
+  <row name="Speed ladder — 2.0 km/h at level 0" duration="00:00:10" speed="2.0" inclination="0" forcespeed="1"/>
+  <row name="Speed ladder — 3.0 km/h at level 0" duration="00:00:10" speed="3.0" inclination="0" forcespeed="1"/>
+  <row name="Speed ladder — 4.0 km/h at level 0" duration="00:00:10" speed="4.0" inclination="0" forcespeed="1"/>
+  <row name="Speed ladder — 5.0 km/h at level 0" duration="00:00:10" speed="5.0" inclination="0" forcespeed="1"/>
+  <row name="Speed ladder — 6.0 km/h at level 0" duration="00:00:10" speed="6.0" inclination="0" forcespeed="1"/>
+  <row name="Return to 1.0 km/h at level 0" duration="00:00:10" speed="1.0" inclination="0" forcespeed="1"/>
+  <row name="Incline ascent — level 1, assumed 1.375%" duration="00:00:15" speed="1.0" inclination="1.375" forcespeed="1"/>
+  <row name="Incline ascent — level 2, assumed 2.75%" duration="00:00:15" speed="1.0" inclination="2.75" forcespeed="1"/>
+  <row name="Incline ascent — level 3, assumed 4.125%" duration="00:00:15" speed="1.0" inclination="4.125" forcespeed="1"/>
+  <row name="Incline ascent — level 4, assumed 5.5%" duration="00:00:15" speed="1.0" inclination="5.5" forcespeed="1"/>
+  <row name="Incline ascent — level 5, assumed 6.875%" duration="00:00:15" speed="1.0" inclination="6.875" forcespeed="1"/>
+  <row name="Incline ascent — level 6, assumed 8.25%" duration="00:00:15" speed="1.0" inclination="8.25" forcespeed="1"/>
+  <row name="Incline ascent — level 7, assumed 9.625%" duration="00:00:15" speed="1.0" inclination="9.625" forcespeed="1"/>
+  <row name="Incline ascent — level 8, assumed 11%" duration="00:00:15" speed="1.0" inclination="11" forcespeed="1"/>
+  <row name="Incline descent — level 7, assumed 9.625%" duration="00:00:15" speed="1.0" inclination="9.625" forcespeed="1"/>
+  <row name="Incline descent — level 6, assumed 8.25%" duration="00:00:15" speed="1.0" inclination="8.25" forcespeed="1"/>
+  <row name="Incline descent — level 5, assumed 6.875%" duration="00:00:15" speed="1.0" inclination="6.875" forcespeed="1"/>
+  <row name="Incline descent — level 4, assumed 5.5%" duration="00:00:15" speed="1.0" inclination="5.5" forcespeed="1"/>
+  <row name="Incline descent — level 3, assumed 4.125%" duration="00:00:15" speed="1.0" inclination="4.125" forcespeed="1"/>
+  <row name="Incline descent — level 2, assumed 2.75%" duration="00:00:15" speed="1.0" inclination="2.75" forcespeed="1"/>
+  <row name="Incline descent — level 1, assumed 1.375%" duration="00:00:15" speed="1.0" inclination="1.375" forcespeed="1"/>
+  <row name="Incline descent — level 0, assumed 0%" duration="00:00:15" speed="1.0" inclination="0" forcespeed="1"/>
+</rows>

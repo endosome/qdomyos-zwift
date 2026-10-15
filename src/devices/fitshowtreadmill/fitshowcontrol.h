@@ -23,6 +23,7 @@ struct Status {
     int speedTenths = -1;
     int inclineCode = -1;
     bool hasMotorData = false;
+    int disabledReason = -1;
 };
 struct Response {
     bool valid = false;
@@ -42,6 +43,7 @@ public:
     void queryLimits(quint64 id);
     bool arm(quint64 generation);
     void start(quint64 generation, quint64 id, int speed, int incline);
+    void prepareReady(quint64 generation, quint64 id);
     void target(quint64 generation, quint64 id, int speed, int incline);
     void stop(quint64 generation, quint64 id);
     void pause(quint64 generation, quint64 id);

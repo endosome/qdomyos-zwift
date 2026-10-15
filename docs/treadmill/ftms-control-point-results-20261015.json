@@ -498,5 +498,95 @@
     "elapsed_ms": 47054,
     "protocol_sequence_complete": true,
     "notes": "The 4% target was sent after Start/Resume and acknowledged. FTMS Treadmill Data continued reporting 0.0% inclination throughout the trial. The return-to-0 target, FTMS Stop and Release Control were acknowledged. The previous FTMS Stop timeout was caused by an insufficient helper deadline; this repeat completed normally. Physical angle readings during the hold and after return were not reported, so deck movement remains unverified."
+  },
+  "incline_4_percent_60_second_physical_repeat": {
+    "purpose": "Hold an FTMS 4% incline target for 60 seconds while running at 1.0 km/h, allowing time to read physical deck angle.",
+    "commands_during_trial": [
+      {
+        "request_hex": "00",
+        "meaning": "Request Control",
+        "write": "Success",
+        "response_hex": "800001"
+      },
+      {
+        "request_hex": "026400",
+        "meaning": "Set Target Speed 1.00 km/h",
+        "write": "Success",
+        "response_hex": "800201"
+      },
+      {
+        "request_hex": "07",
+        "meaning": "Start/Resume at 0%",
+        "write": "Success",
+        "response_hex": "800701"
+      },
+      {
+        "request_hex": "032800",
+        "meaning": "Set Target Inclination 4.0% while running",
+        "write": "Success",
+        "response_hex": "800301"
+      },
+      {
+        "request_hex": "030000",
+        "meaning": "Return to 0% during trial",
+        "write": "not sent; helper absolute deadline expired"
+      },
+      {
+        "request_hex": "0801",
+        "meaning": "FTMS Stop",
+        "write": "Success",
+        "response_hex": "800801"
+      },
+      {
+        "request_hex": "01",
+        "meaning": "Release Control",
+        "write": "Success",
+        "response_hex": "800101"
+      }
+    ],
+    "physical_inclinometer": {
+      "baseline_degrees": 2,
+      "during_4_percent_hold_degrees": 2,
+      "after_trial_degrees": 2,
+      "operator_note": "The inclinometer showed 2 degrees all the time; operator suspects this is within the app margin of error.",
+      "measurable_angle_change": false
+    },
+    "treadmill_data_samples": [
+      {
+        "elapsed_ms": 6508,
+        "frame_hex": "8c056400000000000000000000ffffff000000",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 66510,
+        "frame_hex": "8c056400100000000000000100ffffff003d00",
+        "speed_kmh": 1.0,
+        "incline_percent": 0.1
+      }
+    ],
+    "trial_status": "incomplete sequence: helper deadline expired before return-to-0 target; FTMS Stop and Release Control succeeded",
+    "post_trial_clear_target": {
+      "request_control_response_hex": "800001",
+      "set_incline_0_response_hex": "800301",
+      "release_control_response_hex": "800101"
+    },
+    "post_clear_passive_treadmill_data_samples": [
+      {
+        "elapsed_ms": 2374,
+        "frame_hex": "8c050000000000000000000000ffffff000000",
+        "speed_kmh": 0.0,
+        "incline_percent": 0.0
+      },
+      {
+        "elapsed_ms": 6427,
+        "frame_hex": "8c050000000000000000000000ffffff000000",
+        "speed_kmh": 0.0,
+        "incline_percent": 0.0
+      }
+    ],
+    "subscriptions_cleaned_up": "Success",
+    "physical_deck_movement_verified": false,
+    "notes": "The FTMS target was acknowledged, but Treadmill Data never reported the requested 4%; a late sample showed 0.1%. The inclinometer stayed at 2 degrees throughout, within its suspected error margin. The long-hold helper reused an absolute 40-second deadline for its return target and missed that command. FTMS Stop and Release were confirmed, then a separate Request Control / 0% target / Release sequence succeeded. Passive FTMS samples afterward showed speed and incline both 0.0. No measurable physical incline change was observed."
   }
 }

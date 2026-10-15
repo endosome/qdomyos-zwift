@@ -886,6 +886,14 @@ therefore remains unverified. The stop timeout in the prior repeat was an
 insufficient helper deadline; this run stopped normally. Results are in the
 FTMS capture JSON.
 
+A 60-second 4% hold with the inclinometer on the rigid side rail read 2°
+throughout, the same as baseline and within the app's suspected error margin.
+No physical change was measurable. FTMS accepted the target, but 2ACD showed
+0.0% initially and 0.1% late in the hold, never 4%. A helper deadline expired
+before the return-to-0 command; FTMS Stop and Release succeeded. A separate
+0% target was acknowledged, and passive FTMS data afterward showed 0.0 km/h
+and 0.0% incline. The long-hold capture is recorded in the FTMS JSON artifact.
+
 No prepared motor trials remain. Further useful work is a physical low-incline
 check with the operator's inclinometer and a software investigation of the
 2ACC speed-capability mismatch; do not infer incline attainment from a success

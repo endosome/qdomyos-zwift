@@ -529,6 +529,19 @@ python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadm
 python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
 ```
 
+Summarize one or more saved hardware logs without connecting to the treadmill:
+
+```sh
+python3 tools/treadmill/summarize_run.py /tmp/runpad-stop-context-20261015.jsonl
+python3 tools/treadmill/summarize_run.py docs/treadmill/captures/
+```
+
+The summary collapses repeated FitShow polls to state changes, displays requested
+and reported targets, and decodes only FTMS Treadmill Data speed and inclination
+fields present in each notification. Those values remain device reports, not
+independent physical measurements. Stop delivery, NORMAL feedback, and physical
+stop confirmation are shown as separate outcomes.
+
 These exercise both full workouts, fault outcomes, log preservation, EOF,
 SIGTERM/terminal restoration and single-key stop. They never invoke BLE scanning
 or connect a physical device. Command logs distinguish submitted, acknowledged,

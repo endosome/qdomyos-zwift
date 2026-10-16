@@ -1,0 +1,22 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "info",
+    "devices": [
+    ],
+    "error": "Service discovery: Unreachable",
+    "frames": [
+    ],
+    "last_operation": "discover_services",
+    "motor_capabilities": "unknown: no FitShow queries were sent",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": null,
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "error",
+    "windows_version": "10.0.26300.0"
+}

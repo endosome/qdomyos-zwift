@@ -1,0 +1,304 @@
+{
+  "address": "DD:87:70:39:74:20",
+  "address_type": "public",
+  "backend": "windows-winrt",
+  "command": "info",
+  "devices": [],
+  "error": null,
+  "frames": [],
+  "last_operation": "read_standard_value 00002ad7-0000-1000-8000-00805f9b34fb",
+  "motor_capabilities": "unknown: no FitShow queries were sent",
+  "motor_execution_enabled": false,
+  "name": "FS-0F7A32",
+  "notification_cleanup_status": null,
+  "service_uuids": [
+    "00001800-0000-1000-8000-00805f9b34fb",
+    "0000180a-0000-1000-8000-00805f9b34fb",
+    "00001826-0000-1000-8000-00805f9b34fb",
+    "0000fff0-0000-1000-8000-00805f9b34fb"
+  ],
+  "services": [
+    {
+      "characteristic_status": "Success",
+      "characteristics": [
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 2,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a00-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        }
+      ],
+      "uuid": "00001800-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "characteristic_status": "Success",
+      "characteristics": [
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 5,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a51-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 7,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a5d-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 9,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a25-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 11,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a23-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 13,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": null,
+          "uuid": "00002a46-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": "FITSHOW",
+          "handle": 15,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002a29-0000-1000-8000-00805f9b34fb",
+          "value_hex": "46495453484f57"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": "FS-BT-C1",
+          "handle": 17,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002a24-0000-1000-8000-00805f9b34fb",
+          "value_hex": "46532d42542d4331"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": "1.0",
+          "handle": 19,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002a27-0000-1000-8000-00805f9b34fb",
+          "value_hex": "312e30"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": "1.3.8",
+          "handle": 21,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002a28-0000-1000-8000-00805f9b34fb",
+          "value_hex": "312e332e38"
+        }
+      ],
+      "uuid": "0000180a-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "characteristic_status": "Success",
+      "characteristics": [
+        {
+          "descriptor_status": "Success",
+          "descriptors": [
+            {
+              "handle": 26,
+              "uuid": "00002902-0000-1000-8000-00805f9b34fb"
+            }
+          ],
+          "device_information": null,
+          "handle": 24,
+          "properties": "Notify",
+          "properties_bits": 16,
+          "read_status": null,
+          "uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 27,
+          "properties": "WriteWithoutResponse",
+          "properties_bits": 4,
+          "read_status": null,
+          "uuid": "0000fff2-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        }
+      ],
+      "uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "characteristic_status": "Success",
+      "characteristics": [
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 30,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002acc-0000-1000-8000-00805f9b34fb",
+          "value_hex": "9c5600000e000000"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [
+            {
+              "handle": 34,
+              "uuid": "00002902-0000-1000-8000-00805f9b34fb"
+            }
+          ],
+          "device_information": null,
+          "handle": 32,
+          "properties": "Notify",
+          "properties_bits": 16,
+          "read_status": null,
+          "uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [
+            {
+              "handle": 37,
+              "uuid": "00002902-0000-1000-8000-00805f9b34fb"
+            }
+          ],
+          "device_information": null,
+          "handle": 35,
+          "properties": "Read, Notify",
+          "properties_bits": 18,
+          "read_status": null,
+          "uuid": "00002ad3-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [
+            {
+              "handle": 40,
+              "uuid": "00002902-0000-1000-8000-00805f9b34fb"
+            }
+          ],
+          "device_information": null,
+          "handle": 38,
+          "properties": "Notify",
+          "properties_bits": 16,
+          "read_status": null,
+          "uuid": "00002ada-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [
+            {
+              "handle": 43,
+              "uuid": "00002902-0000-1000-8000-00805f9b34fb"
+            }
+          ],
+          "device_information": null,
+          "handle": 41,
+          "properties": "Write, Indicate",
+          "properties_bits": 40,
+          "read_status": null,
+          "uuid": "00002ad9-0000-1000-8000-00805f9b34fb",
+          "value_hex": null
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 44,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002ad5-0000-1000-8000-00805f9b34fb",
+          "value_hex": "000050000a00"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 46,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002ad6-0000-1000-8000-00805f9b34fb",
+          "value_hex": "0000ff000100"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 48,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002ad8-0000-1000-8000-00805f9b34fb",
+          "value_hex": "0a000f270a00"
+        },
+        {
+          "descriptor_status": "Success",
+          "descriptors": [],
+          "device_information": null,
+          "handle": 50,
+          "properties": "Read",
+          "properties_bits": 2,
+          "read_status": "Success",
+          "uuid": "00002ad7-0000-1000-8000-00805f9b34fb",
+          "value_hex": "0000fa000100"
+        }
+      ],
+      "uuid": "00001826-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "status": "complete",
+  "windows_version": "10.0.26300.0"
+}

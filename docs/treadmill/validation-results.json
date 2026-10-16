@@ -1,0 +1,1556 @@
+{
+  "date": "2026-10-14",
+  "device": "FS-0F7A32",
+  "trials": {
+    "start-stop": {
+      "trace": "captures/windows-motor-trial-20261014-01.jsonl",
+      "sequence_observed": true,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "reported_targets": []
+    },
+    "speed-12": {
+      "trace": "captures/windows-motor-speed-12-20261014-03.jsonl",
+      "sequence_observed": true,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0,
+        1.2,
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 12,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ]
+    },
+    "speed-15": {
+      "trace": "captures/windows-motor-speed-15-20261014-01.jsonl",
+      "sequence_observed": true,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0,
+        1.5,
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 15,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ]
+    },
+    "speed-20": {
+      "trace": "captures/windows-motor-speed-20-20261014-01.jsonl",
+      "sequence_observed": true,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0,
+        2.0,
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 20,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ]
+    },
+    "speed-30": {
+      "trace": "captures/windows-motor-speed-30-20261014-01.jsonl",
+      "sequence_observed": true,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0,
+        3.0,
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 30,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ]
+    },
+    "speed-40": {
+      "trace": "captures/windows-motor-speed-40-20261014-01.jsonl",
+      "sequence_observed": false,
+      "operator_confirmed_physical_movement_and_stop": true,
+      "console_speed_values": [
+        1.0,
+        4.0,
+        1.0
+      ],
+      "console_incline": 0,
+      "physical_controls_untouched": true,
+      "independent_speed_measurement": false,
+      "stop_write_succeeded": true,
+      "software_issue": "Five-second observation deadline ended after two NORMAL reports; observer extended to ten seconds.",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 40,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "feedback_semantics_gap": "RUNNING had already reported raw 10, but STOP began at raw 17; setpoint versus actual belt speed unresolved."
+    },
+    "incline-6": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-6.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 6
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "pause": {
+      "trace": "captures/windows-batch-remaining-20261014-02/pause.jsonl",
+      "sequence_observed": false,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": false,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "classification": "Pause effect unresolved in batch: polling suppressed while waiting for absent ACK; native stale-status watchdog sent stop."
+    },
+    "speed-50": {
+      "trace": "captures/windows-batch-remaining-20261014-02/speed-50.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 50,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-7": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-7.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 7
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "speed-60": {
+      "trace": "captures/windows-batch-remaining-20261014-02/speed-60.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 60,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-5": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-5.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 5
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-8": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-8.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 8
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-2": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-2.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 2
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-4": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-4.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 4
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-3": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-3.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 3
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    },
+    "incline-1": {
+      "trace": "captures/windows-batch-remaining-20261014-02/incline-1.jsonl",
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": true,
+      "operator_report": "All batch trials worked as expected",
+      "reported_targets": [
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 1
+        },
+        {
+          "speed_code": 10,
+          "incline_code": 0
+        }
+      ],
+      "physical_percent_grade_measured": false,
+      "independent_speed_measurement": false,
+      "operator_confirmed_physical_movement_and_stop": true
+    }
+  },
+  "unresolved": [
+    "physical speed units beyond the walking-mode working assumption",
+    "independent belt-speed measurement",
+    "all incline grades and attained-position semantics",
+    "pause/resume",
+    "repeat-stop and hardware interruption/link-loss behavior",
+    "alternate capability reply mode",
+    "firmware identity"
+  ],
+  "preflight_refusals": [
+    {
+      "trace": "captures/windows-motor-speed-12-20261014-01.jsonl",
+      "reason": "SAFETY 0x06; three nonmotor writes, no motor commands"
+    },
+    {
+      "trace": "captures/windows-motor-speed-12-20261014-02.jsonl",
+      "reason": "module identity discovery unavailable; no writes"
+    },
+    {
+      "trace": "captures/windows-incline-timing-4-20261014-01.jsonl",
+      "reason": "Incline limit query 50/03 received native write Success but no response within 2 seconds; speed limits and NORMAL statuses received; no motor commands sent; all subscription cleanups Success"
+    }
+  ],
+  "workflow": "Operator replaced per-trial confirmation with one authorized batch of the remaining eleven trials, followed by combined review.",
+  "pause_followup": {
+    "trace": "captures/windows-motor-pause-polling-20261014-01.jsonl",
+    "status_before_explicit_stop": [
+      {
+        "state": 3,
+        "speed_code": 10
+      },
+      {
+        "state": 3,
+        "speed_code": 10
+      },
+      {
+        "state": 3,
+        "speed_code": 10
+      }
+    ],
+    "pause_reply_received": false,
+    "classification": "53/06 remains unacknowledged and status remains RUNNING raw 10 until explicit stop; do not enable pause/resume",
+    "stop_write_succeeded": true,
+    "normal_status_after_stop": true
+  },
+  "batch_status": "Remaining batch completed ten successful speed/incline trials, then halted at pause. Operator confirmed expected physical behavior; follow-up shows no pause effect in status.",
+  "next_decision": "Await one ordinary physical console wake and stopped confirmation for ready-idle. Polling did not keep display awake; bounded READY requests from sleep did not wake within response deadline. No keepawake solution or calibrated percent interpolation is verified.",
+  "incline_timing": {
+    "trace": "captures/windows-incline-timing-20261014-01.jsonl",
+    "measurements": [
+      {
+        "direction": "rise 0 to 8",
+        "stage": 1,
+        "command_to_report_ms": 516,
+        "command_to_motion_start_ms": 386,
+        "motion_duration_ms": 13832,
+        "command_to_arrival_ms": 14218,
+        "report_preceded_arrival_ms": 13702,
+        "source": "local operator keys; reaction time and visual judgement uncertainty not quantified"
+      },
+      {
+        "direction": "return 8 to 0",
+        "stage": 2,
+        "command_to_report_ms": 450,
+        "command_to_motion_start_ms": 1125,
+        "motion_duration_ms": 12344,
+        "command_to_arrival_ms": 13469,
+        "report_preceded_arrival_ms": 13019,
+        "source": "local operator keys; reaction time and visual judgement uncertainty not quantified"
+      }
+    ],
+    "repeat_count": 2,
+    "trial_result": {
+      "event": "trial_result",
+      "monotonic_ms": 46865,
+      "normal_status_after_stop": true,
+      "operator_arrival_marks_recorded": true,
+      "physical_stop_verified": false,
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "utc": "2026-10-14T14:38:16.721Z"
+    },
+    "cleanup": {
+      "status": "complete",
+      "notification_cleanup_status": "Success",
+      "ftms_observation_status": "complete",
+      "ftms_cleanup_status": [
+        "00002acd-0000-1000-8000-00805f9b34fb: Success",
+        "00002ada-0000-1000-8000-00805f9b34fb: Success"
+      ]
+    },
+    "ftms_notifications": 130,
+    "ftms_status_events": [
+      {
+        "monotonic_ms": 5370,
+        "frame_hex": "04"
+      },
+      {
+        "monotonic_ms": 8309,
+        "frame_hex": "04"
+      },
+      {
+        "monotonic_ms": 45677,
+        "frame_hex": "0201"
+      }
+    ],
+    "automatic_arrival_signal_observed": false,
+    "interpretation": "FitShow incline and FTMS inclination change to requested values about 0.5s after command, well before operator-marked arrival. No distinct arrival/movement flag identified in this capture. Timing alone supports estimates, not verified physical attainment.",
+    "percent_mapping": "Unresolved: document advertises maximum 11%, but no intermediate mapping. Standard decoding of captured FTMS gives 8.0% at code 8 and ramp angle 0.0 degrees throughout; do not use these as physical calibration.",
+    "ftms_field_reference": "https://btprodspecificationrefs.blob.core.windows.net/gatt-specification-supplement/GATT_Specification_Supplement.pdf",
+    "runs": [
+      {
+        "trace": "captures/windows-incline-timing-20261014-01.jsonl",
+        "measurements": [
+          {
+            "stage": 1,
+            "command_to_arrival_ms": 14218,
+            "motion_duration_ms": 13832,
+            "report_preceded_arrival_ms": 13702
+          },
+          {
+            "stage": 2,
+            "command_to_arrival_ms": 13469,
+            "motion_duration_ms": 12344,
+            "report_preceded_arrival_ms": 13019
+          }
+        ],
+        "sequence_observed": true,
+        "cleanup_status": "complete",
+        "operator_marks_complete": true
+      },
+      {
+        "trace": "captures/windows-incline-timing-20261014-02.jsonl",
+        "measurements": [
+          {
+            "stage": 1,
+            "command_to_arrival_ms": 14116,
+            "motion_duration_ms": 13657,
+            "report_preceded_arrival_ms": 13833
+          },
+          {
+            "stage": 2,
+            "command_to_arrival_ms": 13828,
+            "motion_duration_ms": 13281,
+            "report_preceded_arrival_ms": 13283
+          }
+        ],
+        "sequence_observed": true,
+        "cleanup_status": "complete",
+        "operator_marks_complete": true
+      }
+    ],
+    "timing_statistics": {
+      "rise": {
+        "motion_duration_ms": {
+          "mean_ms": 13744.5,
+          "min_ms": 13657,
+          "max_ms": 13832
+        },
+        "command_to_arrival_ms": {
+          "mean_ms": 14167,
+          "min_ms": 14116,
+          "max_ms": 14218
+        }
+      },
+      "return": {
+        "motion_duration_ms": {
+          "mean_ms": 12812.5,
+          "min_ms": 12344,
+          "max_ms": 13281
+        },
+        "command_to_arrival_ms": {
+          "mean_ms": 13648.5,
+          "min_ms": 13469,
+          "max_ms": 13828
+        }
+      }
+    },
+    "pending_capture": "captures/windows-incline-timing-20261014-03.jsonl"
+  },
+  "incline_timing_partial": {
+    "trace": "captures/windows-incline-timing-4-20261014-02.jsonl",
+    "target_level": 4,
+    "repeat_count": 2,
+    "measurements": [
+      {
+        "direction": "rise 0 to 4",
+        "stage": 1,
+        "command_to_report_ms": 351,
+        "command_to_motion_start_ms": 500,
+        "command_to_arrival_ms": 8458,
+        "motion_duration_ms": 7958,
+        "report_preceded_arrival_ms": 8107,
+        "source": "operator local keys; reaction-time uncertainty not quantified"
+      },
+      {
+        "direction": "return 4 to 0",
+        "stage": 2,
+        "command_to_report_ms": 378,
+        "command_to_motion_start_ms": 912,
+        "command_to_arrival_ms": 8181,
+        "motion_duration_ms": 7269,
+        "report_preceded_arrival_ms": 7803,
+        "source": "operator local keys; reaction-time uncertainty not quantified"
+      }
+    ],
+    "trial_result": {
+      "event": "trial_result",
+      "monotonic_ms": 34689,
+      "normal_status_after_stop": true,
+      "operator_arrival_marks_recorded": true,
+      "physical_stop_verified": false,
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "utc": "2026-10-14T14:50:43.129Z"
+    },
+    "cleanup": {
+      "status": "complete",
+      "notification_cleanup_status": "Success",
+      "ftms_cleanup_status": [
+        "00002acd-0000-1000-8000-00805f9b34fb: Success",
+        "00002ada-0000-1000-8000-00805f9b34fb: Success"
+      ]
+    },
+    "automatic_arrival_signal_observed": false,
+    "interpretation": "Partial motion is shorter than full travel but more than half its duration. Do not assume travel is linear in level count or claim timed arrival as measured position. Percent-grade mapping still absent.",
+    "runs": [
+      {
+        "trace": "captures/windows-incline-timing-4-20261014-02.jsonl",
+        "measurements": [
+          {
+            "direction": "rise 0 to 4",
+            "stage": 1,
+            "command_to_report_ms": 351,
+            "command_to_motion_start_ms": 500,
+            "command_to_arrival_ms": 8458,
+            "motion_duration_ms": 7958,
+            "report_preceded_arrival_ms": 8107,
+            "source": "operator local keys; reaction-time uncertainty not quantified"
+          },
+          {
+            "direction": "return 4 to 0",
+            "stage": 2,
+            "command_to_report_ms": 378,
+            "command_to_motion_start_ms": 912,
+            "command_to_arrival_ms": 8181,
+            "motion_duration_ms": 7269,
+            "report_preceded_arrival_ms": 7803,
+            "source": "operator local keys; reaction-time uncertainty not quantified"
+          }
+        ],
+        "trial_result": {
+          "event": "trial_result",
+          "monotonic_ms": 34689,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": true,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T14:50:43.129Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "automatic_arrival_signal_observed": false
+      },
+      {
+        "trace": "captures/windows-incline-timing-4-20261014-03.jsonl",
+        "measurements": [
+          {
+            "direction": "rise 0 to 4",
+            "stage": 1,
+            "command_to_report_ms": 510,
+            "command_to_motion_start_ms": 710,
+            "command_to_arrival_ms": 8922,
+            "motion_duration_ms": 8212,
+            "report_preceded_arrival_ms": 8412,
+            "source": "operator local keys; reaction-time uncertainty not quantified"
+          },
+          {
+            "direction": "return 4 to 0",
+            "stage": 2,
+            "command_to_report_ms": 325,
+            "command_to_motion_start_ms": 503,
+            "command_to_arrival_ms": 7918,
+            "motion_duration_ms": 7415,
+            "report_preceded_arrival_ms": 7593,
+            "source": "operator local keys; reaction-time uncertainty not quantified"
+          }
+        ],
+        "trial_result": {
+          "event": "trial_result",
+          "monotonic_ms": 36362,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": true,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T14:55:47.459Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "automatic_arrival_signal_observed": false
+      }
+    ],
+    "timing_statistics": {
+      "rise": {
+        "motion_duration_ms": {
+          "mean_ms": 8085,
+          "min_ms": 7958,
+          "max_ms": 8212,
+          "spread_ms": 254
+        },
+        "command_to_arrival_ms": {
+          "mean_ms": 8690,
+          "min_ms": 8458,
+          "max_ms": 8922,
+          "spread_ms": 464
+        }
+      },
+      "return": {
+        "motion_duration_ms": {
+          "mean_ms": 7342,
+          "min_ms": 7269,
+          "max_ms": 7415,
+          "spread_ms": 146
+        },
+        "command_to_arrival_ms": {
+          "mean_ms": 8049.5,
+          "min_ms": 7918,
+          "max_ms": 8181,
+          "spread_ms": 263
+        }
+      }
+    }
+  },
+  "angle_measurement_preparation": {
+    "baseline_degrees_provisional": 2,
+    "floor_degrees_range": [
+      0,
+      1
+    ],
+    "phone_placement": "rigid side rail, middle; operator confirmed",
+    "accuracy": "unknown; readings provisional",
+    "prepared_trial": "incline-measure-4",
+    "arrival_hold_seconds": 30,
+    "angles_measured_at_levels": []
+  },
+  "incline_angle_measurement": {
+    "trace": "captures/windows-incline-measure-4-20261014-01.jsonl",
+    "trial_result": {
+      "event": "trial_result",
+      "monotonic_ms": 92412,
+      "normal_status_after_stop": true,
+      "operator_arrival_marks_recorded": true,
+      "physical_stop_verified": false,
+      "sequence_observed": true,
+      "stop_write_succeeded": true,
+      "utc": "2026-10-14T15:14:25.519Z"
+    },
+    "physical_arrival_marks": [
+      {
+        "command_to_arrival_ms": 9803,
+        "event": "incline_state",
+        "monotonic_ms": 20730,
+        "motion_duration_ms": 9358,
+        "report_preceded_arrival_ms": 9244,
+        "source": "operator_key",
+        "stage": 1,
+        "state": "attained_observed",
+        "utc": "2026-10-14T15:13:13.837Z"
+      },
+      {
+        "command_to_arrival_ms": 8078,
+        "event": "incline_state",
+        "monotonic_ms": 58825,
+        "motion_duration_ms": 7648,
+        "report_preceded_arrival_ms": 7508,
+        "source": "operator_key",
+        "stage": 2,
+        "state": "attained_observed",
+        "utc": "2026-10-14T15:13:51.932Z"
+      }
+    ],
+    "arrival_holds_ms": {
+      "level_4": 30017,
+      "returned_level_0": 30002
+    },
+    "cleanup": {
+      "status": "complete",
+      "notification_cleanup_status": "Success",
+      "ftms_cleanup_status": [
+        "00002acd-0000-1000-8000-00805f9b34fb: Success",
+        "00002ada-0000-1000-8000-00805f9b34fb: Success"
+      ]
+    },
+    "angles_degrees_operator_reported": {
+      "initial_level_0": 2,
+      "level_4": 4,
+      "returned_level_0": 2
+    },
+    "angle_accuracy": "unknown; phone app floor readings 0\u20131 degree; single reported value per position, not three separate samples",
+    "missing_information": null,
+    "calibrated_grade_mapping": false,
+    "nominal_gradient_percent_from_reported_angle": {
+      "level_0": 3.492076949174773,
+      "level_4": 6.992681194351041
+    },
+    "nominal_gradient_difference_percentage_points": 3.5006042451762682,
+    "gradient_interpretation": "Provisional mathematical conversions of noisy app readings, not a calibrated grade mapping; no intermediate interpolation or zero-offset assumption.",
+    "level_8_run": {
+      "trace": "captures/windows-incline-measure-8-20261014-01.jsonl",
+      "angles_degrees_operator_reported": {
+        "initial_level_0": 2,
+        "level_8": 6,
+        "returned_level_0": 2
+      },
+      "physical_arrival_marks": [
+        {
+          "command_to_arrival_ms": 14842,
+          "event": "incline_state",
+          "monotonic_ms": 25909,
+          "motion_duration_ms": 14479,
+          "report_preceded_arrival_ms": 14302,
+          "source": "operator_key",
+          "stage": 1,
+          "state": "attained_observed",
+          "utc": "2026-10-14T15:18:39.087Z"
+        }
+      ],
+      "trial_result": {
+        "event": "trial_result",
+        "monotonic_ms": 119623,
+        "normal_status_after_stop": true,
+        "operator_arrival_marks_recorded": false,
+        "physical_stop_verified": false,
+        "sequence_observed": false,
+        "stop_write_succeeded": true,
+        "utc": "2026-10-14T15:20:12.802Z"
+      },
+      "cleanup": {
+        "status": "complete",
+        "notification_cleanup_status": "Success",
+        "ftms_cleanup_status": [
+          "00002acd-0000-1000-8000-00805f9b34fb: Success",
+          "00002ada-0000-1000-8000-00805f9b34fb: Success"
+        ]
+      },
+      "return_mark_status": "No moving_observed or attained_observed marks recorded for return; stopped after 60-second physical-arrival deadline. User independently reports returned level-0 angle 2 degrees. Do not count as a completed marked timing sequence.",
+      "angle_accuracy": "unknown; floor previously read 0\u20131 degree; one reported value per position, not three separate samples",
+      "calibrated_grade_mapping": false
+    },
+    "provisional_observed_levels": [
+      {
+        "level": 0,
+        "reported_angle_degrees": 2,
+        "nominal_gradient_percent": 3.492076949174773,
+        "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+        "calibrated": false
+      },
+      {
+        "level": 4,
+        "reported_angle_degrees": 4,
+        "nominal_gradient_percent": 6.992681194351041,
+        "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+        "calibrated": false
+      },
+      {
+        "level": 8,
+        "reported_angle_degrees": 6,
+        "nominal_gradient_percent": 10.510423526567648,
+        "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+        "calibrated": false
+      }
+    ],
+    "unmeasured_levels": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      7
+    ],
+    "interpretation": "Nominal upper gradient 10.51% is consistent with advertised 11% within unquantified phone uncertainty. No equal-spacing assumption or baseline-zero correction applied; intermediate levels unmeasured."
+  },
+  "automatic_incline_batch": {
+    "batch": "inclines",
+    "authorized_by_operator": true,
+    "operator_workflow": "automatic sequential trials; operator interrupts if unexpected",
+    "trace": "captures/windows-auto-inclines-ftms-20261014-01/incline-1.jsonl",
+    "state": "halted before motors at incline-1 preflight",
+    "raw_status_code": 6,
+    "motor_commands_sent": false,
+    "writes": [
+      "0250025203",
+      "02515103"
+    ],
+    "cleanup_status": "Success for FitShow and both FTMS subscriptions",
+    "next_action": "Operator must resolve current SAFETY state using normal controls; no remote wake/safety bypass or automatic retry. Continue same authorized batch after awake/stopped confirmation with a new capture directory."
+  },
+  "automatic_incline_batch_retry": {
+    "directory": "captures/windows-auto-inclines-ftms-20261014-02",
+    "trials": [
+      {
+        "trial": "incline-1",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-1.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46170,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:28:54.770Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 8783
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 1,
+            "monotonic_ms": 12146
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27423
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 4886
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 5768
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 8783
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 44953
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-2",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-2.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47020,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:29:41.794Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9686
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 2,
+            "monotonic_ms": 12994
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28290
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6649
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9686
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45828
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-3",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-3.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47516,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:30:29.314Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9836
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 3,
+            "monotonic_ms": 13382
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28919
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6844
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9836
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 46237
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-4",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-4.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46582,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:31:15.899Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 8982
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 4,
+            "monotonic_ms": 12411
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27707
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6047
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 8982
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45337
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-5",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-5.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47548,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:32:03.449Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9638
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 5,
+            "monotonic_ms": 13221
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28765
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6616
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9606
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 46045
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-6",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-6.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46380,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:32:49.834Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9042
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 6,
+            "monotonic_ms": 12353
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27710
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6056
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9042
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45175
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-7",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-7.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 40785,
+          "normal_status_after_stop": false,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": false,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:33:30.622Z"
+        },
+        "cleanup": {
+          "status": "error",
+          "error": "Windows motor watchdog requested stop",
+          "notification_cleanup_status": "unconfirmed: Inspection deadline exceeded",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: unconfirmed Inspection deadline exceeded",
+            "00002ada-0000-1000-8000-00805f9b34fb: unconfirmed Inspection deadline exceeded"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9171
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 7,
+            "monotonic_ms": 12693
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28307
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6219
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9171
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      }
+    ],
+    "completed_trials": 6,
+    "halted_at": "incline-7",
+    "incline_8_started": false,
+    "fault": "FitShow notifications stopped after return target at level 7; status stale watchdog then attempted stop. Native stop write Success without reply/final NORMAL. All CCCD cleanup timed out. Batch halted.",
+    "operator_confirmed_physical_stop_after_fault": true,
+    "operator_statement": "yes, stopped",
+    "angle_measurements_collected": false,
+    "next_action": "Short nonmotor connection recheck, then sustained idle polling observation if reachable. Do not blindly retry motor fault."
+  },
+  "idle_polling_experiment": {
+    "trace": "captures/windows-idle-polling-20261014-01.json",
+    "planned_duration_seconds": 600,
+    "ended_early_by_operator_display_off_report": true,
+    "operator_confirmed_display_off": true,
+    "polling_prevented_display_sleep": false,
+    "first_status": {
+      "monotonic_ms": 2680,
+      "utc": "2026-10-14T15:35:57.4124023Z",
+      "state": 0,
+      "detail": null
+    },
+    "last_normal_status": {
+      "monotonic_ms": 345440,
+      "utc": "2026-10-14T15:41:40.1733439Z",
+      "state": 0,
+      "detail": null
+    },
+    "first_sleep_status": {
+      "monotonic_ms": 345980,
+      "utc": "2026-10-14T15:41:40.7114937Z",
+      "state": 6,
+      "detail": 2
+    },
+    "last_status": {
+      "monotonic_ms": 400097,
+      "utc": "2026-10-14T15:42:34.8294617Z",
+      "state": 6,
+      "detail": 2
+    },
+    "normal_status_count": 625,
+    "sleep_status_count": 101,
+    "normal_to_sleep_elapsed_from_first_status_ms": 343300,
+    "maximum_query_write_gap_ms": 562,
+    "query_counts": {
+      "0250025203": 1,
+      "0250035303": 1,
+      "02515103": 726
+    },
+    "all_native_query_writes_successful": true,
+    "motor_execution_enabled": false,
+    "cleanup_status": "Success",
+    "cancelled_via_cli_q": true,
+    "interpretation": "Bluetooth remains responsive while the console sleeps. Frequent 51 status polling does not reset/prevent this W1 sleep state. The 343.3s observation-to-sleep interval is not a measured inactivity timeout from physical stop or last button input.",
+    "next_candidate": "Official FitShow v1.1 protocol describes 53/01 mode high bit 0x80 as READY without start, expected status 9. Unverified on W1; it remains motor-capable and must be tested under a separate bounded motor trial, never a nonmotor query. No keepalive fix claimed."
+  },
+  "ready_idle_preparation": {
+    "plan": "ready-idle-plan.json",
+    "source_document": "references/fitshow-treadmill-protocol-v1.1-2017.pdf",
+    "intended_feedback_state": 9,
+    "hold_seconds": 15,
+    "independent_deadline_seconds": 30,
+    "stop_on_countdown_or_motion": true,
+    "preflight_requires_fresh_normal": true,
+    "motor_capable": true,
+    "sent_physically": false,
+    "awake_stopped_confirmation_pending": true
+  },
+  "ready_wake_preparation": {
+    "arrival_hold_seconds": 2,
+    "backend": "windows-winrt",
+    "device": "DD:87:70:39:74:20",
+    "expected_name": "FS-0F7A32",
+    "expected_ready_status": 9,
+    "frames": [
+      "0253010000000080000000d203",
+      "0253035003"
+    ],
+    "ftms_observation_requested": false,
+    "incline_ceiling_code": 0,
+    "incline_code": 0,
+    "initial_deck_baseline_confirmation_required": false,
+    "initial_hold_seconds": 15,
+    "motor_execution_enabled": false,
+    "operator_marks_required": false,
+    "physical_arrival_source": "operator observation only",
+    "physical_stop_verified": false,
+    "physical_units_verified": false,
+    "preflight": "raw limits 10/60/unit 0 and incline 0/8; three fresh NORMAL or sleep 06/02 replies plus operator-confirmed stopped belt; key 06/01 and unknown disabled reasons refuse",
+    "ready_only": true,
+    "return_hold_seconds": 0,
+    "sleep_ready_allowed": true,
+    "speed_ceiling_code": 10,
+    "speed_code": 10,
+    "step_hold_seconds": 15,
+    "trial": "ready-wake",
+    "windows_motor_deadline_seconds": 30
+  },
+  "ready_wake_attempt": {
+    "trace": "captures/windows-ready-wake-20261014-01.jsonl",
+    "trial": "ready-wake",
+    "state": "refused during device open, before any writes",
+    "error": "Selected device name unavailable or differs from the operator-confirmed name",
+    "writes_sent": 0,
+    "command_sent": false,
+    "keepawake_verified": false,
+    "software_checks": {
+      "core": 49,
+      "bridge": 9,
+      "cli": 11,
+      "focused_motor_checks": 5,
+      "windows_independent_gates": "passed"
+    },
+    "permitted_preflight": "three fresh NORMAL or sleep 06/02 reports; exact module identity and walking limits; operator-confirmed stopped belt",
+    "still_rejected": "safety-key 06/01, missing/unknown disabled detail, disabled state after READY attempt, countdown/running",
+    "retry_after_scan": {
+      "trace": "captures/windows-ready-wake-20261014-02.jsonl",
+      "preflight": "three fresh sleep 06/02 statuses, matching module identity and raw limits",
+      "ready_write_status": "Success",
+      "ready_status_observed": false,
+      "sleep_persisted_on_first_post_command_status": true,
+      "stop_write_succeeded": true,
+      "cleanup_status": "Success",
+      "interpretation": "Initial short-window experiment stopped on first continued sleep feedback; not enough to rule out delayed wake. One bounded follow-up permits the existing two-second response deadline, without readiness retries or acceptance of key/motion states.",
+      "sleep_observed_after_request_ms": 487
+    },
+    "two_second_followup": {
+      "trace": "captures/windows-ready-wake-20261014-03.jsonl",
+      "preflight": "three fresh sleep 06/02 statuses; matching identity and walking limits",
+      "ready_write_status": "Success",
+      "ready_acknowledgement_received": false,
+      "ready_status_observed": false,
+      "request_to_stop_ms": 2002,
+      "post_request_states": [
+        6
+      ],
+      "countdown_or_running_observed": false,
+      "stop_write_succeeded": true,
+      "normal_status_after_stop": false,
+      "cleanup_status": "Success",
+      "interpretation": "Within the bounded two-second response window, W1 remained sleep 06/02 and did not acknowledge or enter READY. Remote wake is not verified. Next is READY-idle from an awake stopped baseline, requiring physical wake; no repeat from sleep planned."
+    }
+  },
+  "keepawake_checkpoint": {
+    "awake_ready_trace": "captures/windows-ready-idle-20261014-02.jsonl",
+    "awake_ready_result": "countdown after about 494 ms; stop write and cleanup succeeded, stopped state not verified",
+    "ready_live_trials_retired": true,
+    "zero_heart_rate_trace": "captures/windows-idle-heart-rate-zero-20261014-02.json",
+    "zero_heart_rate_query_writes": 24,
+    "zero_heart_rate_running_replies": 24,
+    "zero_heart_rate_result": "started RUNNING speed code10/incline0; not an idle standby measurement",
+    "physical_stop_confirmation_pending": false,
+    "keepawake_verified": false,
+    "offline_checks": {
+      "bridge": 11,
+      "cli": 11,
+      "retired_ready_and_standard_sleep": 2,
+      "windows_compilation_query_motor_idle_gates": "passed"
+    },
+    "zero_heart_rate_idle_trace": "captures/windows-idle-heart-rate-zero-20261014-03.json",
+    "zero_heart_rate_idle_result": {
+      "status": "sleep_observed",
+      "first_normal_to_sleep_ms": 471530,
+      "normal_replies": 862,
+      "documented_sleep_replies": 1,
+      "query_5100_writes": 863,
+      "notification_cleanup": "Success",
+      "operator_display_observation": "off when later checked; transition time unknown"
+    },
+    "next_trial": "Measure protocol sleep-to-NORMAL-to-sleep after synchronized physical wake; display-off event requires direct observation",
+    "data_sport_trace": "captures/windows-idle-data-sport-20261014-02.json",
+    "data_sport_result": {
+      "status": "sleep_observed",
+      "first_normal_to_sleep_ms": 524120,
+      "normal_replies": 478,
+      "sleep_replies": 1,
+      "status_query_writes": 479,
+      "data_sport_query_writes": 478,
+      "data_sport_replies": 478,
+      "notification_cleanup": "Success"
+    },
+    "sleep_timer_observer": {
+      "trace": "captures/windows-sleep-timer-20261014-02.json",
+      "initial_sleep_replies": 728,
+      "normal_replies": 0,
+      "wake_to_sleep_interval_ms": null,
+      "cancelled_by_operator": true,
+      "notification_cleanup": "Success",
+      "future_wake_window_seconds": 90
+    },
+    "display_off_transition_time": null,
+    "interval_definition": "first protocol NORMAL reply to first protocol sleep 06/02; not physical wake or display-on duration",
+    "query_variant_timing_causal_comparison_valid": false,
+    "sleep_timer_observer_03": {
+      "trace": "captures/windows-sleep-timer-20261014-03.json",
+      "initial_sleep_ms": 2767,
+      "first_normal_after_physical_wake_ms": 30127,
+      "normal_replies_after_wake": 1032,
+      "next_protocol_sleep_observed": false,
+      "observed_normal_duration_ms": 569467,
+      "session_end_ms": 599594,
+      "notification_cleanup": "Success",
+      "display_observation": "pending operator report",
+      "interpretation": "Display turned off 9:53 after physical wake, about24s after observer disconnect; no second protocol sleep by cutoff. Connection effect plausible, unverified.",
+      "operator_display_off_after_physical_wake_seconds": 593,
+      "operator_display_off_observed_continuously": true,
+      "estimated_display_off_after_last_protocol_normal_seconds": 23.5
+    },
+    "post_wake_baseline": {
+      "trace": "captures/windows-post-wake-baseline-20261014-01.json",
+      "first_normal_to_first_sleep_ms": 572136,
+      "sleep_while_connected": true,
+      "normal_replies": 1048,
+      "sleep_replies": 47,
+      "notification_cleanup": "Success",
+      "operator_display_observation": "pending"
+    },
+    "connection_before_wake_hypothesis": "Weak: latest run connected after wake yet protocol sleep only after ~9m32 from first NORMAL; likely physical wake time drives timer, repeat needed",
+    "repeat_15min_attempts": {
+      "attempt_04": "FFF0 discovery failed before writes; exact-name rescan succeeded",
+      "attempt_05": "Initial sleep confirmed, no physical wake; 166 sleep replies in ~93s, stopped by 90s no-wake deadline, cleanup Success",
+      "standby_result": "none; operator confirmed no wake action"
+    }
+  }
+}

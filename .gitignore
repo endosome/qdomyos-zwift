@@ -67,8 +67,3 @@ src/translations/*.qm
 # macOS
 *.DS_Store
 
-# Treadmill experiment captures stay local; source documents are versioned.
-/docs/treadmill/*
-!/docs/treadmill/HANDOFF.md
-!/docs/treadmill/references/
-!/docs/treadmill/RunPad W1 WalkingDesk — Technical Specifications.md

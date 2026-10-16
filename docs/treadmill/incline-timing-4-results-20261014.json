@@ -1,0 +1,167 @@
+{
+  "trace": "captures/windows-incline-timing-4-20261014-02.jsonl",
+  "target_level": 4,
+  "repeat_count": 2,
+  "measurements": [
+    {
+      "direction": "rise 0 to 4",
+      "stage": 1,
+      "command_to_report_ms": 351,
+      "command_to_motion_start_ms": 500,
+      "command_to_arrival_ms": 8458,
+      "motion_duration_ms": 7958,
+      "report_preceded_arrival_ms": 8107,
+      "source": "operator local keys; reaction-time uncertainty not quantified"
+    },
+    {
+      "direction": "return 4 to 0",
+      "stage": 2,
+      "command_to_report_ms": 378,
+      "command_to_motion_start_ms": 912,
+      "command_to_arrival_ms": 8181,
+      "motion_duration_ms": 7269,
+      "report_preceded_arrival_ms": 7803,
+      "source": "operator local keys; reaction-time uncertainty not quantified"
+    }
+  ],
+  "trial_result": {
+    "event": "trial_result",
+    "monotonic_ms": 34689,
+    "normal_status_after_stop": true,
+    "operator_arrival_marks_recorded": true,
+    "physical_stop_verified": false,
+    "sequence_observed": true,
+    "stop_write_succeeded": true,
+    "utc": "2026-10-14T14:50:43.129Z"
+  },
+  "cleanup": {
+    "status": "complete",
+    "notification_cleanup_status": "Success",
+    "ftms_cleanup_status": [
+      "00002acd-0000-1000-8000-00805f9b34fb: Success",
+      "00002ada-0000-1000-8000-00805f9b34fb: Success"
+    ]
+  },
+  "automatic_arrival_signal_observed": false,
+  "interpretation": "Partial motion is shorter than full travel but more than half its duration. Do not assume travel is linear in level count or claim timed arrival as measured position. Percent-grade mapping still absent.",
+  "runs": [
+    {
+      "trace": "captures/windows-incline-timing-4-20261014-02.jsonl",
+      "measurements": [
+        {
+          "direction": "rise 0 to 4",
+          "stage": 1,
+          "command_to_report_ms": 351,
+          "command_to_motion_start_ms": 500,
+          "command_to_arrival_ms": 8458,
+          "motion_duration_ms": 7958,
+          "report_preceded_arrival_ms": 8107,
+          "source": "operator local keys; reaction-time uncertainty not quantified"
+        },
+        {
+          "direction": "return 4 to 0",
+          "stage": 2,
+          "command_to_report_ms": 378,
+          "command_to_motion_start_ms": 912,
+          "command_to_arrival_ms": 8181,
+          "motion_duration_ms": 7269,
+          "report_preceded_arrival_ms": 7803,
+          "source": "operator local keys; reaction-time uncertainty not quantified"
+        }
+      ],
+      "trial_result": {
+        "event": "trial_result",
+        "monotonic_ms": 34689,
+        "normal_status_after_stop": true,
+        "operator_arrival_marks_recorded": true,
+        "physical_stop_verified": false,
+        "sequence_observed": true,
+        "stop_write_succeeded": true,
+        "utc": "2026-10-14T14:50:43.129Z"
+      },
+      "cleanup": {
+        "status": "complete",
+        "notification_cleanup_status": "Success",
+        "ftms_cleanup_status": [
+          "00002acd-0000-1000-8000-00805f9b34fb: Success",
+          "00002ada-0000-1000-8000-00805f9b34fb: Success"
+        ]
+      },
+      "automatic_arrival_signal_observed": false
+    },
+    {
+      "trace": "captures/windows-incline-timing-4-20261014-03.jsonl",
+      "measurements": [
+        {
+          "direction": "rise 0 to 4",
+          "stage": 1,
+          "command_to_report_ms": 510,
+          "command_to_motion_start_ms": 710,
+          "command_to_arrival_ms": 8922,
+          "motion_duration_ms": 8212,
+          "report_preceded_arrival_ms": 8412,
+          "source": "operator local keys; reaction-time uncertainty not quantified"
+        },
+        {
+          "direction": "return 4 to 0",
+          "stage": 2,
+          "command_to_report_ms": 325,
+          "command_to_motion_start_ms": 503,
+          "command_to_arrival_ms": 7918,
+          "motion_duration_ms": 7415,
+          "report_preceded_arrival_ms": 7593,
+          "source": "operator local keys; reaction-time uncertainty not quantified"
+        }
+      ],
+      "trial_result": {
+        "event": "trial_result",
+        "monotonic_ms": 36362,
+        "normal_status_after_stop": true,
+        "operator_arrival_marks_recorded": true,
+        "physical_stop_verified": false,
+        "sequence_observed": true,
+        "stop_write_succeeded": true,
+        "utc": "2026-10-14T14:55:47.459Z"
+      },
+      "cleanup": {
+        "status": "complete",
+        "notification_cleanup_status": "Success",
+        "ftms_cleanup_status": [
+          "00002acd-0000-1000-8000-00805f9b34fb: Success",
+          "00002ada-0000-1000-8000-00805f9b34fb: Success"
+        ]
+      },
+      "automatic_arrival_signal_observed": false
+    }
+  ],
+  "timing_statistics": {
+    "rise": {
+      "motion_duration_ms": {
+        "mean_ms": 8085,
+        "min_ms": 7958,
+        "max_ms": 8212,
+        "spread_ms": 254
+      },
+      "command_to_arrival_ms": {
+        "mean_ms": 8690,
+        "min_ms": 8458,
+        "max_ms": 8922,
+        "spread_ms": 464
+      }
+    },
+    "return": {
+      "motion_duration_ms": {
+        "mean_ms": 7342,
+        "min_ms": 7269,
+        "max_ms": 7415,
+        "spread_ms": 146
+      },
+      "command_to_arrival_ms": {
+        "mean_ms": 8049.5,
+        "min_ms": 7918,
+        "max_ms": 8181,
+        "spread_ms": 263
+      }
+    }
+  }
+}

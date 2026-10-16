@@ -1,0 +1,133 @@
+{
+  "trace": "captures/windows-incline-timing-20261014-01.jsonl",
+  "measurements": [
+    {
+      "direction": "rise 0 to 8",
+      "stage": 1,
+      "command_to_report_ms": 516,
+      "command_to_motion_start_ms": 386,
+      "motion_duration_ms": 13832,
+      "command_to_arrival_ms": 14218,
+      "report_preceded_arrival_ms": 13702,
+      "source": "local operator keys; reaction time and visual judgement uncertainty not quantified"
+    },
+    {
+      "direction": "return 8 to 0",
+      "stage": 2,
+      "command_to_report_ms": 450,
+      "command_to_motion_start_ms": 1125,
+      "motion_duration_ms": 12344,
+      "command_to_arrival_ms": 13469,
+      "report_preceded_arrival_ms": 13019,
+      "source": "local operator keys; reaction time and visual judgement uncertainty not quantified"
+    }
+  ],
+  "repeat_count": 2,
+  "trial_result": {
+    "event": "trial_result",
+    "monotonic_ms": 46865,
+    "normal_status_after_stop": true,
+    "operator_arrival_marks_recorded": true,
+    "physical_stop_verified": false,
+    "sequence_observed": true,
+    "stop_write_succeeded": true,
+    "utc": "2026-10-14T14:38:16.721Z"
+  },
+  "cleanup": {
+    "status": "complete",
+    "notification_cleanup_status": "Success",
+    "ftms_observation_status": "complete",
+    "ftms_cleanup_status": [
+      "00002acd-0000-1000-8000-00805f9b34fb: Success",
+      "00002ada-0000-1000-8000-00805f9b34fb: Success"
+    ]
+  },
+  "ftms_notifications": 130,
+  "ftms_status_events": [
+    {
+      "monotonic_ms": 5370,
+      "frame_hex": "04"
+    },
+    {
+      "monotonic_ms": 8309,
+      "frame_hex": "04"
+    },
+    {
+      "monotonic_ms": 45677,
+      "frame_hex": "0201"
+    }
+  ],
+  "automatic_arrival_signal_observed": false,
+  "interpretation": "FitShow incline and FTMS inclination change to requested values about 0.5s after command, well before operator-marked arrival. No distinct arrival/movement flag identified in this capture. Timing alone supports estimates, not verified physical attainment.",
+  "percent_mapping": "Unresolved: document advertises maximum 11%, but no intermediate mapping. Standard decoding of captured FTMS gives 8.0% at code 8 and ramp angle 0.0 degrees throughout; do not use these as physical calibration.",
+  "ftms_field_reference": "https://btprodspecificationrefs.blob.core.windows.net/gatt-specification-supplement/GATT_Specification_Supplement.pdf",
+  "runs": [
+    {
+      "trace": "captures/windows-incline-timing-20261014-01.jsonl",
+      "measurements": [
+        {
+          "stage": 1,
+          "command_to_arrival_ms": 14218,
+          "motion_duration_ms": 13832,
+          "report_preceded_arrival_ms": 13702
+        },
+        {
+          "stage": 2,
+          "command_to_arrival_ms": 13469,
+          "motion_duration_ms": 12344,
+          "report_preceded_arrival_ms": 13019
+        }
+      ],
+      "sequence_observed": true,
+      "cleanup_status": "complete",
+      "operator_marks_complete": true
+    },
+    {
+      "trace": "captures/windows-incline-timing-20261014-02.jsonl",
+      "measurements": [
+        {
+          "stage": 1,
+          "command_to_arrival_ms": 14116,
+          "motion_duration_ms": 13657,
+          "report_preceded_arrival_ms": 13833
+        },
+        {
+          "stage": 2,
+          "command_to_arrival_ms": 13828,
+          "motion_duration_ms": 13281,
+          "report_preceded_arrival_ms": 13283
+        }
+      ],
+      "sequence_observed": true,
+      "cleanup_status": "complete",
+      "operator_marks_complete": true
+    }
+  ],
+  "timing_statistics": {
+    "rise": {
+      "motion_duration_ms": {
+        "mean_ms": 13744.5,
+        "min_ms": 13657,
+        "max_ms": 13832
+      },
+      "command_to_arrival_ms": {
+        "mean_ms": 14167,
+        "min_ms": 14116,
+        "max_ms": 14218
+      }
+    },
+    "return": {
+      "motion_duration_ms": {
+        "mean_ms": 12812.5,
+        "min_ms": 12344,
+        "max_ms": 13281
+      },
+      "command_to_arrival_ms": {
+        "mean_ms": 13648.5,
+        "min_ms": 13469,
+        "max_ms": 13828
+      }
+    }
+  },
+  "pending_capture": "captures/windows-incline-timing-20261014-03.jsonl"
+}

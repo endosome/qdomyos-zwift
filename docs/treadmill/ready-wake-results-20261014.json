@@ -1,0 +1,45 @@
+{
+  "trace": "captures/windows-ready-wake-20261014-01.jsonl",
+  "trial": "ready-wake",
+  "state": "refused during device open, before any writes",
+  "error": "Selected device name unavailable or differs from the operator-confirmed name",
+  "writes_sent": 0,
+  "command_sent": false,
+  "keepawake_verified": false,
+  "software_checks": {
+    "core": 49,
+    "bridge": 9,
+    "cli": 11,
+    "focused_motor_checks": 5,
+    "windows_independent_gates": "passed"
+  },
+  "permitted_preflight": "three fresh NORMAL or sleep 06/02 reports; exact module identity and walking limits; operator-confirmed stopped belt",
+  "still_rejected": "safety-key 06/01, missing/unknown disabled detail, disabled state after READY attempt, countdown/running",
+  "retry_after_scan": {
+    "trace": "captures/windows-ready-wake-20261014-02.jsonl",
+    "preflight": "three fresh sleep 06/02 statuses, matching module identity and raw limits",
+    "ready_write_status": "Success",
+    "ready_status_observed": false,
+    "sleep_persisted_on_first_post_command_status": true,
+    "stop_write_succeeded": true,
+    "cleanup_status": "Success",
+    "interpretation": "Initial short-window experiment stopped on first continued sleep feedback; not enough to rule out delayed wake. One bounded follow-up permits the existing two-second response deadline, without readiness retries or acceptance of key/motion states.",
+    "sleep_observed_after_request_ms": 487
+  },
+  "two_second_followup": {
+    "trace": "captures/windows-ready-wake-20261014-03.jsonl",
+    "preflight": "three fresh sleep 06/02 statuses; matching identity and walking limits",
+    "ready_write_status": "Success",
+    "ready_acknowledgement_received": false,
+    "ready_status_observed": false,
+    "request_to_stop_ms": 2002,
+    "post_request_states": [
+      6
+    ],
+    "countdown_or_running_observed": false,
+    "stop_write_succeeded": true,
+    "normal_status_after_stop": false,
+    "cleanup_status": "Success",
+    "interpretation": "Within the bounded two-second response window, W1 remained sleep 06/02 and did not acknowledge or enter READY. Remote wake is not verified. Next is READY-idle from an awake stopped baseline, requiring physical wake; no repeat from sleep planned."
+  }
+}

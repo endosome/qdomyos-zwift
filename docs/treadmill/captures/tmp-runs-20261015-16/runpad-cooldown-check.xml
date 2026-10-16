@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="runpad-cooldown-check" name="W1 cooldown and stop check" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Level walk" duration="00:00:30" speed="1.0" inclination="0" forcespeed="1"/>
+  <row name="Easy walk" duration="00:00:30" speed="1.5" inclination="0" forcespeed="1"/>
+  <row name="Finish" duration="00:00:30" speed="1.0" inclination="0" forcespeed="1"/>
+</rows>

@@ -1,0 +1,130 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": null,
+    "frames": [
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250025203",
+            "monotonic_ms": 1931,
+            "utc": "2026-10-16T09:26:33.8371134Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250023c0a006403",
+            "monotonic_ms": 1975,
+            "utc": "2026-10-16T09:26:33.8815692Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250035303",
+            "monotonic_ms": 2479,
+            "utc": "2026-10-16T09:26:34.3851063Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250030800025903",
+            "monotonic_ms": 2516,
+            "utc": "2026-10-16T09:26:34.4224522Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3012,
+            "utc": "2026-10-16T09:26:34.9190779Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3041,
+            "utc": "2026-10-16T09:26:34.9455785Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3539,
+            "utc": "2026-10-16T09:26:35.4460299Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3656,
+            "utc": "2026-10-16T09:26:35.5631736Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4083,
+            "utc": "2026-10-16T09:26:35.9892873Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4196,
+            "utc": "2026-10-16T09:26:36.1026998Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4633,
+            "utc": "2026-10-16T09:26:36.5398884Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4736,
+            "utc": "2026-10-16T09:26:36.6421908Z",
+            "write_status": null
+        }
+    ],
+    "ftms_cleanup_status": [
+    ],
+    "ftms_observation_status": "not requested",
+    "idle_first_normal_ms": -1,
+    "idle_initial_sleep_ms": -1,
+    "idle_initial_state_code": -1,
+    "idle_normal_reports": 0,
+    "idle_sleep_after_normal_ms": -1,
+    "idle_sleep_observed": false,
+    "last_operation": "nonmotor_query 51",
+    "measure_sleep_timer": false,
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": "Success",
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "complete",
+    "status_data_sport": false,
+    "status_heart_rate_zero": false,
+    "windows_version": "10.0.26300.0"
+}

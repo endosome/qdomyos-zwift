@@ -1,0 +1,1537 @@
+{
+    "command":  "probe",
+    "backend":  "windows-winrt",
+    "windows_version":  "10.0.26300.0",
+    "status":  "complete",
+    "error":  null,
+    "last_operation":  "nonmotor_query 51",
+    "notification_cleanup_status":  "Success",
+    "devices":  [
+
+                ],
+    "address":  "DD:87:70:39:74:20",
+    "address_type":  "public",
+    "name":  "FS-0F7A32",
+    "service_uuids":  [
+
+                      ],
+    "services":  [
+
+                 ],
+    "motor_capabilities":  "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled":  false,
+    "frames":  [
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  1599,
+                       "utc":  "2026-10-13T09:45:24.4532763Z",
+                       "frame_hex":  "0250025203",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  1637,
+                       "utc":  "2026-10-13T09:45:24.4898955Z",
+                       "frame_hex":  "025002780a002003",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  2156,
+                       "utc":  "2026-10-13T09:45:25.0106573Z",
+                       "frame_hex":  "0250035303",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  2185,
+                       "utc":  "2026-10-13T09:45:25.0392464Z",
+                       "frame_hex":  "0250030800025903",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  2708,
+                       "utc":  "2026-10-13T09:45:25.5621883Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  2740,
+                       "utc":  "2026-10-13T09:45:25.5929957Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  3250,
+                       "utc":  "2026-10-13T09:45:26.1046574Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  3370,
+                       "utc":  "2026-10-13T09:45:26.2236895Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  3795,
+                       "utc":  "2026-10-13T09:45:26.6492418Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  3910,
+                       "utc":  "2026-10-13T09:45:26.7619588Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  4333,
+                       "utc":  "2026-10-13T09:45:27.1873716Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  4450,
+                       "utc":  "2026-10-13T09:45:27.2998844Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  4863,
+                       "utc":  "2026-10-13T09:45:27.7174497Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  4989,
+                       "utc":  "2026-10-13T09:45:27.8375793Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  5403,
+                       "utc":  "2026-10-13T09:45:28.2575066Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  5589,
+                       "utc":  "2026-10-13T09:45:28.4425765Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  5943,
+                       "utc":  "2026-10-13T09:45:28.7973244Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  6070,
+                       "utc":  "2026-10-13T09:45:28.9205772Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  6475,
+                       "utc":  "2026-10-13T09:45:29.3298781Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  6609,
+                       "utc":  "2026-10-13T09:45:29.4634194Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  7022,
+                       "utc":  "2026-10-13T09:45:29.8759963Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  7149,
+                       "utc":  "2026-10-13T09:45:30.0021834Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  7566,
+                       "utc":  "2026-10-13T09:45:30.4200879Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  7689,
+                       "utc":  "2026-10-13T09:45:30.5419355Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  8107,
+                       "utc":  "2026-10-13T09:45:30.9609853Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  8229,
+                       "utc":  "2026-10-13T09:45:31.0797155Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  8643,
+                       "utc":  "2026-10-13T09:45:31.4972695Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  8770,
+                       "utc":  "2026-10-13T09:45:31.6243861Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  9201,
+                       "utc":  "2026-10-13T09:45:32.0557275Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  9369,
+                       "utc":  "2026-10-13T09:45:32.2188636Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  9733,
+                       "utc":  "2026-10-13T09:45:32.5870575Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  9909,
+                       "utc":  "2026-10-13T09:45:32.7638627Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  10264,
+                       "utc":  "2026-10-13T09:45:33.1189199Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  10389,
+                       "utc":  "2026-10-13T09:45:33.2433252Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  10824,
+                       "utc":  "2026-10-13T09:45:33.6787527Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  10989,
+                       "utc":  "2026-10-13T09:45:33.8437449Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  11382,
+                       "utc":  "2026-10-13T09:45:34.2368094Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  11529,
+                       "utc":  "2026-10-13T09:45:34.3827892Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  11943,
+                       "utc":  "2026-10-13T09:45:34.7969272Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  12069,
+                       "utc":  "2026-10-13T09:45:34.9232045Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  12500,
+                       "utc":  "2026-10-13T09:45:35.3546364Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  12669,
+                       "utc":  "2026-10-13T09:45:35.5232577Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  13058,
+                       "utc":  "2026-10-13T09:45:35.9128213Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  13269,
+                       "utc":  "2026-10-13T09:45:36.1229565Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  13591,
+                       "utc":  "2026-10-13T09:45:36.4450496Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  13749,
+                       "utc":  "2026-10-13T09:45:36.6024922Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  14149,
+                       "utc":  "2026-10-13T09:45:37.0040101Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  14349,
+                       "utc":  "2026-10-13T09:45:37.2027248Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  14681,
+                       "utc":  "2026-10-13T09:45:37.5352295Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  14829,
+                       "utc":  "2026-10-13T09:45:37.6827735Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  15241,
+                       "utc":  "2026-10-13T09:45:38.0956508Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  15369,
+                       "utc":  "2026-10-13T09:45:38.2228069Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  15772,
+                       "utc":  "2026-10-13T09:45:38.6266636Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  15909,
+                       "utc":  "2026-10-13T09:45:38.7621199Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  16331,
+                       "utc":  "2026-10-13T09:45:39.1857925Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  16509,
+                       "utc":  "2026-10-13T09:45:39.3632861Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  16862,
+                       "utc":  "2026-10-13T09:45:39.7164468Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  16989,
+                       "utc":  "2026-10-13T09:45:39.8425726Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  17394,
+                       "utc":  "2026-10-13T09:45:40.2484574Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  17529,
+                       "utc":  "2026-10-13T09:45:40.3831864Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  17927,
+                       "utc":  "2026-10-13T09:45:40.7815338Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  18069,
+                       "utc":  "2026-10-13T09:45:40.9229918Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  18459,
+                       "utc":  "2026-10-13T09:45:41.3133491Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  18608,
+                       "utc":  "2026-10-13T09:45:41.4630640Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  19020,
+                       "utc":  "2026-10-13T09:45:41.8747927Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  19149,
+                       "utc":  "2026-10-13T09:45:42.0019693Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  19578,
+                       "utc":  "2026-10-13T09:45:42.4321800Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  19688,
+                       "utc":  "2026-10-13T09:45:42.5424756Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  20108,
+                       "utc":  "2026-10-13T09:45:42.9629524Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  20229,
+                       "utc":  "2026-10-13T09:45:43.0828066Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  20668,
+                       "utc":  "2026-10-13T09:45:43.5223766Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  20888,
+                       "utc":  "2026-10-13T09:45:43.7429855Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  21229,
+                       "utc":  "2026-10-13T09:45:44.0831134Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  21368,
+                       "utc":  "2026-10-13T09:45:44.2228514Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  21788,
+                       "utc":  "2026-10-13T09:45:44.6427894Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  21908,
+                       "utc":  "2026-10-13T09:45:44.7624018Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  22319,
+                       "utc":  "2026-10-13T09:45:45.1734778Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  22449,
+                       "utc":  "2026-10-13T09:45:45.3028892Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  22852,
+                       "utc":  "2026-10-13T09:45:45.7062763Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  22988,
+                       "utc":  "2026-10-13T09:45:45.8422386Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  23410,
+                       "utc":  "2026-10-13T09:45:46.2647004Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  23528,
+                       "utc":  "2026-10-13T09:45:46.3821006Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  23972,
+                       "utc":  "2026-10-13T09:45:46.8262560Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  24068,
+                       "utc":  "2026-10-13T09:45:46.9220537Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  24504,
+                       "utc":  "2026-10-13T09:45:47.3586895Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  24608,
+                       "utc":  "2026-10-13T09:45:47.4625947Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  25037,
+                       "utc":  "2026-10-13T09:45:47.8913001Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  25148,
+                       "utc":  "2026-10-13T09:45:48.0017639Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  25599,
+                       "utc":  "2026-10-13T09:45:48.4531460Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  25808,
+                       "utc":  "2026-10-13T09:45:48.6621930Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  26160,
+                       "utc":  "2026-10-13T09:45:49.0144814Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  26288,
+                       "utc":  "2026-10-13T09:45:49.1424370Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  26721,
+                       "utc":  "2026-10-13T09:45:49.5750463Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  26888,
+                       "utc":  "2026-10-13T09:45:49.7424955Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  27253,
+                       "utc":  "2026-10-13T09:45:50.1070766Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  27368,
+                       "utc":  "2026-10-13T09:45:50.2225684Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  27787,
+                       "utc":  "2026-10-13T09:45:50.6418698Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  27908,
+                       "utc":  "2026-10-13T09:45:50.7624227Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  28320,
+                       "utc":  "2026-10-13T09:45:51.1741365Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  28508,
+                       "utc":  "2026-10-13T09:45:51.3623763Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  28880,
+                       "utc":  "2026-10-13T09:45:51.7343607Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  28988,
+                       "utc":  "2026-10-13T09:45:51.8420850Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  29411,
+                       "utc":  "2026-10-13T09:45:52.2657416Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  29588,
+                       "utc":  "2026-10-13T09:45:52.4420776Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  29969,
+                       "utc":  "2026-10-13T09:45:52.8228582Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  30068,
+                       "utc":  "2026-10-13T09:45:52.9220914Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  30529,
+                       "utc":  "2026-10-13T09:45:53.3836456Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  30668,
+                       "utc":  "2026-10-13T09:45:53.5221955Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  31088,
+                       "utc":  "2026-10-13T09:45:53.9427649Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  31208,
+                       "utc":  "2026-10-13T09:45:54.0619673Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  31620,
+                       "utc":  "2026-10-13T09:45:54.4740073Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  31748,
+                       "utc":  "2026-10-13T09:45:54.6017207Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  32176,
+                       "utc":  "2026-10-13T09:45:55.0302775Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  32288,
+                       "utc":  "2026-10-13T09:45:55.1418456Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  32708,
+                       "utc":  "2026-10-13T09:45:55.5620680Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  32888,
+                       "utc":  "2026-10-13T09:45:55.7423078Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  33267,
+                       "utc":  "2026-10-13T09:45:56.1219106Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  33368,
+                       "utc":  "2026-10-13T09:45:56.2216041Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  33798,
+                       "utc":  "2026-10-13T09:45:56.6527081Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  33908,
+                       "utc":  "2026-10-13T09:45:56.7623161Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  34359,
+                       "utc":  "2026-10-13T09:45:57.2133392Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  34507,
+                       "utc":  "2026-10-13T09:45:57.3613122Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  34890,
+                       "utc":  "2026-10-13T09:45:57.7444127Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  34988,
+                       "utc":  "2026-10-13T09:45:57.8422186Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  35449,
+                       "utc":  "2026-10-13T09:45:58.3031225Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  35588,
+                       "utc":  "2026-10-13T09:45:58.4418167Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  36005,
+                       "utc":  "2026-10-13T09:45:58.8594365Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  36128,
+                       "utc":  "2026-10-13T09:45:58.9820615Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  36539,
+                       "utc":  "2026-10-13T09:45:59.3934338Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  36667,
+                       "utc":  "2026-10-13T09:45:59.5215006Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  37098,
+                       "utc":  "2026-10-13T09:45:59.9526945Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  37267,
+                       "utc":  "2026-10-13T09:46:00.1217106Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  37655,
+                       "utc":  "2026-10-13T09:46:00.5099358Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  37927,
+                       "utc":  "2026-10-13T09:46:00.7817302Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  38215,
+                       "utc":  "2026-10-13T09:46:01.0691166Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  38347,
+                       "utc":  "2026-10-13T09:46:01.2017838Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  38747,
+                       "utc":  "2026-10-13T09:46:01.6010461Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  38887,
+                       "utc":  "2026-10-13T09:46:01.7416062Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  39308,
+                       "utc":  "2026-10-13T09:46:02.1619778Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  39487,
+                       "utc":  "2026-10-13T09:46:02.3413001Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  39866,
+                       "utc":  "2026-10-13T09:46:02.7204052Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  39967,
+                       "utc":  "2026-10-13T09:46:02.8210906Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  40397,
+                       "utc":  "2026-10-13T09:46:03.2515522Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  40507,
+                       "utc":  "2026-10-13T09:46:03.3604715Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  40958,
+                       "utc":  "2026-10-13T09:46:03.8126952Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  41107,
+                       "utc":  "2026-10-13T09:46:03.9601688Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  41490,
+                       "utc":  "2026-10-13T09:46:04.3447443Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  41587,
+                       "utc":  "2026-10-13T09:46:04.4415726Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  42047,
+                       "utc":  "2026-10-13T09:46:04.9012757Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  42187,
+                       "utc":  "2026-10-13T09:46:05.0409794Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  42579,
+                       "utc":  "2026-10-13T09:46:05.4339614Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  42727,
+                       "utc":  "2026-10-13T09:46:05.5805700Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  43108,
+                       "utc":  "2026-10-13T09:46:05.9623724Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  43267,
+                       "utc":  "2026-10-13T09:46:06.1200276Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  43637,
+                       "utc":  "2026-10-13T09:46:06.4915312Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  43747,
+                       "utc":  "2026-10-13T09:46:06.6009976Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  44176,
+                       "utc":  "2026-10-13T09:46:07.0304258Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  44287,
+                       "utc":  "2026-10-13T09:46:07.1406615Z",
+                       "frame_hex":  "0251005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  44734,
+                       "utc":  "2026-10-13T09:46:07.5887971Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  44887,
+                       "utc":  "2026-10-13T09:46:07.7411873Z",
+                       "frame_hex":  "025102035003",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  45273,
+                       "utc":  "2026-10-13T09:46:08.1275484Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  45427,
+                       "utc":  "2026-10-13T09:46:08.2809425Z",
+                       "frame_hex":  "025102035003",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  45834,
+                       "utc":  "2026-10-13T09:46:08.6881255Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  46027,
+                       "utc":  "2026-10-13T09:46:08.8811727Z",
+                       "frame_hex":  "025102025103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  46365,
+                       "utc":  "2026-10-13T09:46:09.2189871Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  46507,
+                       "utc":  "2026-10-13T09:46:09.3605022Z",
+                       "frame_hex":  "025102025103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  46895,
+                       "utc":  "2026-10-13T09:46:09.7491691Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  47107,
+                       "utc":  "2026-10-13T09:46:09.9584708Z",
+                       "frame_hex":  "025102015203",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  47440,
+                       "utc":  "2026-10-13T09:46:10.2941011Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  47586,
+                       "utc":  "2026-10-13T09:46:10.4396729Z",
+                       "frame_hex":  "025102015203",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  47987,
+                       "utc":  "2026-10-13T09:46:10.8419097Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  48127,
+                       "utc":  "2026-10-13T09:46:10.9803594Z",
+                       "frame_hex":  "0251030a00000000000000000000005803",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  48515,
+                       "utc":  "2026-10-13T09:46:11.3691879Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  48667,
+                       "utc":  "2026-10-13T09:46:11.5167673Z",
+                       "frame_hex":  "0251030a00000000000000000000005803",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  49057,
+                       "utc":  "2026-10-13T09:46:11.9117766Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  49207,
+                       "utc":  "2026-10-13T09:46:12.0564733Z",
+                       "frame_hex":  "0251030a00010000000000000000005903",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  49588,
+                       "utc":  "2026-10-13T09:46:12.4425843Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  49687,
+                       "utc":  "2026-10-13T09:46:12.5410657Z",
+                       "frame_hex":  "0251030a00010000000000000000005903",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  50122,
+                       "utc":  "2026-10-13T09:46:12.9768189Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  50227,
+                       "utc":  "2026-10-13T09:46:13.0782124Z",
+                       "frame_hex":  "0251030a00020000000000000000005a03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  50648,
+                       "utc":  "2026-10-13T09:46:13.5027209Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  50766,
+                       "utc":  "2026-10-13T09:46:13.6143318Z",
+                       "frame_hex":  "0251030a00030000000000000000005b03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  51177,
+                       "utc":  "2026-10-13T09:46:14.0318738Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  51306,
+                       "utc":  "2026-10-13T09:46:14.1591546Z",
+                       "frame_hex":  "0251030a00030000000000000000005b03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  51718,
+                       "utc":  "2026-10-13T09:46:14.5726019Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  51846,
+                       "utc":  "2026-10-13T09:46:14.7009116Z",
+                       "frame_hex":  "0251030a00040001000000000000005d03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  52258,
+                       "utc":  "2026-10-13T09:46:15.1120228Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  52387,
+                       "utc":  "2026-10-13T09:46:15.2413910Z",
+                       "frame_hex":  "0251030a00040001000000000000005d03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  52789,
+                       "utc":  "2026-10-13T09:46:15.6439678Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  52986,
+                       "utc":  "2026-10-13T09:46:15.8407695Z",
+                       "frame_hex":  "0251030a00050001000000000000005c03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  53328,
+                       "utc":  "2026-10-13T09:46:16.1822573Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  53466,
+                       "utc":  "2026-10-13T09:46:16.3147414Z",
+                       "frame_hex":  "0251030a00050001000000000000005c03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  53867,
+                       "utc":  "2026-10-13T09:46:16.7211093Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  54007,
+                       "utc":  "2026-10-13T09:46:16.8609026Z",
+                       "frame_hex":  "0251030a00060001000100000000005e03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  54404,
+                       "utc":  "2026-10-13T09:46:17.2580845Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  54546,
+                       "utc":  "2026-10-13T09:46:17.3995788Z",
+                       "frame_hex":  "0251030a00060001000100000000005e03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  54941,
+                       "utc":  "2026-10-13T09:46:17.7955065Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  55086,
+                       "utc":  "2026-10-13T09:46:17.9363810Z",
+                       "frame_hex":  "0251030a00070001000100000000005f03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  55475,
+                       "utc":  "2026-10-13T09:46:18.3291445Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  55626,
+                       "utc":  "2026-10-13T09:46:18.4782239Z",
+                       "frame_hex":  "0251030a00070001000100000000005f03",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  56014,
+                       "utc":  "2026-10-13T09:46:18.8687641Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  56166,
+                       "utc":  "2026-10-13T09:46:19.0170502Z",
+                       "frame_hex":  "0251030a00080002000100000000005303",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  56549,
+                       "utc":  "2026-10-13T09:46:19.4037833Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  56646,
+                       "utc":  "2026-10-13T09:46:19.4988270Z",
+                       "frame_hex":  "0251030a00080002000100000000005303",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  57085,
+                       "utc":  "2026-10-13T09:46:19.9393162Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  57246,
+                       "utc":  "2026-10-13T09:46:20.1004948Z",
+                       "frame_hex":  "0251030a00090002000100000000005203",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  57636,
+                       "utc":  "2026-10-13T09:46:20.4904738Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  57786,
+                       "utc":  "2026-10-13T09:46:20.6371215Z",
+                       "frame_hex":  "0251030a000a0002000100000000005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  58169,
+                       "utc":  "2026-10-13T09:46:21.0234817Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  58266,
+                       "utc":  "2026-10-13T09:46:21.1199188Z",
+                       "frame_hex":  "0251030a000a0002000100000000005103",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  58726,
+                       "utc":  "2026-10-13T09:46:21.5803410Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  58866,
+                       "utc":  "2026-10-13T09:46:21.7166282Z",
+                       "frame_hex":  "0251030a000b0003000200000000005203",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  59272,
+                       "utc":  "2026-10-13T09:46:22.1269142Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  59406,
+                       "utc":  "2026-10-13T09:46:22.2579051Z",
+                       "frame_hex":  "0251030a000b0003000200000000005203",
+                       "write_status":  null
+                   },
+                   {
+                       "direction":  "tx",
+                       "monotonic_ms":  59828,
+                       "utc":  "2026-10-13T09:46:22.6825221Z",
+                       "frame_hex":  "02515103",
+                       "write_status":  "Success"
+                   },
+                   {
+                       "direction":  "rx",
+                       "monotonic_ms":  60006,
+                       "utc":  "2026-10-13T09:46:22.8606460Z",
+                       "frame_hex":  "0251030a000c0003000200000000005503",
+                       "write_status":  null
+                   }
+               ]
+}

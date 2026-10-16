@@ -1,0 +1,46 @@
+{
+  "trace": "captures/windows-idle-polling-20261014-01.json",
+  "planned_duration_seconds": 600,
+  "ended_early_by_operator_display_off_report": true,
+  "operator_confirmed_display_off": true,
+  "polling_prevented_display_sleep": false,
+  "first_status": {
+    "monotonic_ms": 2680,
+    "utc": "2026-10-14T15:35:57.4124023Z",
+    "state": 0,
+    "detail": null
+  },
+  "last_normal_status": {
+    "monotonic_ms": 345440,
+    "utc": "2026-10-14T15:41:40.1733439Z",
+    "state": 0,
+    "detail": null
+  },
+  "first_sleep_status": {
+    "monotonic_ms": 345980,
+    "utc": "2026-10-14T15:41:40.7114937Z",
+    "state": 6,
+    "detail": 2
+  },
+  "last_status": {
+    "monotonic_ms": 400097,
+    "utc": "2026-10-14T15:42:34.8294617Z",
+    "state": 6,
+    "detail": 2
+  },
+  "normal_status_count": 625,
+  "sleep_status_count": 101,
+  "normal_to_sleep_elapsed_from_first_status_ms": 343300,
+  "maximum_query_write_gap_ms": 562,
+  "query_counts": {
+    "0250025203": 1,
+    "0250035303": 1,
+    "02515103": 726
+  },
+  "all_native_query_writes_successful": true,
+  "motor_execution_enabled": false,
+  "cleanup_status": "Success",
+  "cancelled_via_cli_q": true,
+  "interpretation": "Bluetooth remains responsive while the console sleeps. Frequent 51 status polling does not reset/prevent this W1 sleep state. The 343.3s observation-to-sleep interval is not a measured inactivity timeout from physical stop or last button input.",
+  "next_candidate": "Official FitShow v1.1 protocol describes 53/01 mode high bit 0x80 as READY without start, expected status 9. Unverified on W1; it remains motor-capable and must be tested under a separate bounded motor trial, never a nonmotor query. No keepalive fix claimed."
+}

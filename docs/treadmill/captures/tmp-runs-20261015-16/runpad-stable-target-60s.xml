@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="runpad-stable-target-60s" name="RunPad stable-target check — 60 seconds" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Constant 1.0 km/h, level 0" duration="00:01:00" speed="1.0" inclination="0" forcespeed="1"/>
+</rows>

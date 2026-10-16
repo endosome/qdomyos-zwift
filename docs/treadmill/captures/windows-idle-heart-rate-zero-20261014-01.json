@@ -1,0 +1,26 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": "Expected exactly one accessible FFF0 service",
+    "frames": [
+    ],
+    "ftms_cleanup_status": [
+    ],
+    "ftms_observation_status": "not requested",
+    "last_operation": "discover_fitshow_service",
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": null,
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "error",
+    "status_heart_rate_zero": true,
+    "windows_version": "10.0.26300.0"
+}

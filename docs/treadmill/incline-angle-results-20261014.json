@@ -1,0 +1,137 @@
+{
+  "trace": "captures/windows-incline-measure-4-20261014-01.jsonl",
+  "trial_result": {
+    "event": "trial_result",
+    "monotonic_ms": 92412,
+    "normal_status_after_stop": true,
+    "operator_arrival_marks_recorded": true,
+    "physical_stop_verified": false,
+    "sequence_observed": true,
+    "stop_write_succeeded": true,
+    "utc": "2026-10-14T15:14:25.519Z"
+  },
+  "physical_arrival_marks": [
+    {
+      "command_to_arrival_ms": 9803,
+      "event": "incline_state",
+      "monotonic_ms": 20730,
+      "motion_duration_ms": 9358,
+      "report_preceded_arrival_ms": 9244,
+      "source": "operator_key",
+      "stage": 1,
+      "state": "attained_observed",
+      "utc": "2026-10-14T15:13:13.837Z"
+    },
+    {
+      "command_to_arrival_ms": 8078,
+      "event": "incline_state",
+      "monotonic_ms": 58825,
+      "motion_duration_ms": 7648,
+      "report_preceded_arrival_ms": 7508,
+      "source": "operator_key",
+      "stage": 2,
+      "state": "attained_observed",
+      "utc": "2026-10-14T15:13:51.932Z"
+    }
+  ],
+  "arrival_holds_ms": {
+    "level_4": 30017,
+    "returned_level_0": 30002
+  },
+  "cleanup": {
+    "status": "complete",
+    "notification_cleanup_status": "Success",
+    "ftms_cleanup_status": [
+      "00002acd-0000-1000-8000-00805f9b34fb: Success",
+      "00002ada-0000-1000-8000-00805f9b34fb: Success"
+    ]
+  },
+  "angles_degrees_operator_reported": {
+    "initial_level_0": 2,
+    "level_4": 4,
+    "returned_level_0": 2
+  },
+  "angle_accuracy": "unknown; phone app floor readings 0\u20131 degree; single reported value per position, not three separate samples",
+  "missing_information": null,
+  "calibrated_grade_mapping": false,
+  "nominal_gradient_percent_from_reported_angle": {
+    "level_0": 3.492076949174773,
+    "level_4": 6.992681194351041
+  },
+  "nominal_gradient_difference_percentage_points": 3.5006042451762682,
+  "gradient_interpretation": "Provisional mathematical conversions of noisy app readings, not a calibrated grade mapping; no intermediate interpolation or zero-offset assumption.",
+  "level_8_run": {
+    "trace": "captures/windows-incline-measure-8-20261014-01.jsonl",
+    "angles_degrees_operator_reported": {
+      "initial_level_0": 2,
+      "level_8": 6,
+      "returned_level_0": 2
+    },
+    "physical_arrival_marks": [
+      {
+        "command_to_arrival_ms": 14842,
+        "event": "incline_state",
+        "monotonic_ms": 25909,
+        "motion_duration_ms": 14479,
+        "report_preceded_arrival_ms": 14302,
+        "source": "operator_key",
+        "stage": 1,
+        "state": "attained_observed",
+        "utc": "2026-10-14T15:18:39.087Z"
+      }
+    ],
+    "trial_result": {
+      "event": "trial_result",
+      "monotonic_ms": 119623,
+      "normal_status_after_stop": true,
+      "operator_arrival_marks_recorded": false,
+      "physical_stop_verified": false,
+      "sequence_observed": false,
+      "stop_write_succeeded": true,
+      "utc": "2026-10-14T15:20:12.802Z"
+    },
+    "cleanup": {
+      "status": "complete",
+      "notification_cleanup_status": "Success",
+      "ftms_cleanup_status": [
+        "00002acd-0000-1000-8000-00805f9b34fb: Success",
+        "00002ada-0000-1000-8000-00805f9b34fb: Success"
+      ]
+    },
+    "return_mark_status": "No moving_observed or attained_observed marks recorded for return; stopped after 60-second physical-arrival deadline. User independently reports returned level-0 angle 2 degrees. Do not count as a completed marked timing sequence.",
+    "angle_accuracy": "unknown; floor previously read 0\u20131 degree; one reported value per position, not three separate samples",
+    "calibrated_grade_mapping": false
+  },
+  "provisional_observed_levels": [
+    {
+      "level": 0,
+      "reported_angle_degrees": 2,
+      "nominal_gradient_percent": 3.492076949174773,
+      "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+      "calibrated": false
+    },
+    {
+      "level": 4,
+      "reported_angle_degrees": 4,
+      "nominal_gradient_percent": 6.992681194351041,
+      "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+      "calibrated": false
+    },
+    {
+      "level": 8,
+      "reported_angle_degrees": 6,
+      "nominal_gradient_percent": 10.510423526567648,
+      "measurement_accuracy": "unknown; phone inclinometer, integer-degree readings",
+      "calibrated": false
+    }
+  ],
+  "unmeasured_levels": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7
+  ],
+  "interpretation": "Nominal upper gradient 10.51% is consistent with advertised 11% within unquantified phone uncertainty. No equal-spacing assumption or baseline-zero correction applied; intermediate levels unmeasured."
+}

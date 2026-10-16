@@ -1,0 +1,49 @@
+{
+    "command":  "scan",
+    "backend":  "windows-winrt",
+    "windows_version":  "10.0.26300.0",
+    "status":  "complete",
+    "error":  null,
+    "devices":  [
+                    {
+                        "name":  "",
+                        "address":  "62:30:27:74:46:FB",
+                        "address_type":  "random",
+                        "rssi_dbm":  -53,
+                        "advertised_service_uuids":  [
+
+                                                     ]
+                    },
+                    {
+                        "name":  "Flare RT",
+                        "address":  "D2:0F:44:BF:7C:0A",
+                        "address_type":  "random",
+                        "rssi_dbm":  -86,
+                        "advertised_service_uuids":  [
+                                                         "0000180a-0000-1000-8000-00805f9b34fb",
+                                                         "0000180f-0000-1000-8000-00805f9b34fb",
+                                                         "71262000-3692-ae93-e711-472ba41689c9"
+                                                     ]
+                    },
+                    {
+                        "name":  "FS-0F7A32",
+                        "address":  "DD:87:70:39:74:20",
+                        "address_type":  "public",
+                        "rssi_dbm":  -69,
+                        "advertised_service_uuids":  [
+                                                         "00001826-0000-1000-8000-00805f9b34fb",
+                                                         "0000fff0-0000-1000-8000-00805f9b34fb"
+                                                     ]
+                    }
+                ],
+    "address":  null,
+    "address_type":  null,
+    "name":  null,
+    "service_uuids":  [
+
+                      ],
+    "services":  [
+
+                 ],
+    "motor_capabilities":  "unknown: no FitShow queries were sent"
+}

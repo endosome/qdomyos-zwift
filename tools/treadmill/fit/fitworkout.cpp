@@ -46,9 +46,17 @@ QString intensityName(FIT_INTENSITY code) {
 double gradeOf(int level) { return level * kGradePerLevel; }
 thread_local double gMaxSpeedKmh = kMaxSpeedKmh; // set from the sport before steps are validated
 
+// The FIT SDK keeps a string's length in 8 bits: anything over 255 bytes wraps and its copy overruns the buffer
+// (found with AddressSanitizer). So every string we hand it is plain printable ASCII, well under that limit.
+bool plainText(const QString &text, const QString &what, QString &error) {
+    for (const QChar c : text)
+        if (c.unicode() < 0x20 || c.unicode() > 0x7e) { error = what + " must be plain printable ASCII"; return false; }
+    return true;
+}
 bool validateStep(const Step &step, const QString &where, QString &error) {
     if (step.name.isEmpty() || step.name.size() > 32) { error = where + ": name must be 1-32 characters"; return false; }
     if (step.notes.size() > 160) { error = where + ": notes exceed 160 characters"; return false; }
+    if (!plainText(step.name, where + ": name", error) || !plainText(step.notes, where + ": notes", error)) return false;
     if (!kIntensities.contains(step.intensity)) { error = where + ": unknown intensity " + step.intensity; return false; }
     if (step.seconds < kMinStepSeconds || step.seconds > kMaxStepSeconds) {
         error = where + QString(": duration must be %1-%2 seconds").arg(kMinStepSeconds).arg(kMaxStepSeconds); return false;
@@ -250,7 +258,8 @@ bool fromSpec(const QJsonObject &spec, Training &out, QString &error) {
     out.description = spec.value("description").toString();
     out.sport = spec.value("sport").toString("hiking");
     if (out.name.isEmpty() || out.name.size() > 40) { error = "spec: name must be 1-40 characters"; return false; }
-    if (out.description.size() > 400) { error = "spec: description exceeds 400 characters"; return false; }
+    if (out.description.size() > 250) { error = "spec: description exceeds 250 characters"; return false; }
+    if (!plainText(out.name, "spec: name", error) || !plainText(out.description, "spec: description", error)) return false;
     if (out.sport != "hiking" && out.sport != "walking" && out.sport != "running") { error = "spec: sport must be hiking, walking or running"; return false; }
     out.subSport = spec.value("sub_sport").toString(out.sport == "running" ? "treadmill" : "");
     if (out.sport != "running" && !out.subSport.isEmpty()) { error = "spec: sub_sport applies to running only"; return false; }

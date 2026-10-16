@@ -22,7 +22,7 @@ class MotorTrialTests(unittest.TestCase):
         self.log = self.directory / 'trial.jsonl'
         self.calls = self.directory / 'frames.json'
         self.environment = dict(os.environ, PATH=str(self.directory) + os.pathsep + os.environ['PATH'],
-                                MOTOR_CALLS=str(self.calls), MOTOR_MODE='normal')
+                                MOTOR_CALLS=str(self.calls), MOTOR_MODE='normal', TREADMILL_STATE_DIR=str(self.directory / 'state'))
         self.executable('wslpath', 'import sys\nprint(sys.argv[-1])\n')
         helper = self.executable('fake-powershell', '''import json, os, sys, time
 from pathlib import Path
@@ -33,6 +33,7 @@ def argument(windows, linux):
             return sys.argv[sys.argv.index(name) + 1]
 trial = argument('-Trial', '--trial')
 expected_name = argument('-ExpectedName', '--expected-name')
+running_profile = argument('-Profile', '--profile') == 'running'
 Path(os.environ['MOTOR_CALLS'] + '.argv').write_text(json.dumps(sys.argv[1:]))
 if mode == 'batch-fault':
     mode = 'bounds' if trial == 'speed-60' else 'normal'
@@ -66,7 +67,7 @@ for line in sys.stdin:
     payload = bytes.fromhex(frame)[1:-2]
     send('TX\\t' + ident + '\\t' + frame + '\\tSuccess')
     if payload == bytes.fromhex('5002'):
-        rx(bytes.fromhex('50023c0a00') if mode != 'bounds' else bytes.fromhex('5002780a20'))
+        rx(bytes.fromhex('5002780a20') if (mode == 'bounds' or running_profile) else bytes.fromhex('50023c0a00'))
     elif payload == bytes.fromhex('5003'):
         rx(bytes.fromhex('5003080002'))
     elif payload[0] == 0x51:
@@ -88,6 +89,9 @@ for line in sys.stdin:
             continue
         if ready and mode == 'ready-reverted' and time.monotonic() - ready_at > 1:
             ready = False
+        if observe_ftms and os.environ.get('MOTOR_FTMS', 'ok') != 'silent':
+            shown = (speed if moving else 0) * (0.5 if os.environ.get('MOTOR_FTMS') == 'mismatch' else 1)
+            send('FTMS\t00002acd-0000-1000-8000-00805f9b34fb\t' + ('8c05' + int(shown * 10).to_bytes(2, 'little').hex() + '00' * 15))
         rx(bytes([0x51, 4, 1, 0]) + bytes(9) if time.monotonic() < normal_at else
            (bytes([0x51, 10, 0, incline]) + bytes(9) if paused else
            (bytes([0x51, 3, speed, incline]) + bytes(9) if moving else
@@ -114,6 +118,8 @@ for line in sys.stdin:
     elif payload == bytes.fromhex('5303'):
         stopped = True
         moving, paused, ready = False, False, False
+        if os.environ.get('MOTOR_STOP_DELAY'):
+            normal_at = time.monotonic() + float(os.environ['MOTOR_STOP_DELAY'])
         if mode == 'delayed-stop':
             normal_at = time.monotonic() + 4.4
         rx(bytes.fromhex('5303'))
@@ -484,6 +490,158 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 process.wait()
             os.close(master)
             os.close(slave)
+
+    # --- running mode (Linux backend) ----------------------------------------------------------
+    def stage(self, trial, env=None, actions=None, timeout=120, validated=None, keep_helper=False):
+        """Run a staged running-mode trial against the fake peer; returns (exit code, stderr)."""
+        if not keep_helper:
+            self.linux()
+        state = self.directory / 'state'
+        if validated is not None:
+            state.mkdir(exist_ok=True)
+            (state / 'running-validated.json').write_text(json.dumps({'validated_kmh': validated}))
+        self.environment.update(env or {})
+        master, slave = pty.openpty()
+        process = subprocess.Popen([*self.arguments, '--trial', trial, '--running-mode', '--confirm-motor', '--log', str(self.log)],
+                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        started = time.monotonic()
+        def wait_for(name, count=1):
+            while time.monotonic() - started < timeout:
+                if self.log.exists() and sum(1 for row in self.events() if row['event'] == name) >= count:
+                    return
+                time.sleep(0.02)
+            self.fail('Never saw ' + name)
+        try:
+            os.write(master, b'MOTOR\n')
+            if actions:
+                actions(lambda data: os.write(master, data), wait_for)
+            output, errors = process.communicate(timeout=timeout)
+            return process.returncode, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def validated_kmh(self):
+        path = self.directory / 'state' / 'running-validated.json'
+        return json.loads(path.read_text())['validated_kmh'] if path.exists() else None
+
+    def test_running_stages_unlock_in_order_and_unknown_stages_are_refused(self):
+        self.linux()
+        for trial, message in (('run-8', b'not unlocked: validated so far is 6 km/h, so the next stage is run-7'),
+                               ('run-12', b'next stage is run-7'), ('run-9', b'Unknown running stage')):
+            with self.subTest(trial=trial):
+                result = subprocess.run([*self.arguments, '--trial', trial, '--running-mode', '--dry-run'], capture_output=True, env=self.environment)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(message, result.stderr)
+        result = subprocess.run([*self.arguments, '--trial', 'run-7', '--dry-run'], capture_output=True, env=self.environment)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn(b'need --running-mode', result.stderr)
+        plan = subprocess.run([*self.arguments, '--trial', 'run-7', '--running-mode', '--dry-run'], capture_output=True, text=True, env=self.environment)
+        self.assertEqual(plan.returncode, 0, plan.stderr)
+        data = json.loads(plan.stdout)
+        self.assertEqual((data['profile'], data['speed_ceiling_code'], data['running_validated_kmh']), ('running', 70, 6.0))
+        self.assertEqual([step['speed_code'] for step in data['workout_steps']], [60, 70, 60, 10])
+        self.assertFalse(self.calls.exists())
+
+    def test_running_options_are_linux_only_and_pass_the_profile_and_ftms_to_the_helper(self):
+        windows = subprocess.run([BINARY, 'control-test', '--backend', 'windows', '--device', ADDRESS, '--expected-name', 'FS-TEST',
+                                  '--running-mode', '--dry-run'], capture_output=True, env=self.environment)
+        self.assertEqual(windows.returncode, 2)
+        self.assertIn(b'Linux-backend', windows.stderr)
+        code, _ = self.stage('run-7')
+        self.assertEqual(code, 0)
+        argv = json.loads(Path(str(self.calls) + '.argv').read_text())
+        self.assertIn('--observe-ftms', argv)
+        self.assertEqual(argv[argv.index('--profile') + 1], 'running')
+
+    def test_a_completed_stage_with_agreeing_ftms_unlocks_exactly_the_next_stage(self):
+        code, errors = self.stage('run-7')
+        self.assertEqual(code, 0, errors)
+        self.assertEqual(self.validated_kmh(), 7.0)
+        events = self.events()
+        result = next(row for row in events if row['event'] == 'running_stage_result')
+        self.assertTrue(result['validated'])
+        self.assertGreaterEqual(result['ftms_agreed_samples_at_top'], 10)
+        self.assertEqual(result['validated_kmh_now'], 7.0)
+        self.assertTrue(events[-1]['sequence_observed'])
+        motor = [f for f in json.loads(self.calls.read_text()) if f.startswith('0253')]
+        self.assertEqual(motor[0], '02530100000000000000005203')
+        self.assertEqual(motor[-1], '0253035003')
+        # run-10 is still locked (next is run-8); a workout above 7 km/h is refused; one at 7 is accepted.
+        locked = subprocess.run([*self.arguments, '--trial', 'run-10', '--running-mode', '--dry-run'], capture_output=True, env=self.environment)
+        self.assertEqual(locked.returncode, 2)
+        self.assertIn(b'next stage is run-8', locked.stderr)
+        self.assertEqual(subprocess.run([*self.arguments, '--trial', 'run-8', '--running-mode', '--dry-run'], capture_output=True, env=self.environment).returncode, 0)
+        self.assertEqual(self.run_running_workout(7.0, dry=True).returncode, 0)
+        refused = self.run_running_workout(8.0, dry=True)
+        self.assertEqual(refused.returncode, 2)
+        self.assertIn(b'validated only up to 7 km/h', refused.stderr)
+
+    def run_running_workout(self, speed, dry=False, running=True):
+        workout = self.directory / 'running.xml'
+        workout.write_text(f'''<rows version="1" id="fast" name="Fast" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Go" duration="00:01:00" forcespeed="1" speed="{speed}" inclination="1.375" />
+</rows>''')
+        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', 'linux', '--device', 'DD:87:70:39:74:20',
+                     '--expected-name', 'FS-0F7A32', *(['--running-mode'] if running else []), *(['--dry-run'] if dry else [])]
+        return subprocess.run(arguments, capture_output=True, env=self.environment, stdin=subprocess.DEVNULL)
+
+    def test_running_speeds_need_the_flag_and_walking_workouts_stay_walking(self):
+        self.linux()
+        no_flag = self.run_running_workout(7.0, dry=True, running=False)
+        self.assertEqual(no_flag.returncode, 2)
+        self.assertIn(b'add --running-mode', no_flag.stderr)
+        self.assertEqual(self.run_running_workout(5.5, dry=True, running=False).returncode, 0)
+        tall = self.run_running_workout(12.1, dry=True)
+        self.assertEqual(tall.returncode, 2)
+        self.assertIn(b'1.0', tall.stderr)
+
+    def test_a_stage_is_stopped_when_ftms_speed_disagrees_and_nothing_is_unlocked(self):
+        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'mismatch'})
+        self.assertNotEqual(code, 0)
+        self.assertIsNone(self.validated_kmh())
+        events = self.events()
+        stop = next(row for row in events if row['event'] == 'stop_requested')
+        self.assertIn('disagrees', stop['reason'])
+        self.assertFalse(next(row for row in events if row['event'] == 'running_stage_result')['validated'])
+
+    def test_a_stage_is_stopped_when_ftms_speed_is_not_observed(self):
+        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'silent'})
+        self.assertNotEqual(code, 0)
+        self.assertIsNone(self.validated_kmh())
+        stop = next(row for row in self.events() if row['event'] == 'stop_requested')
+        self.assertIn('cannot be observed', stop['reason'])
+
+    def test_running_mode_with_the_walking_limit_report_refuses_before_any_motor_frame(self):
+        self.linux()
+        # The fake answers walking limits unless the helper was started with the running profile; hide that to emulate a
+        # console left in walking mode.
+        self.environment['MOTOR_MODE'] = 'normal'
+        source = Path(self.environment['TREADMILL_LINUX_HELPER']).read_text().replace("running_profile = argument('-Profile', '--profile') == 'running'", 'running_profile = False')
+        walking = self.executable('walking-console-helper', source.split('\n', 1)[1])
+        self.environment['TREADMILL_LINUX_HELPER'] = str(walking)
+        code, _ = self.stage('run-7', keep_helper=True)
+        self.assertNotEqual(code, 0)
+        self.assertEqual([f for f in json.loads(self.calls.read_text()) if f.startswith('0253')], [])
+        fault = next(row for row in self.events() if row['event'] == 'fault')
+        self.assertIn('not the running-mode report', fault['reason'])
+
+    def test_a_stop_from_high_speed_gets_a_longer_window_for_the_deceleration(self):
+        # Operator stop at 10 km/h; the fake keeps reporting STOPPING for 14 s. The old fixed 10 s window would fault.
+        def actions(send, wait_for):
+            wait_for('reported_target', 2)
+            time.sleep(1.0)
+            send(b'Q')
+        code, _ = self.stage('run-10', env={'MOTOR_STOP_DELAY': '14'}, actions=actions, validated=8)
+        self.assertNotEqual(code, 0)  # an operator stop is never a successful stage
+        events = self.events()
+        self.assertIn('Operator stop', next(row for row in events if row['event'] == 'stop_requested')['reason'])
+        self.assertFalse(any(row['event'] == 'fault' and 'Stop observation deadline' in row.get('reason', '') for row in events))
+        self.assertTrue(events[-1]['normal_status_after_stop'])
+        self.assertIsNone(None if self.validated_kmh() == 8 else self.validated_kmh())  # still 8: an aborted stage unlocks nothing
 
     def test_linux_backend_refuses_a_report_from_another_backend(self):
         self.linux(backend_report='windows-winrt')

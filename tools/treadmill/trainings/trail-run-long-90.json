@@ -1,0 +1,56 @@
+{
+  "id": "trail-run-long-90",
+  "name": "Trail run long 90",
+  "description": "A long easy-to-moderate trail day with power-hike climbs. UNPROVEN LENGTH: the longest run on this treadmill so far is 62 minutes. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 5.0,
+        "speed_to": 7.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 6,
+      "steps": [
+        {
+          "name": "Easy run",
+          "minutes": 8,
+          "speed": 8.0,
+          "level": 2,
+          "intensity": "active",
+          "notes": "RPE 4-5. Conversational."
+        },
+        {
+          "name": "Power-hike climb",
+          "minutes": 4,
+          "speed": 6.0,
+          "level": 4,
+          "intensity": "active",
+          "notes": "RPE 5-6."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

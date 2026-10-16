@@ -1,0 +1,48 @@
+{
+  "id": "trail-run-progression-45",
+  "name": "Trail run progression 45",
+  "description": "A staircase from easy to brisk at a gentle grade: teaches pacing and finishing strong. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 5.0,
+        "speed_to": 7.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "ramp": {
+        "name": "Progression",
+        "minutes": 28,
+        "speed_from": 7.0,
+        "speed_to": 10.0,
+        "level_from": 2,
+        "level_to": 2,
+        "step_minutes": 2,
+        "intensity": "active",
+        "notes": "Ease into it; each step slightly faster."
+      }
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 9,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

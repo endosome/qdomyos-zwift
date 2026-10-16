@@ -1,0 +1,56 @@
+{
+  "id": "mrun-vertical-intervals-55",
+  "name": "Mountain run vertical intervals 55",
+  "description": "Five four-minute efforts at the steepest grade the W1 offers: vertical-kilometre style climbing strength. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 5,
+      "steps": [
+        {
+          "name": "Steep effort",
+          "minutes": 4,
+          "speed": 7.0,
+          "level": 8,
+          "intensity": "interval",
+          "notes": "RPE 8-9. Controlled; fast feet, strong arms."
+        },
+        {
+          "name": "Walk recovery",
+          "minutes": 3,
+          "speed": 4.5,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "Walk down to RPE 3."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

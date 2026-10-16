@@ -266,6 +266,25 @@ class FitTests(unittest.TestCase):
             os.close(master); os.close(slave)
         self.assertNotIn(b'LONG RUN', errors)
 
+    def test_oversize_and_non_ascii_strings_are_refused_cleanly(self):
+        # The FIT SDK keeps string lengths in 8 bits; a longer string once corrupted the heap. It must be a clean refusal.
+        step = {'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}
+        for field, value, message in (('description', 'x' * 251, 'description exceeds 250'), ('description', 'caf\u00e9', 'plain printable ASCII'),
+                                      ('name', 'Caf\u00e9 climb', 'plain printable ASCII')):
+            with self.subTest(field=field, size=len(value)):
+                result, out = self.build(self.spec({field: value, 'steps': [step]}))
+                self.assertEqual(result.returncode, 2, (result.returncode, result.stderr))  # a crash would be negative or 134
+                self.assertIn(message, result.stderr)
+                self.assertFalse(out.exists())
+        for key, value in (('name', 'Climb \u00fc'), ('notes', 'steil \u2013 hart')):
+            with self.subTest(step=key):
+                result, _ = self.build(self.spec({'steps': [dict(step, **{key: value})]}))
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn('plain printable ASCII', result.stderr)
+        ok, out = self.build(self.spec({'description': 'x' * 250, 'steps': [step]}, name='exact250'))
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertEqual(json.loads(run(FIT_TOOL, 'dump', str(out)).stdout)['description'], 'x' * 250)
+
     def test_nested_repeats_and_over_long_trainings_are_refused(self):
         inner = {'repeat': 2, 'steps': [{'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}]}
         self.refused({'steps': [{'repeat': 2, 'steps': [inner]}]}, 'cannot be nested')

@@ -31,7 +31,7 @@ class TrainingLibraryTests(unittest.TestCase):
     def test_there_are_trainings_for_each_discipline(self):
         ids = [path.stem for path in SPECS]
         self.assertGreaterEqual(len(ids), 15)
-        for prefix in ('skimo-', 'hike-', 'mr-', 'trail-'):
+        for prefix in ('skimo-', 'hike-', 'mr-', 'mrun-', 'trail-'):
             self.assertGreaterEqual(sum(i.startswith(prefix) for i in ids), 3, prefix)
 
     def test_every_fit_file_is_exactly_what_its_spec_builds(self):
@@ -60,13 +60,20 @@ class TrainingLibraryTests(unittest.TestCase):
             with self.subTest(spec=spec.stem):
                 info = dump(ROOT / 'workouts' / (spec.stem + '.fit'))
                 self.assertEqual(info['id'], spec.stem)
-                self.assertTrue(20 * 60 <= info['total_seconds'] <= 65 * 60, info['total_seconds'])
+                self.assertTrue(20 * 60 <= info['total_seconds'] <= 120 * 60, info['total_seconds'])
+                if info['total_seconds'] > 65 * 60:  # nothing past 62 minutes has run on this treadmill
+                    self.assertIn('UNPROVEN LENGTH', info['description'])
                 steps = list(plan_tool.flat_steps(info['steps']))
-                self.assertLessEqual(max(s['speed'] for s in steps), 6.0)
+                running = info['sport'] == 'running'
+                self.assertLessEqual(max(s['speed'] for s in steps), 12.0 if running else 6.0)
                 self.assertGreaterEqual(min(s['speed'] for s in steps), 1.0)
                 self.assertLessEqual(max(s['level'] for s in steps), 8)
                 self.assertTrue(all(s['seconds'] >= 30 for s in steps))
-                self.assertEqual(info['sport'], 'hiking')
+                self.assertIn(info['sport'], ('hiking', 'running'))
+                self.assertEqual(info.get('sub_sport'), 'trail' if running else None)
+                if running:
+                    self.assertGreater(max(s['speed'] for s in steps), 6.0, 'a running training should use running speeds')
+                    self.assertIn('--running-mode', info['description'])
                 self.assertTrue(info['description'])
                 self.assertNotIn(info['name'], names)
                 names.add(info['name'])
@@ -79,14 +86,24 @@ class TrainingLibraryTests(unittest.TestCase):
                 fit = ROOT / 'workouts' / (spec.stem + '.fit')
                 info = dump(fit)
                 steps = list(plan_tool.flat_steps(info['steps']))
-                result = run(CLI, 'workout', 'run', fit, '--dry-run', *ADDRESS)
+                running = info['sport'] == 'running'
+                with tempfile.TemporaryDirectory() as state:
+                    env = dict(os.environ, TREADMILL_STATE_DIR=state)
+                    if running:
+                        # Without the flag, then with the flag but nothing validated: both refuse. Only then validate 12 km/h.
+                        self.assertIn('add --running-mode', run(CLI, 'workout', 'run', fit, '--dry-run', *ADDRESS, env=env).stderr)
+                        self.assertIn('validated only up to 6 km/h', run(CLI, 'workout', 'run', fit, '--dry-run', *ADDRESS, '--running-mode', env=env).stderr)
+                        Path(state, 'running-validated.json').write_text('{"validated_kmh": 12}')
+                    result = run(CLI, 'workout', 'run', fit, '--dry-run', *ADDRESS, *(['--running-mode'] if running else []), env=env)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 plan = json.loads(result.stdout)
                 self.assertEqual(plan['workout_id'], spec.stem)
                 self.assertEqual(plan['speed_ceiling_code'], round(max(s['speed'] for s in steps) * 10))
                 self.assertEqual(plan['incline_ceiling_code'], max(s['level'] for s in steps))
                 self.assertLessEqual(plan['step_count'], 512)
-                self.assertLessEqual(plan['windows_motor_deadline_seconds'], 4500)
+                # The library's normal sessions also fit the Windows bridge's 70 minute / 4500 s limit; the long ones are Linux only.
+                self.assertLessEqual(plan['windows_motor_deadline_seconds'], 4500 if info['total_seconds'] <= 65 * 60 else 9000)
+                self.assertEqual(plan['profile'], 'running' if running else 'walking')
                 self.assertFalse(plan['motor_execution_enabled'])
 
     def test_garmin_official_decoder_reads_every_training_cleanly(self):
@@ -134,7 +151,10 @@ class PlanTests(unittest.TestCase):
                 self.assertEqual(plan['id'], path.stem)
                 for week in plan['weeks']:
                     used |= {s['training'] for s in week['sessions'] if 'training' in s}
-        self.assertEqual(sorted(set(p.stem for p in SPECS) - used), [])
+        unproven = {p.stem for p in SPECS if 'UNPROVEN LENGTH' in json.loads(p.read_text())['description']}
+        self.assertGreaterEqual(len(unproven), 3)
+        self.assertEqual(sorted(set(p.stem for p in SPECS) - used - unproven), [])
+        self.assertEqual(sorted(used & unproven), [])
 
     def test_plans_show_without_errors(self):
         for path in PLANS:
@@ -171,6 +191,7 @@ class PlanTests(unittest.TestCase):
             "'week' must be 2": self.plan([base[0], dict(base[1], week=3), base[2], base[3]]),
             "unknown key 'extra'": dict(self.plan(base), extra=1),
             "missing 'goal'": {'id': 'p', 'name': 'P', 'weeks': base},
+            'has an unproven length': self.plan([self.good_week(1, [{'day': 'Tue', 'training': 'hike-long-day-100'}])] + base[1:]),
         }
         for message, plan in cases.items():
             with self.subTest(message):

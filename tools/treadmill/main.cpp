@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("confirm-batch", "Approve the printed sequential batch with stop between trials."));
     parser.addOption(QCommandLineOption("wait-wake", "Linux hardware runs: wait up to this many minutes (0.05-30) for the console to wake, sending nothing to the motor, then run the normal preflight. Without --wait-wake-confirm the belt starts by itself 5 s after the wake.", "minutes"));
     parser.addOption(QCommandLineOption("wait-wake-confirm", "With --wait-wake: after the wake, start only when ENTER is pressed."));
+    parser.addOption(QCommandLineOption("running-mode", "Linux hardware runs: allow speeds above 6.0 km/h (the console must be in running mode). Needs FTMS observation, unlocks in stages (see the run-N trials) and stops if FTMS speed disagrees with FitShow speed."));
     parser.addOption(QCommandLineOption("observe-ftms", "Also capture FTMS data/status notifications without FTMS motor writes."));
     parser.addOption(QCommandLineOption("status-heart-rate-zero", "Experimental Windows status query with the documented zero heart-rate byte."));
     parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
@@ -57,6 +58,7 @@ int main(int argc, char *argv[]) {
                                QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss") + ".jsonl";
         }
     }
+    if (commandLine.contains("--running-mode") && !commandLine.contains("--observe-ftms")) commandLine << "--observe-ftms"; // required, not optional
     parser.process(commandLine);
     const auto arguments = parser.positionalArguments();
     const bool hardwareWorkout = arguments.size() == 3 && arguments[0] == "workout" && arguments[1] == "run" && !parser.isSet("simulate");
@@ -93,6 +95,10 @@ int main(int argc, char *argv[]) {
     if ((parser.isSet("wait-wake") || parser.isSet("wait-wake-confirm")) &&
         !(hardwareWorkout || (arguments.size() == 1 && arguments.first() == "control-test")) ) {
         QTextStream(stderr) << "--wait-wake applies to hardware workouts and control-test only.\n"; return 2;
+    }
+    if (parser.isSet("running-mode") && (backend != "linux" || parser.isSet("simulate") ||
+        !(hardwareWorkout || (arguments.size() == 1 && arguments.first() == "control-test")))) {
+        QTextStream(stderr) << "--running-mode applies to Linux-backend control trials and hardware workouts only.\n"; return 2;
     }
     if (arguments.size() == 1 && arguments.first() == "control-batch") return motorBatch(app, parser);
     if (parser.isSet("batch") || parser.isSet("confirm-batch")) {

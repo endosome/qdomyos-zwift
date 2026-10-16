@@ -1,0 +1,43 @@
+{
+  "id": "mrun-uphill-tempo-50",
+  "name": "Mountain run uphill tempo 50",
+  "description": "A long steady uphill tempo effort at a hard but sustainable pace. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "name": "Uphill tempo",
+      "minutes": 30,
+      "speed": 8.0,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 6-7: comfortably hard, short sentences."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

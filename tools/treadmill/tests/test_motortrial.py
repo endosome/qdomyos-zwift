@@ -164,7 +164,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                     time.sleep(0.01)
                 else:
                     self.fail('Motor request never reached fake peer')
-            output, errors = process.communicate(timeout=60)
+            output, errors = process.communicate(timeout=180)
             self.assertEqual(termios.tcgetattr(slave), before)
             return process.returncode, output, errors
         finally:
@@ -339,16 +339,20 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
 
     def check_timing_trial(self, trial, arrival_hold=2):
         master, slave = pty.openpty()
+        out_file, err_file = tempfile.TemporaryFile(), tempfile.TemporaryFile()  # files cannot fill up and block the CLI
         process = subprocess.Popen([*self.arguments, '--trial', trial, '--observe-ftms',
                                     '--confirm-motor', '--log', str(self.log)], stdin=slave,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+                                   stdout=out_file, stderr=err_file, env=self.environment)
+        def captured(file):
+            file.seek(0)
+            return file.read()
         def wait_for(predicate):
-            deadline = time.monotonic() + arrival_hold + 15
+            deadline = time.monotonic() + arrival_hold + 60
             while time.monotonic() < deadline:
                 if self.log.exists() and predicate(self.events()):
                     return
                 if process.poll() is not None:
-                    self.fail('Timing trial exited before marks: ' + process.stderr.read().decode())
+                    self.fail('Timing trial exited before marks: ' + captured(err_file).decode())
                 time.sleep(0.02)
             self.fail('Timed out waiting for trial event')
         try:
@@ -362,8 +366,8 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 time.sleep(0.3)
                 os.write(master, key)
                 wait_for(lambda rows: any(r.get('state') == 'attained_observed' and r.get('stage') == stage for r in rows))
-            output, errors = process.communicate(timeout=arrival_hold + 15)
-            self.assertEqual(process.returncode, 0, output.decode() + errors.decode())
+            process.wait(timeout=arrival_hold + 60)
+            self.assertEqual(process.returncode, 0, captured(out_file).decode() + captured(err_file).decode())
             rows = self.events()
             arrivals = [r for r in rows if r.get('state') == 'attained_observed']
             self.assertEqual(len(arrivals), 2)
@@ -483,7 +487,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                                    stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
             os.write(master, b'MOTOR\n')
-            output, errors = process.communicate(timeout=60)
+            output, errors = process.communicate(timeout=180)
             return process.returncode, output, errors
         finally:
             if process.poll() is None:
@@ -493,7 +497,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             os.close(slave)
 
     # --- running mode (Linux backend) ----------------------------------------------------------
-    def stage(self, trial, env=None, actions=None, timeout=120, validated=None, keep_helper=False, display='match'):
+    def stage(self, trial, env=None, actions=None, timeout=150, validated=None, keep_helper=False, display='match'):
         """Run a staged running-mode trial against the fake peer; returns (exit code, stderr).
         After a clean stage the CLI asks what the console display showed: 'match' answers with the stage speed."""
         if actions is None and display is not None:
@@ -507,21 +511,29 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             (state / 'running-validated.json').write_text(json.dumps({'validated_kmh': validated}))
         self.environment.update(env or {})
         master, slave = pty.openpty()
+        out_file, err_file = tempfile.TemporaryFile(), tempfile.TemporaryFile()  # files cannot fill up and block the CLI
         process = subprocess.Popen([*self.arguments, '--trial', trial, '--running-mode', '--confirm-motor', '--log', str(self.log)],
-                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+                                   stdin=slave, stdout=out_file, stderr=err_file, env=self.environment)
+        def captured(file):
+            file.seek(0)
+            return file.read()
         started = time.monotonic()
         def wait_for(name, count=1):
             while time.monotonic() - started < timeout:
                 if self.log.exists() and sum(1 for row in self.events() if row['event'] == name) >= count:
                     return
+                if process.poll() is not None:
+                    break
                 time.sleep(0.02)
-            self.fail('Never saw ' + name)
+            tail = [json.dumps(r)[:230] for r in self.events()[-25:]] if self.log.exists() else []
+            self.fail('Never saw %s (exit %s); last events:\n%s; stderr: %s' % (
+                name, process.poll(), '\n'.join(tail), captured(err_file).decode(errors='replace')[-1500:]))
         try:
             os.write(master, b'MOTOR\n')
             if actions:
                 actions(lambda data: os.write(master, data), wait_for)
-            output, errors = process.communicate(timeout=timeout)
-            return process.returncode, errors
+            process.wait(timeout=timeout)
+            return process.returncode, captured(err_file)
         finally:
             if process.poll() is None:
                 process.kill()
@@ -743,8 +755,12 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         if key:
             self.environment['MOTOR_WAKE_KEY'] = '1'
         master, slave = pty.openpty()
+        out_file, err_file = tempfile.TemporaryFile(), tempfile.TemporaryFile()  # files cannot fill up and block the CLI
         process = subprocess.Popen([*self.arguments, '--trial', 'start-stop', '--confirm-motor', '--log', str(self.log), *extra],
-                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+                                   stdin=slave, stdout=out_file, stderr=err_file, env=self.environment)
+        def captured(file):
+            file.seek(0)
+            return file.read()
         started = time.monotonic()
         def wait_for(name, count=1):
             while time.monotonic() - started < timeout:
@@ -758,8 +774,8 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             os.write(master, first)
             if actions:
                 actions(lambda data: os.write(master, data), wait_for)
-            output, errors = process.communicate(timeout=timeout)
-            return process.returncode, errors
+            process.wait(timeout=timeout)
+            return process.returncode, captured(err_file)
         finally:
             if process.poll() is None:
                 process.kill()

@@ -23,7 +23,7 @@ RUN qmake /source/tools/treadmill/tests/tests.pro && make -j2 \
     && ./treadmill-tests --gtest_output=xml:/build/core-results.xml \
     && python3 /source/tools/treadmill/tests/test_cli.py /build/cli/treadmill \
     && python3 /source/tools/treadmill/tests/test_windows_bridge.py /build/cli/treadmill \
-    && python3 /source/tools/treadmill/tests/test_motortrial.py /build/cli/treadmill
+    && python3 /source/tools/treadmill/tests/run_parallel.py /source/tools/treadmill/tests/test_motortrial.py /build/cli/treadmill
 WORKDIR /build/helper
 RUN qmake /source/tools/treadmill/linux/linux-helper.pro && make -j2 && python3 /source/tools/treadmill/tests/test_linux_helper.py /build/helper/treadmill-linux-helper
 WORKDIR /build/driver

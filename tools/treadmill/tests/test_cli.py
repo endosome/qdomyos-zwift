@@ -70,7 +70,7 @@ class CliTests(unittest.TestCase):
     def test_hardware_gate_and_invalid_options(self):
         result = self.command('workout', 'run', 'interval-demo')
         self.assertEqual(result.returncode, 2)
-        self.assertIn('requires --backend windows', result.stderr)
+        self.assertIn('interactive operator confirmation', result.stderr)
         self.assertEqual(self.command('info').returncode, 2)
         self.assertEqual(self.command('scan', '--timeout', '0').returncode, 2)
         self.assertEqual(self.command('workout', 'list', '--simulate').returncode, 2)

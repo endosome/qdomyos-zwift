@@ -78,9 +78,9 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
     if (arguments.size() != 3) return fail("workout run requires one workout ID or file path");
     const bool inspect = arguments[1] == "inspect";
     if (!inspect && !parser.isSet("simulate")) {
-        if (!parser.isSet("backend") || parser.value("backend") != "windows" || !parser.isSet("device") ||
-            !parser.isSet("expected-name"))
-            return fail("Hardware workout requires --backend windows, --device and exact --expected-name");
+        if (!parser.isSet("backend") || (parser.value("backend") != "windows" && parser.value("backend") != "linux") ||
+            !parser.isSet("device") || !parser.isSet("expected-name"))
+            return fail("Hardware workout requires --backend windows or linux, --device and exact --expected-name");
         if (parser.isSet("profile") || parser.isSet("fast") || parser.isSet("inject") || parser.isSet("inject-at") ||
             parser.isSet("confirm-diagnostics")) return fail("Unsupported hardware workout option");
     }

@@ -63,11 +63,24 @@ static QByteArray targetPayload(int speed, int incline) {
     return payload;
 }
 
+// The Linux transport is a separate helper process that speaks the same line protocol as the Windows helper.
+static QString linuxHelperPath(QString &error) {
+    QStringList candidates;
+    if (qEnvironmentVariableIsSet("TREADMILL_LINUX_HELPER")) candidates << qEnvironmentVariable("TREADMILL_LINUX_HELPER");
+    const QDir binDir(QCoreApplication::applicationDirPath());
+    candidates << binDir.absoluteFilePath("../libexec/treadmill/treadmill-linux-helper") << binDir.absoluteFilePath("treadmill-linux-helper");
+    for (const QString &candidate : candidates)
+        if (QFileInfo(candidate).isExecutable()) return QFileInfo(candidate).absoluteFilePath();
+    error = "Linux Bluetooth helper is missing; build tools/treadmill/linux/linux-helper.pro or set TREADMILL_LINUX_HELPER";
+    return {};
+}
+
 static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser,
                          const QString &trialOverride, bool batchConfirmed, const QString &logPath,
                          const Trial *workoutOverride = nullptr) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
-    if (parser.value("backend") != "windows") return fail("The bounded control trial currently requires --backend windows; Linux diagnostics remain available");
+    const bool linuxBackend = parser.value("backend") == "linux";
+    if (!linuxBackend && parser.value("backend") != "windows") return fail("The bounded control trial requires --backend windows or --backend linux");
     const auto trials = preparedTrials();
     if (parser.isSet("list-trials")) {
         for (const QString option : {"device", "expected-name", "address-type", "dry-run", "confirm-motor", "log", "trial", "timeout", "simulate", "fast", "profile", "confirm-diagnostics", "workouts-dir", "inject", "inject-at"})
@@ -85,6 +98,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     const QString trialId = trialOverride.isEmpty() ? parser.value("trial") : trialOverride;
     if (!found) for (const auto &candidate : trials) if (candidate.id == trialId) { trial = candidate; found = true; break; }
     if (!found) return fail("Unknown trial; use control-test --backend windows --list-trials");
+    if (linuxBackend && (trial.pause || trial.readyOnly || trial.operatorMarks))
+        return fail("Pause, READY and operator-timed trials are not available on the Linux backend");
     const QBluetoothAddress address(parser.value("device"));
     const QString name = parser.value("expected-name");
     if (address.isNull() || name.trimmed().isEmpty()) return fail("Control trial requires --device and exact --expected-name");
@@ -122,7 +137,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 {"incline_code", step.incline}, {"grade_percent_assumption", step.incline * (11.0 / 8.0)}});
         }
     }
-    const QJsonObject plan {{"backend", "windows-winrt"}, {"device", address.toString()}, {"expected_name", name},
+    const QJsonObject plan {{"backend", linuxBackend ? "linux-bluez" : "windows-winrt"}, {"device", address.toString()}, {"expected_name", name},
                            {"motor_execution_enabled", false}, {"speed_code", 10}, {"incline_code", 0},
                            {"trial", trial.id}, {"workout_id", trial.workoutId}, {"workout_name", trial.workoutName},
                            {"step_count", trial.steps.size()}, {"speed_ceiling_code", trial.speed}, {"incline_ceiling_code", trial.incline},
@@ -150,8 +165,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                            : trial.readyOnly ? "This requests READY with mode bit 0x80, observes 15 seconds, then explicitly stops.\nW1 support is unverified: countdown or running triggers immediate stop.\n"
                            : "This starts at raw 10/0, follows only the printed trial sequence, and explicitly stops.\n")
         << "Holds begin at matching reported targets; attained incline and calibrated units remain unverified.\n"
-           "Windows attempts stop on EOF, faults, stale status, or the printed motor deadline.\n"
-           "A disconnected Bluetooth link cannot guarantee delivery.\n"
+        << (linuxBackend ? "The Linux helper" : "Windows") << " attempts stop on EOF, faults, stale status, or the printed motor deadline.\n"
+        << "A disconnected Bluetooth link cannot guarantee delivery.\n"
            "Confirm the belt is stopped and clear, safety key normally attached, other controllers disconnected,\n"
            "and you are at the physical controls with an accessible stop. Type MOTOR to approve this exact trial: " << Qt::flush;
     if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
@@ -162,7 +177,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         "Mark arrival when the deck has visibly stopped moving. Each direction allows 60 seconds, then faults/stops.\n"
         "Q/S always aborts. Key timestamps are operator observations with reaction-time uncertainty.\n" << Qt::flush;
     QString helperError;
-    const auto helper = windowsHelperPath(helperError);
+    const auto helper = linuxBackend ? linuxHelperPath(helperError) : windowsHelperPath(helperError);
     if (!helperError.isEmpty()) return fail(helperError);
     QFile log(logPath.isEmpty() ? parser.value("log") : logPath);
     if (!log.open(QIODevice::WriteOnly | QIODevice::NewOnly)) return fail("Cannot create motor log: " + log.errorString());
@@ -319,7 +334,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 QJsonParseError error;
                 const auto report = QJsonDocument::fromJson(line, &error).object();
                 hasFinalReport = error.error == QJsonParseError::NoError && report.value("command") == "control-test" &&
-                                 report.value("backend") == "windows-winrt" && report.value("motor_execution_enabled") == true;
+                                 report.value("backend") == (linuxBackend ? "linux-bluez" : "windows-winrt") && report.value("motor_execution_enabled") == true;
                 record("windows_report", report);
                 if (!hasFinalReport || report.value("status") != "complete" || report.value("notification_cleanup_status") != "Success") failed = true;
                 if (parser.isSet("observe-ftms") && report.value("ftms_observation_status") != "complete") failed = true;
@@ -365,8 +380,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     QObject::connect(&process, &QProcess::errorOccurred, &app, [&](QProcess::ProcessError error) {
         failed = true;
         if (error == QProcess::FailedToStart) {
-            record("fault", {{"reason", "PowerShell failed to start; check WSL interop (powershell.exe from WSL)"}});
-            QTextStream(stderr) << "powershell.exe failed to start. If it reports 'Exec format error', WSL interop was unregistered; see README.\n";
+            record("fault", {{"reason", linuxBackend ? "Linux Bluetooth helper failed to start" : "PowerShell failed to start; check WSL interop (powershell.exe from WSL)"}});
+            QTextStream(stderr) << (linuxBackend ? "The Linux Bluetooth helper failed to start.\n"
+                : "powershell.exe failed to start. If it reports 'Exec format error', WSL interop was unregistered; see README.\n");
             app.quit();
         }
     });
@@ -453,6 +469,12 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     QTimer::singleShot(0, &app, [&]() {
         record("trial_plan", plan);
         if (closing) { app.quit(); return; }
+        if (linuxBackend) {
+            QStringList arguments {"--device", address.toString(), "--expected-name", name, "--confirm-motor",
+                                   "--trial", trial.id, "--timeout", QString::number(trial.deadline)};
+            if (trial.workout) arguments << "--target-sequence" << targetSequence;
+            process.start(helper, arguments);
+        } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,
                        "-Command", "control-test", "-Device", address.toString(), "-AddressType", parser.value("address-type"),
                        "-ExpectedName", name, "-Bridge", "-ConfirmMotor", "-Confirmation", "MOTOR", "-Trial", trial.id,
@@ -460,6 +482,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         if (trial.workout) arguments << "-TargetSequence" << targetSequence;
         if (parser.isSet("observe-ftms")) arguments << "-ObserveFtms";
         process.start(qEnvironmentVariable("TREADMILL_POWERSHELL", "powershell.exe"), arguments);
+        }
         pump.start(20);
     });
     app.exec();
@@ -512,7 +535,8 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     plan.deadline = int(totalMs / 1000) + 120;
     if (plan.deadline > 4500) return fail("Workout plus safety margin exceeds the 75-minute control deadline");
     plan.stepHold = plan.steps.first().holdSeconds;
-    if (parser.value("backend") != "windows") return fail("Real W1 workout playback currently requires the Windows Bluetooth bridge (--backend windows); native Linux transport remains available for diagnostics.");
+    if (parser.value("backend") != "windows" && parser.value("backend") != "linux")
+        return fail("Real W1 workout playback requires --backend windows or --backend linux");
     if (parser.value("device").toUpper() != "DD:87:70:39:74:20" || parser.value("expected-name") != "FS-0F7A32")
         return fail("Experimental W1 workout playback is pinned to DD:87:70:39:74:20 / FS-0F7A32");
     return runMotorTrial(app, parser, {}, false, {}, &plan);

@@ -1094,3 +1094,34 @@ discovery sampler remains prepared but unrun. Restore WSL Windows interop,
 repeat the nonmotor NORMAL preflight, and then launch the sampler through its
 existing motor approval, bounds, deadline, and STOP gates. Do not treat the
 operator's awake report as a host-verified preflight result.
+
+## Native Linux workout transport (2026-10-16)
+
+`--backend linux` now runs W1 control trials and workouts. The transport is a separate
+BlueZ/Qt helper, `tools/treadmill/linux/treadmill-linux-helper`
+(`linux-helper.pro`), that speaks the same line protocol as the Windows helper
+(WRITE/QUIT in; IDENTITY/READY/RX/TX plus a final JSON report out; its backend string
+is `linux-bluez`). The host finds it via `TREADMILL_LINUX_HELPER`, then
+`../libexec/treadmill/`, then next to the `treadmill` binary. `workout run <plan>` now
+defaults to Linux unless `WSL_DISTRO_NAME` is set.
+
+The helper enforces its own gate, `linux/motorgate.h`, a port of the Windows
+`MotorTestGate`: frame allowlist, reviewed limits 10-60/unit 0 and 0-8, three fresh
+NORMAL reports before start, 1.5 s stale-status watchdog, trial deadline, one STOP only.
+It also checks exact name/address, FITSHOW/FS-BT-C1/1.3.8 identity, one FFF0 service and
+FFF1/FFF2 properties, and sends one emergency STOP on EOF, fault, stale status or
+deadline. Not ported: pause, READY and operator-timed trials (the host refuses them).
+FTMS observation is Windows only.
+
+Qt's BlueZ backend never reports completion of write-without-response, so a helper `TX ...
+Success` means BlueZ raised no error within 250 ms. Only the three post-STOP NORMAL
+reports demonstrate that a stop took effect.
+
+Hardware check on this Raspberry Pi (BlueZ, `hci0`), nonmotor only: identity verified,
+limits 10-60/0 and incline 0-8 received, repeated NORMAL status, CCCD cleanup Success, exit
+0, link closed. No motor frame has been sent from Linux yet. The first Linux motor run
+(`uphill-walk-20`) still needs the operator's typed MOTOR confirmation.
+
+Standby: the W1 sleeps after about 10 minutes of inactivity and nothing sent over BLE has
+kept it awake (see the sleep investigation above). Whether an active run holds it awake is
+unverified beyond the 8.5-minute run. Wake it at the console, then start the run promptly.

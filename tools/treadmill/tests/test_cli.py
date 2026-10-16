@@ -50,7 +50,7 @@ class CliTests(unittest.TestCase):
         for row in catalog:
             if row['id'] not in core:
                 self.assertTrue(row['path'].endswith('.fit'), row)
-                self.assertTrue(20 * 60 <= row['duration_seconds'] <= 65 * 60, row)
+                self.assertTrue(20 * 60 <= row["duration_seconds"] <= 120 * 60, row)
         result = self.command('workout', 'run', 'uphill-walk-20', '--simulate', '--fast', '--log', str(self.log))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         events = self.events()

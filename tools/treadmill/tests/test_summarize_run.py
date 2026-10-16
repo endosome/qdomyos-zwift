@@ -53,6 +53,39 @@ class SummarizeRunTests(unittest.TestCase):
         self.assertIn('physical_stop_verified=False', report)
         self.assertEqual(report.count('FitShow RUNNING'), 1)
 
+    def test_statistics_expose_step_overhead_and_unfinished_plans(self):
+        steps = [{'index': i, 'hold_seconds': 10} for i in range(4)]
+        rows = [{'event': 'trial_plan', 'monotonic_ms': 0, 'workout_steps': steps, 'windows_motor_deadline_seconds': 50}]
+        for i, at in enumerate((1000, 12500, 24000)):  # 1.5 s overhead per step
+            rows.append({'event': 'reported_target', 'monotonic_ms': at, 'stage': i})
+        rows += [{'event': 'raw_status', 'monotonic_ms': 1000, 'status_code': 3},
+                 {'event': 'raw_status', 'monotonic_ms': 1600, 'status_code': 3},
+                 {'event': 'raw_status', 'monotonic_ms': 26000, 'status_code': 4},
+                 {'event': 'stop_requested', 'monotonic_ms': 26100, 'reason': 'Missing status or start deadline'},
+                 {'event': 'raw_status', 'monotonic_ms': 27000, 'status_code': 4}]
+        stats = summarize_run.run_statistics(rows)
+        self.assertEqual((stats['reported_targets'], stats['planned_targets']), (3, 4))
+        mean, low, high = stats['step_overhead_s']
+        self.assertAlmostEqual(mean, 1.5)
+        self.assertAlmostEqual(stats['step_overhead_total_s'], 3.0)
+        self.assertAlmostEqual(stats['max_status_gap_s'], 24.4)
+        self.assertEqual(stats['stopping_before_stop_request_s'], [26.0])
+        self.assertEqual(stats['stop_reason'], 'Missing status or start deadline')
+        self.assertEqual(stats['nominal_hold_s'], 40)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'run.jsonl'
+            path.write_text('\n'.join(json.dumps(row) for row in rows) + '\n', encoding='utf-8')
+            output = io.StringIO()
+            with redirect_stdout(output):
+                summarize_run.summarize(path)
+        self.assertIn('targets reported: 3 of 4', output.getvalue())
+        self.assertIn('a console stop looks the same', output.getvalue())
+
+    def test_statistics_without_a_plan_do_not_fail(self):
+        stats = summarize_run.run_statistics([{'event': 'raw_status', 'monotonic_ms': 5, 'status_code': 0}])
+        self.assertIsNone(stats['planned_targets'])
+        self.assertEqual(stats['reported_targets'], 0)
+
     def test_reports_malformed_json_line(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'broken.jsonl'

@@ -3,8 +3,10 @@
 A headless CLI that plays an XML training plan on the RunPad W1 (FitShow
 `FS-0F7A32`): it starts the belt, sets speed and incline on schedule, and stops
 at the end. Everything runs locally; there's no cloud service and no phone app.
-It runs under WSL and uses Windows Bluetooth through PowerShell. WSL itself has
-no Bluetooth adapter.
+It runs on Linux with BlueZ (a Raspberry Pi works), or under WSL through Windows
+Bluetooth and PowerShell. WSL itself has no Bluetooth adapter. The backend is
+chosen automatically: Windows under WSL, Linux everywhere else. `--backend linux`
+or `--backend windows` overrides it.
 
 Engineering history, protocol notes and experiment records are in
 [ENGINEERING.md](ENGINEERING.md), [STATUS.md](STATUS.md) and
@@ -90,11 +92,36 @@ You need a C++17 compiler, plus Qt 5.15 Core, Bluetooth and Positioning
 development packages. On Debian/Ubuntu install `build-essential qtbase5-dev
 qt5-qmake qtconnectivity5-dev qtpositioning5-dev`.
 
+The CLI and the Linux Bluetooth helper are two programs. Install both under one
+prefix so the CLI finds the helper at `../libexec/treadmill/`:
+
 ```sh
-mkdir -p /tmp/treadmill-build && cd /tmp/treadmill-build
-qmake /home/mix/qdomyos-zwift/tools/treadmill/treadmill.pro
-make -j4
+P=$HOME/.local   # any prefix; put $P/bin on PATH
+mkdir -p /tmp/treadmill-build /tmp/treadmill-helper
+(cd /tmp/treadmill-build  && qmake <repo>/tools/treadmill/treadmill.pro PREFIX=$P && make -j4 && make install)
+(cd /tmp/treadmill-helper && qmake <repo>/tools/treadmill/linux/linux-helper.pro PREFIX=$P && make -j4 && make install)
 ```
+
+Re-run `qmake` before `make install` after adding a plan to `workouts/`: the
+install list is expanded when qmake runs. `TREADMILL_LINUX_HELPER=<path>` points
+the CLI at a helper elsewhere.
+
+### Linux (BlueZ)
+
+The helper (`treadmill-linux-helper`) is a separate process that holds the
+Bluetooth connection and speaks the same line protocol as the Windows helper.
+It checks the device name and address, the FITSHOW/FS-BT-C1/1.3.8 module identity
+and the speed/incline limits, and it enforces its own safety gate, so it refuses
+anything the CLI should not send. It sends one STOP if input closes, status goes
+stale, a fault appears or the deadline passes. It needs a working BlueZ adapter
+(`bluetoothctl list` shows one) and no root. Pause, READY and operator-timed
+trials aren't available on Linux, and `--observe-ftms` is Windows only.
+
+A first connect sometimes fails with `Controller error: Unknown Error`. The
+helper retries three times before it sends anything. If a run still refuses at
+startup, retry it: nothing has moved the belt at that point.
+
+### WSL
 
 WSL interop must work, meaning `powershell.exe` must run from WSL. If it fails
 with `Exec format error`, the WSL interop registration has been removed (often
@@ -107,12 +134,19 @@ echo ':WSLInterop:M::MZ::/init:PF' | sudo tee /etc/binfmt.d/WSLInterop.conf   # 
 
 ## Known issues
 
-- **Sleep:** the W1 sleeps after about 5 minutes idle, and only a physical wake
-  brings it back. Status polling doesn't keep it awake, and the FitShow READY
+- **Sleep:** the W1 sleeps after about 10 minutes idle, and only a physical wake
+  brings it back. Wake it, then start the run within a few minutes. A running belt
+  keeps it awake: a 62-minute run never slept. Status polling doesn't keep it awake, and the FitShow READY
   command starts a countdown instead of waking it.
-- **Unexplained STOPPING:** on 2026-10-14 the treadmill once reported
-  "decelerating" mid-run without a host STOP. Repeat tests haven't reproduced
-  it. If it happens, the CLI ends the run. Start the plan again; there's no resume.
-- **Other options:** the CLI also has a Linux BLE backend (diagnostics only),
+- **Unexplained STOPPING:** on the Windows bridge the treadmill several times
+  reported "decelerating" mid-run without a host STOP. A console stop looks the
+  same in the telemetry. If it happens, the CLI ends the run. Start the plan
+  again; there's no resume.
+- **Run length:** each target adds about 1.5 s of waiting for status, so a run
+  takes a little longer than the plan's nominal time (about 2.5 minutes more for
+  a 60-minute plan with 99 targets). The deadline allows for it.
+- **Temperature:** the protocol has no temperature or protection field, so the CLI
+  can't see motor heat. Check the motor housing by hand on long runs.
+- **Other options:** the CLI also has Linux diagnostics (scan, info, status),
   a simulator (`--simulate`), and prepared control trials. Those came from the
   investigation and aren't needed for normal use. See ENGINEERING.md.

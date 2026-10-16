@@ -1153,3 +1153,19 @@ about the earlier Windows-bridge events (5:28, 8:37, about 18 s, about 57 s). Th
 correctly: it stopped on the unexpected status 4, STOP and cleanup succeeded. A console stop is
 indistinguishable in the telemetry from a device-initiated one. Log:
 `~/treadmill-logs/uphill-walk-60-20261016-131928.jsonl`. The run is being restarted.
+
+### 60-minute run on Linux: 97 of 99 targets, then the host deadline (2026-10-16)
+
+`uphill-walk-60` (restarted 13:34:33) ran 62:10 with no faults, no status 4 and no operator input.
+It reported 97 of 99 targets in order, then the host stopped it at 3724 s with `Missing status or
+start deadline` because the host's per-run deadline (`total + 120 s` = 3720 s) was exhausted:
+each target costs about 1.45 s waiting for three matching status reports (mean over 96 steps, 139 s
+total plus 6 s startup), so a 99-step plan runs about 145 s longer than its nominal 3600 s. The
+last two 10 s cooldown steps never ran. STOP, deceleration to 1, three NORMAL replies and
+cleanup Success followed normally; `sequence_observed` is false only because of the missing
+targets. The log is 4.4 MB (cap 64 MB). Log: `~/treadmill-logs/uphill-walk-60-20261016-133433.jsonl`.
+
+Fix: the workout deadline is now `total + 120 s + 3 s per target` (uphill-walk-20: 1461 s,
+uphill-walk-60: 4017 s, both under the 4500 s cap). This means the 60-minute acceptance run still needs
+a second, complete attempt. Thermal state could not be observed: the protocol has no temperature
+field and status 5 (fault) was never reported in any of our 93 logs.

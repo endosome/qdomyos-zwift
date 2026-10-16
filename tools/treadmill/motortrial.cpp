@@ -532,7 +532,9 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
         }
     }
     if (plan.steps.isEmpty()) return fail("Workout has no W1-compatible targets");
-    plan.deadline = int(totalMs / 1000) + 120;
+    // Each target costs about 1.5 s of waiting for three matching status reports (measured: 1.45 s mean over a
+    // 60-minute run), so the margin grows with the step count: 3 s per step on top of the fixed 120 s.
+    plan.deadline = int(totalMs / 1000) + 120 + 3 * int(plan.steps.size());
     if (plan.deadline > 4500) return fail("Workout plus safety margin exceeds the 75-minute control deadline");
     plan.stepHold = plan.steps.first().holdSeconds;
     if (parser.value("backend") != "windows" && parser.value("backend") != "linux")

@@ -1,4 +1,5 @@
 #include "session.h"
+#include "workoutfile.h"
 #include "runner.h"
 #include "profile.h"
 #include "terminal.h"
@@ -46,9 +47,9 @@ static QString workoutDirectory(const QCommandLineParser &parser) {
 static bool catalog(const QString &directory, QMap<QString, QString> &paths, QJsonArray &entries, QString &error) {
     const QDir dir(directory);
     if (!dir.exists()) { error = "Workout directory does not exist: " + directory; return false; }
-    for (const auto &file : dir.entryList({"*.xml"}, QDir::Files, QDir::Name)) {
+    for (const auto &file : dir.entryList({"*.xml", "*.fit"}, QDir::Files, QDir::Name)) {
         const QString path = dir.absoluteFilePath(file);
-        const auto loaded = loadWorkout(path);
+        const auto loaded = loadWorkoutFile(path);
         if (!loaded.error.isEmpty()) { error = path + ": " + loaded.error; return false; }
         const auto &workout = loaded.workout;
         if (paths.contains(workout.id)) { error = "Duplicate workout ID: " + workout.id; return false; }
@@ -98,7 +99,7 @@ int workoutCommand(QCoreApplication &app, const QCommandLineParser &parser, cons
         if (!paths.contains(path)) return fail("Unknown workout ID: " + path);
         path = paths.value(path);
     }
-    const auto loaded = loadWorkout(path);
+    const auto loaded = loadWorkoutFile(path);
     if (!loaded.error.isEmpty()) return fail(loaded.error);
     if (!inspect && !parser.isSet("simulate")) return runWindowsWorkout(app, parser, loaded.workout);
     if (inspect) {

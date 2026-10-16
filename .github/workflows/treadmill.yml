@@ -55,6 +55,11 @@ jobs:
           cd /tmp/treadmill-driver-tests
           qmake "$GITHUB_WORKSPACE/tools/treadmill/driver/tests.pro" DRIVER_LIB=/tmp/treadmill-driver
           make -j2
+          mkdir -p /tmp/treadmill-fit
+          cd /tmp/treadmill-fit
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/fit/treadmill-fit.pro"
+          make -j2
+          cd /tmp/treadmill-driver-tests
           mkdir -p /tmp/treadmill-linux-helper
           cd /tmp/treadmill-linux-helper
           qmake "$GITHUB_WORKSPACE/tools/treadmill/linux/linux-helper.pro"
@@ -68,6 +73,9 @@ jobs:
           python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_linux_helper.py /tmp/treadmill-linux-helper/treadmill-linux-helper
           python3 tools/treadmill/tests/test_make_plan.py /tmp/treadmill-build/treadmill
+          python3 -m venv /tmp/fit-venv
+          /tmp/fit-venv/bin/pip install --quiet garmin-fit-sdk
+          /tmp/fit-venv/bin/python tools/treadmill/tests/test_fit.py /tmp/treadmill-fit/treadmill-fit /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_summarize_run.py

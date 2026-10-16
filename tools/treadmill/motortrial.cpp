@@ -269,9 +269,10 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             normalCount = (status.state == 0 || (trial.sleepReadyAllowed && status.state == 6 && status.disabledReason == 2))
                 ? normalCount + 1 : 0;
             const auto limits = control.limits();
-            if (waitWakeMs > 0 && normalCount == 0 && (startPrompted || graceUntil >= 0) && !startConfirmed) {
-                // Went back to sleep (or left NORMAL) before the start: begin the wake handshake again.
-                startPrompted = false; graceUntil = -1;
+            if (waitWakeMs > 0 && normalCount == 0 && (startPrompted || graceUntil >= 0 || startConfirmed)) {
+                // Went back to sleep (or left NORMAL) before the start: an earlier ENTER no longer counts,
+                // and the wake handshake begins again.
+                startPrompted = false; startConfirmed = false; graceUntil = -1;
                 record("wake_lost", {{"status_code", status.state}});
                 QTextStream(stderr) << "Treadmill is no longer awake; waiting again.\n" << Qt::flush;
             }
@@ -406,7 +407,10 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                         // Documented sleep before the start is the expected wait state. It never counts as NORMAL,
                         // and the key-detached state (06/01) still goes to the generic fault path.
                         normalCount = 0;
-                        if (startPrompted || graceUntil >= 0) { startPrompted = false; graceUntil = -1; }
+                        if (startPrompted || graceUntil >= 0 || startConfirmed) {
+                            startPrompted = false; startConfirmed = false; graceUntil = -1;
+                            record("wake_lost", {{"status_code", 6}});
+                        }
                         if (!sleepNoticed) {
                             sleepNoticed = true;
                             record("waiting_for_wake", {{"wait_limit_seconds", waitWakeMs / 1000.0}});

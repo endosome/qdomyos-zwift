@@ -49,7 +49,8 @@ class PackageTests(unittest.TestCase):
         self.assertFalse(json.loads(result.stdout)['motor_execution_enabled'])
         result = self.command('workout', 'run', 'uphill-walk-20', '--profile', profile)
         self.assertEqual(result.returncode, 2)
-        self.assertIn('disabled', result.stderr)
+        # `workout run` means real hardware; a profile (which can only describe a disabled one) is refused outright.
+        self.assertIn('Unsupported hardware workout option', result.stderr)
 
     def test_the_linux_helper_is_installed_where_the_cli_looks_for_it(self):
         # `workout run` defaults to the Linux backend outside WSL; without the helper next to the CLI it cannot run.
@@ -71,8 +72,9 @@ class PackageTests(unittest.TestCase):
         self.assertIn('./tools/treadmill/treadmill.pro', files)
         self.assertIn('./src/devices/fitshowtreadmill/fitshowcontrol.cpp', files)
         self.assertIn('./LICENSE', files)
-        self.assertNotIn('./src/main.cpp', files)
-        self.assertNotIn('./src/fit-sdk/fit_mesg.cpp', files)
+        self.assertNotIn('./src/main.cpp', files)  # the QZ application itself is not part of this package
+        self.assertIn('./src/fit-sdk/fit_mesg.cpp', files)  # the CLI compiles the FIT SDK, so its source must ship
+        self.assertIn('./tools/treadmill/linux/linuxhelper.cpp', files)
 
 
 if __name__ == '__main__':

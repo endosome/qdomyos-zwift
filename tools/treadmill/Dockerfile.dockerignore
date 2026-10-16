@@ -15,6 +15,7 @@
 !src/devices/bluetoothdevice.h
 !src/devices/treadmill.cpp
 !src/devices/treadmill.h
+!src/devices/runnclosedloopcontroller.h
 !src/devices/fitshowtreadmill/
 !src/devices/fitshowtreadmill/**
 !src/virtualdevices/

@@ -12,7 +12,7 @@ COPY src/metric.cpp src/metric.h src/qzsettings.cpp src/qzsettings.h \
     src/keepawakehelper.h /source/src/
 COPY src/fit-sdk /source/src/fit-sdk
 COPY src/devices/bluetoothdevice.cpp src/devices/bluetoothdevice.h \
-    src/devices/treadmill.cpp src/devices/treadmill.h /source/src/devices/
+    src/devices/treadmill.cpp src/devices/treadmill.h src/devices/runnclosedloopcontroller.h /source/src/devices/
 COPY src/devices/fitshowtreadmill /source/src/devices/fitshowtreadmill
 COPY src/virtualdevices/virtualdevice.cpp src/virtualdevices/virtualdevice.h /source/src/virtualdevices/
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/tmp/no-bluetooth-bus

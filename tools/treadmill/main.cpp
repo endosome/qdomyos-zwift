@@ -33,6 +33,8 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("list-trials", "List all prepared control trials without Bluetooth I/O."));
     parser.addOption(QCommandLineOption("batch", "Prepared batch: remaining, speeds, inclines or all.", "set", "remaining"));
     parser.addOption(QCommandLineOption("confirm-batch", "Approve the printed sequential batch with stop between trials."));
+    parser.addOption(QCommandLineOption("wait-wake", "Linux hardware runs: wait up to this many minutes (0.05-30) for the console to wake, sending nothing to the motor, then run the normal preflight. Without --wait-wake-confirm the belt starts by itself 5 s after the wake.", "minutes"));
+    parser.addOption(QCommandLineOption("wait-wake-confirm", "With --wait-wake: after the wake, start only when ENTER is pressed."));
     parser.addOption(QCommandLineOption("observe-ftms", "Also capture FTMS data/status notifications without FTMS motor writes."));
     parser.addOption(QCommandLineOption("status-heart-rate-zero", "Experimental Windows status query with the documented zero heart-rate byte."));
     parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
@@ -86,6 +88,10 @@ int main(int argc, char *argv[]) {
          (arguments.first() != "status" && arguments.first() != "control-test" && arguments.first() != "control-batch"))) ||
         parser.isSet("simulate"))) {
         QTextStream(stderr) << "--observe-ftms requires Windows protocol status or control trials/workouts.\n"; return 2;
+    }
+    if ((parser.isSet("wait-wake") || parser.isSet("wait-wake-confirm")) &&
+        !(hardwareWorkout || (arguments.size() == 1 && arguments.first() == "control-test")) ) {
+        QTextStream(stderr) << "--wait-wake applies to hardware workouts and control-test only.\n"; return 2;
     }
     if (arguments.size() == 1 && arguments.first() == "control-batch") return motorBatch(app, parser);
     if (parser.isSet("batch") || parser.isSet("confirm-batch")) {

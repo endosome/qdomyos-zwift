@@ -37,8 +37,8 @@ const QString kStopFrame = QStringLiteral("0253035003");
 
 class Helper : public QObject {
   public:
-    Helper(const QBluetoothAddress &address, const QString &name, const QString &trial, int seconds, Treadmill::MotorGate gate)
-        : address_(address), name_(name), trial_(trial), seconds_(seconds), gate_(std::move(gate)) {}
+    Helper(const QBluetoothAddress &address, const QString &name, const QString &trial, int seconds, int waitWakeSeconds, Treadmill::MotorGate gate)
+        : address_(address), name_(name), trial_(trial), seconds_(seconds), waitWake_(waitWakeSeconds), gate_(std::move(gate)) {}
 
     void start() {
         clock_.start();
@@ -239,9 +239,9 @@ class Helper : public QObject {
         if (cancelled_) { shutdown(QString()); return; }
         // Setup (scan, connect, identity) has its own 30 s budget, like the host's preflight limit. Once running,
         // the gate bounds the motor to the trial deadline and forces a STOP; this is only a backstop that leaves
-        // room for the host's 30 s preflight and 10 s post-stop observation after READY.
+        // room for the host's 30 s preflight (plus any wait-for-wake time) and 10 s post-stop observation after READY.
         if (state_ != State::Running && clock_.elapsed() >= 30000) { shutdown("Inspection deadline exceeded"); return; }
-        if (state_ == State::Running && clock_.elapsed() - readyAt_ >= (qint64(seconds_) + 45) * 1000) { shutdown(QString()); return; }
+        if (state_ == State::Running && clock_.elapsed() - readyAt_ >= (qint64(seconds_) + waitWake_ + 45) * 1000) { shutdown(QString()); return; }
         if (state_ != State::Running) return;
         if (gate_.needsStop(clock_.elapsed())) { shutdown("Linux motor watchdog requested stop"); return; }
         if (writeInFlight_ || commands_.isEmpty()) return;
@@ -366,7 +366,7 @@ class Helper : public QObject {
 
     QBluetoothAddress address_;
     QString name_, trial_;
-    int seconds_;
+    int seconds_, waitWake_;
     Treadmill::MotorGate gate_;
     State state_ = State::Scanning;
     CloseStep closeStep_ = CloseStep::None;
@@ -401,6 +401,7 @@ int main(int argc, char *argv[]) {
     parser.addOption({"target-sequence", "Workout target pairs speed:incline,...", "pairs"});
     parser.addOption({"timeout", "Motor deadline in seconds.", "seconds", "120"});
     parser.addOption({"confirm-motor", "The CLI host obtained typed MOTOR approval."});
+    parser.addOption({"wait-wake", "Extra seconds the host may wait for the console to wake before the start.", "seconds", "0"});
     parser.process(app);
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
     const QBluetoothAddress address(parser.value("device"));
@@ -411,9 +412,12 @@ int main(int argc, char *argv[]) {
     bool timeoutOk = false;
     const int seconds = parser.value("timeout").toInt(&timeoutOk);
     if (!timeoutOk || seconds < 1 || seconds > (trial == "workout" ? 4500 : 240)) return fail("Session duration exceeds its bounded scope");
+    bool waitOk = false;
+    const int waitWake = parser.value("wait-wake").toInt(&waitOk);
+    if (!waitOk || waitWake < 0 || waitWake > 1800) return fail("--wait-wake must be 0-1800 seconds");
     std::unique_ptr<Helper> helper;
     try {
-        helper.reset(new Helper(address, name, trial, seconds, Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds)));
+        helper.reset(new Helper(address, name, trial, seconds, waitWake, Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds)));
     } catch (const std::exception &error) { return fail(QString::fromUtf8(error.what())); }
     QTimer::singleShot(0, &app, [&]() { helper->start(); });
     return app.exec();

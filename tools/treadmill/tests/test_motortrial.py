@@ -67,7 +67,8 @@ for line in sys.stdin:
     payload = bytes.fromhex(frame)[1:-2]
     send('TX\\t' + ident + '\\t' + frame + '\\tSuccess')
     if payload == bytes.fromhex('5002'):
-        rx(bytes.fromhex('5002780a20') if (mode == 'bounds' or running_profile) else bytes.fromhex('50023c0a00'))
+        # 10-120 with unit tag 0 is the console's report with the handrail raised; 'unknown-tag' is the older unexplained 0x20 variant.
+        rx(bytes.fromhex('5002780a20') if mode == 'unknown-tag' else bytes.fromhex('5002780a00') if (mode == 'bounds' or running_profile) else bytes.fromhex('50023c0a00'))
     elif payload == bytes.fromhex('5003'):
         rx(bytes.fromhex('5003080002'))
     elif payload[0] == 0x51:
@@ -620,6 +621,12 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 self.assertEqual((result['display_matched'], result['validated']), (expected, expected))
                 self.assertEqual(self.validated_kmh(), 7.0 if expected else None)
                 self.assertIn(b'DISPLAY', errors)
+
+    def test_running_mode_refuses_the_unexplained_unit_tag_before_any_motor_frame(self):
+        code, _ = self.stage('run-7', env={'MOTOR_MODE': 'unknown-tag'}, display=None)
+        self.assertNotEqual(code, 0)
+        self.assertEqual([f for f in json.loads(self.calls.read_text()) if f.startswith('0253')], [])
+        self.assertIn('not the running-mode report', next(row for row in self.events() if row['event'] == 'fault')['reason'])
 
     def test_a_stage_warns_the_operator_to_watch_the_display_before_the_belt_starts(self):
         self.linux()

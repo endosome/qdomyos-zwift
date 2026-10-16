@@ -1321,3 +1321,17 @@ Caveat: the operator also clicked Play on the console around the start. The cons
 attributable to the command, but a near-simultaneous click cannot be excluded; an airtight proof would repeat it without touching Play.
 Play/Pause on an awake console can also pause a running belt, so it should not be pressed during a run.
 Remaining optional checks: running-mode stages (operator switches the console to running mode and reads the display) and a 90-minute run.
+
+### Running mode is selected by the handrail; the running limit report has unit tag 0 (2026-10-16, 20:20)
+
+The operator confirmed on this treadmill that **raising the handrail enables running mode**: with it up, the handrail buttons take the speed to
+12.0 km/h and incline to 8. Sources point the same way for the sister models (WalkingPad R2: handrail down = walking mode 0.5-6 km/h, handrail up = running
+mode 0.5-12 km/h; the W1 has a foldable handrail); no W1 manual is published anywhere found (Polish, English and Chinese searches).
+Read from the console without any motor command: handrail down gives speed limits max raw 60, min 10, unit tag 0; **handrail up gives max raw 120,
+min 10, unit tag 0** (incline 0-8, config byte 0x2 in both). So the running profile's earlier assumption, "10-120 with unit tag 0x20", was wrong; that
+older report remains unexplained and is now refused in BOTH profiles. The gate, host, tests and docs were corrected: running = max 120 / tag 0;
+walking = max 60 / tag 0; anything else refuses before any motor frame.
+With the handrail down the console itself reports 6.0 km/h as its maximum. That is a console safety limit; our software respects it and does not try
+to override it. The running-speed validation stages (run-7, run-8, run-10, run-12, display-checked) are now possible with the handrail up.
+New: seven `run-` trainings and two plans (`plan-run-speed-hills-6w`, `plan-trail-race-build-10w`) using speeds up to 12 km/h with changing incline;
+`plan.py show` prints the running speed each week needs validated and marks sessions handrail up or down.

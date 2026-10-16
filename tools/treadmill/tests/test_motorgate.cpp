@@ -225,7 +225,8 @@ TEST(MotorGate, SpeedAndInclineTrialsOnlyAllowTheirOwnTargets) {
 }
 
 namespace {
-QByteArray runningLimits() { return frame(QByteArray::fromHex("50027" "80a20")); } // max 120, min 10, unit tag 0x20
+QByteArray runningLimits() { return frame(QByteArray::fromHex("5002780a00")); } // max 120, min 10, unit tag 0: what the console reports with its handrail raised
+QByteArray unexplainedTagLimits() { return frame(QByteArray::fromHex("5002780a20")); } // 10-120 with the older, unexplained tag 0x20
 QByteArray ftmsFrame(double kmh) {
     const int hundredths = int(kmh * 100 + 0.5);
     QByteArray bytes = QByteArray::fromHex("8c05") + char(hundredths & 0xff) + char(hundredths >> 8) + QByteArray(15, '\0');
@@ -253,6 +254,19 @@ TEST(MotorGateRunning, OnlyTheRunningLimitsStartARunningWorkoutAndOnlyWalkingLim
     EXPECT_NO_THROW(running.approve(kStart, 0));
     MotorGate walking("workout", "50:0", 600);
     runningPreflight(walking); // running-mode limits must never start a walking plan
+    EXPECT_THROW(walking.approve(kStart, 0), std::invalid_argument);
+}
+
+TEST(MotorGateRunning, TheUnexplainedUnitTagIsRefusedInBothProfiles) {
+    MotorGate running("workout", "80:0", 600, Profile::Running);
+    running.observe(unexplainedTagLimits(), 0);
+    running.observe(inclineLimits(), 0);
+    for (int i = 0; i < 3; ++i) running.observe(normal(), 0);
+    EXPECT_THROW(running.approve(kStart, 0), std::invalid_argument);
+    MotorGate walking("workout", "50:0", 600);
+    walking.observe(unexplainedTagLimits(), 0);
+    walking.observe(inclineLimits(), 0);
+    for (int i = 0; i < 3; ++i) walking.observe(normal(), 0);
     EXPECT_THROW(walking.approve(kStart, 0), std::invalid_argument);
 }
 

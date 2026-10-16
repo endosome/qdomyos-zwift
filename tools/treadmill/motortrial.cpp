@@ -375,11 +375,11 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 if (clock.elapsed() < graceUntil) return;
             }
             if (normalCount >= 3 && limits.complete()) {
-                const int expectedMaxSpeed = runningMode ? 120 : 60, expectedUnit = runningMode ? 0x20 : 0;
+                const int expectedMaxSpeed = runningMode ? 120 : 60, expectedUnit = 0; // any other unit tag (e.g. the unexplained 0x20) is refused
                 if (limits.minSpeed != 10 || limits.maxSpeed != expectedMaxSpeed || limits.unit != expectedUnit || limits.minIncline != 0 || limits.maxIncline != 8) {
                     failed = true;
-                    record("fault", {{"reason", runningMode ? "Live limits are not the running-mode report (10-120, unit tag 0x20); put the console in running mode"
-                                                            : "Live limits differ from the reviewed walking-mode trial (if the console is in running mode, use --running-mode)"}});
+                    record("fault", {{"reason", runningMode ? "Live limits are not the running-mode report (10-120, unit tag 0); raise the console's handrail for running mode"
+                                                            : "Live limits differ from the reviewed walking-mode trial (with the handrail raised the console reports 12 km/h: use --running-mode)"}});
                     close(); return;
                 }
                 if (trial.pause && !limits.pause) { failed = true; record("fault", {{"reason", "Pause is not advertised"}}); close(); return; }

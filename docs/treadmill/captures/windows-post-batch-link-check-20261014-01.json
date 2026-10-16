@@ -1,0 +1,217 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": null,
+    "frames": [
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250025203",
+            "monotonic_ms": 1573,
+            "utc": "2026-10-14T15:34:50.6390540Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250023c0a006403",
+            "monotonic_ms": 1695,
+            "utc": "2026-10-14T15:34:50.7615645Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250035303",
+            "monotonic_ms": 2129,
+            "utc": "2026-10-14T15:34:51.1953846Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250030800025903",
+            "monotonic_ms": 2184,
+            "utc": "2026-10-14T15:34:51.2508270Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 2685,
+            "utc": "2026-10-14T15:34:51.7517188Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 2710,
+            "utc": "2026-10-14T15:34:51.7761977Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3244,
+            "utc": "2026-10-14T15:34:52.3099198Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3370,
+            "utc": "2026-10-14T15:34:52.4352211Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3803,
+            "utc": "2026-10-14T15:34:52.8697456Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3909,
+            "utc": "2026-10-14T15:34:52.9756047Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4360,
+            "utc": "2026-10-14T15:34:53.4261371Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4509,
+            "utc": "2026-10-14T15:34:53.5750897Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4915,
+            "utc": "2026-10-14T15:34:53.9818704Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5050,
+            "utc": "2026-10-14T15:34:54.1161297Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 5449,
+            "utc": "2026-10-14T15:34:54.5155837Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5589,
+            "utc": "2026-10-14T15:34:54.6553311Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6009,
+            "utc": "2026-10-14T15:34:55.0757490Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6129,
+            "utc": "2026-10-14T15:34:55.1949204Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6540,
+            "utc": "2026-10-14T15:34:55.6065705Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6669,
+            "utc": "2026-10-14T15:34:55.7353390Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7094,
+            "utc": "2026-10-14T15:34:56.1608220Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7209,
+            "utc": "2026-10-14T15:34:56.2758796Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7650,
+            "utc": "2026-10-14T15:34:56.7164777Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7751,
+            "utc": "2026-10-14T15:34:56.8172860Z",
+            "write_status": null
+        }
+    ],
+    "ftms_cleanup_status": [
+    ],
+    "ftms_observation_status": "not requested",
+    "last_operation": "nonmotor_query 51",
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": "Success",
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "complete",
+    "windows_version": "10.0.26300.0"
+}

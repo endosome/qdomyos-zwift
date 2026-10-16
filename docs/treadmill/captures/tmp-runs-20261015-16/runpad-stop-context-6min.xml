@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="runpad-stop-context-6min" name="RunPad stop-context repeat — first six minutes" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Warm-up" duration="00:03:00" speedfrom="2.0" speedto="2.6" inclination="0" forcespeed="1"/>
+  <row name="Progressive ascent" duration="00:03:00" speedfrom="2.6" speedto="3.0" inclinationfrom="0" inclinationto="3" forcespeed="1"/>
+</rows>

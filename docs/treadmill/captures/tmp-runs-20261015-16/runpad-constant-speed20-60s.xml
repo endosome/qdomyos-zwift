@@ -1,0 +1,3 @@
+<rows version="1" id="constant-speed20-60s" name="Constant speed 2.0 km/h for 60 seconds" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Constant 2.0 km/h, level 0" duration="00:01:00" forcespeed="1" speed="2" inclination="0" />
+</rows>

@@ -1,0 +1,211 @@
+[
+  {
+    "trial": "incline-1",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 1,
+        "report_delay_ms": 349
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 266
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "0a000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-2",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 2,
+        "report_delay_ms": 293
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 289
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "14000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-3",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 3,
+        "report_delay_ms": 542
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 519
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "1e000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-4",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 4,
+        "report_delay_ms": 413
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 289
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "28000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-5",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 5,
+        "report_delay_ms": 580
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 544
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "32000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-6",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 6,
+        "report_delay_ms": 294
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 351
+      }
+    ],
+    "sequence_observed": true,
+    "ftms_status_values": [
+      "0201",
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "3c000000"
+      ]
+    ]
+  },
+  {
+    "trial": "incline-7",
+    "targets": [
+      {
+        "stage": 1,
+        "target_code": 7,
+        "report_delay_ms": 517
+      },
+      {
+        "stage": 2,
+        "target_code": 0,
+        "report_delay_ms": 611
+      }
+    ],
+    "sequence_observed": false,
+    "ftms_status_values": [
+      "04"
+    ],
+    "ftms_flags_incline_angle_bytes": [
+      [
+        "8c05",
+        "00000000"
+      ],
+      [
+        "8c05",
+        "46000000"
+      ]
+    ]
+  }
+]

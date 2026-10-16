@@ -1,0 +1,33 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": "Expected exactly one accessible FFF0 service",
+    "frames": [
+    ],
+    "ftms_cleanup_status": [
+    ],
+    "ftms_observation_status": "not requested",
+    "idle_first_normal_ms": -1,
+    "idle_initial_state_code": -1,
+    "idle_normal_reports": 0,
+    "idle_sleep_after_normal_ms": -1,
+    "idle_sleep_observed": false,
+    "last_operation": "discover_fitshow_service",
+    "measure_sleep_timer": true,
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": null,
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "error",
+    "status_data_sport": false,
+    "status_heart_rate_zero": false,
+    "windows_version": "10.0.26300.0"
+}

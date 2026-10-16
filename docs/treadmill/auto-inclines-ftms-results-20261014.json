@@ -1,0 +1,434 @@
+{
+  "batch": "inclines",
+  "authorized_by_operator": true,
+  "operator_workflow": "automatic sequential trials; operator interrupts if unexpected",
+  "trace": "captures/windows-auto-inclines-ftms-20261014-01/incline-1.jsonl",
+  "state": "halted before motors at incline-1 preflight",
+  "raw_status_code": 6,
+  "motor_commands_sent": false,
+  "writes": [
+    "0250025203",
+    "02515103"
+  ],
+  "cleanup_status": "Success for FitShow and both FTMS subscriptions",
+  "next_action": "Operator must resolve current SAFETY state using normal controls; no remote wake/safety bypass or automatic retry. Continue same authorized batch after awake/stopped confirmation with a new capture directory.",
+  "retry": {
+    "directory": "captures/windows-auto-inclines-ftms-20261014-02",
+    "trials": [
+      {
+        "trial": "incline-1",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-1.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46170,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:28:54.770Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 8783
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 1,
+            "monotonic_ms": 12146
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27423
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 4886
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 5768
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 8783
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 44953
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-2",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-2.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47020,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:29:41.794Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9686
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 2,
+            "monotonic_ms": 12994
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28290
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6649
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9686
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45828
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-3",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-3.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47516,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:30:29.314Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9836
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 3,
+            "monotonic_ms": 13382
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28919
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6844
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9836
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 46237
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-4",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-4.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46582,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:31:15.899Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 8982
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 4,
+            "monotonic_ms": 12411
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27707
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6047
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 8982
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45337
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-5",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-5.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 47548,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:32:03.449Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9638
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 5,
+            "monotonic_ms": 13221
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28765
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6616
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9606
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 46045
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-6",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-6.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 46380,
+          "normal_status_after_stop": true,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": true,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:32:49.834Z"
+        },
+        "cleanup": {
+          "status": "complete",
+          "error": null,
+          "notification_cleanup_status": "Success",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: Success",
+            "00002ada-0000-1000-8000-00805f9b34fb: Success"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9042
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 6,
+            "monotonic_ms": 12353
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 27710
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6056
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9042
+          },
+          {
+            "frame_hex": "0201",
+            "monotonic_ms": 45175
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      },
+      {
+        "trial": "incline-7",
+        "trace": "captures/windows-auto-inclines-ftms-20261014-02/incline-7.jsonl",
+        "result": {
+          "event": "trial_result",
+          "monotonic_ms": 40785,
+          "normal_status_after_stop": false,
+          "operator_arrival_marks_recorded": false,
+          "physical_stop_verified": false,
+          "sequence_observed": false,
+          "stop_write_succeeded": true,
+          "utc": "2026-10-14T15:33:30.622Z"
+        },
+        "cleanup": {
+          "status": "error",
+          "error": "Windows motor watchdog requested stop",
+          "notification_cleanup_status": "unconfirmed: Inspection deadline exceeded",
+          "ftms_cleanup_status": [
+            "00002acd-0000-1000-8000-00805f9b34fb: unconfirmed Inspection deadline exceeded",
+            "00002ada-0000-1000-8000-00805f9b34fb: unconfirmed Inspection deadline exceeded"
+          ]
+        },
+        "reported_targets": [
+          {
+            "stage": 0,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 9171
+          },
+          {
+            "stage": 1,
+            "speed_code": 10,
+            "incline_code": 7,
+            "monotonic_ms": 12693
+          },
+          {
+            "stage": 2,
+            "speed_code": 10,
+            "incline_code": 0,
+            "monotonic_ms": 28307
+          }
+        ],
+        "ftms_status_events": [
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 6219
+          },
+          {
+            "frame_hex": "04",
+            "monotonic_ms": 9171
+          }
+        ],
+        "automatic_physical_arrival_verified": false
+      }
+    ],
+    "completed_trials": 6,
+    "halted_at": "incline-7",
+    "incline_8_started": false,
+    "fault": "FitShow notifications stopped after return target at level 7; status stale watchdog then attempted stop. Native stop write Success without reply/final NORMAL. All CCCD cleanup timed out. Batch halted.",
+    "operator_confirmed_physical_stop_after_fault": true,
+    "operator_statement": "yes, stopped",
+    "angle_measurements_collected": false,
+    "next_action": "Short nonmotor connection recheck, then sustained idle polling observation if reachable. Do not blindly retry motor fault."
+  }
+}

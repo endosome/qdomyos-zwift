@@ -1,0 +1,183 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": null,
+    "frames": [
+        {
+            "direction": "tx",
+            "frame_hex": "0250025203",
+            "monotonic_ms": 1882,
+            "utc": "2026-10-14T12:48:06.4438537Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0250023c0a006403",
+            "monotonic_ms": 1920,
+            "utc": "2026-10-14T12:48:06.4809935Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "0250035303",
+            "monotonic_ms": 2437,
+            "utc": "2026-10-14T12:48:06.9984819Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0250030800025903",
+            "monotonic_ms": 2512,
+            "utc": "2026-10-14T12:48:07.0731742Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 2996,
+            "utc": "2026-10-14T12:48:07.5576381Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3022,
+            "utc": "2026-10-14T12:48:07.5818018Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3556,
+            "utc": "2026-10-14T12:48:08.1179421Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3682,
+            "utc": "2026-10-14T12:48:08.2430220Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4114,
+            "utc": "2026-10-14T12:48:08.6757912Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4222,
+            "utc": "2026-10-14T12:48:08.7832229Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4671,
+            "utc": "2026-10-14T12:48:09.2324651Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4822,
+            "utc": "2026-10-14T12:48:09.3832582Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 5201,
+            "utc": "2026-10-14T12:48:09.7627533Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5302,
+            "utc": "2026-10-14T12:48:09.8622952Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 5758,
+            "utc": "2026-10-14T12:48:10.3191358Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5901,
+            "utc": "2026-10-14T12:48:10.4629595Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6316,
+            "utc": "2026-10-14T12:48:10.8778568Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6502,
+            "utc": "2026-10-14T12:48:11.0632075Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6876,
+            "utc": "2026-10-14T12:48:11.4376758Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6981,
+            "utc": "2026-10-14T12:48:11.5429261Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7434,
+            "utc": "2026-10-14T12:48:11.9952622Z",
+            "write_status": "Success"
+        },
+        {
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7581,
+            "utc": "2026-10-14T12:48:12.1426415Z",
+            "write_status": null
+        },
+        {
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7993,
+            "utc": "2026-10-14T12:48:12.5546310Z",
+            "write_status": "Success"
+        }
+    ],
+    "last_operation": "nonmotor_query 51",
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": "Success",
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "complete",
+    "windows_version": "10.0.26300.0"
+}

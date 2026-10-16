@@ -1,0 +1,355 @@
+{
+    "address": "DD:87:70:39:74:20",
+    "address_type": "public",
+    "backend": "windows-winrt",
+    "command": "probe",
+    "devices": [
+    ],
+    "error": null,
+    "frames": [
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250025203",
+            "monotonic_ms": 2272,
+            "utc": "2026-10-14T14:31:37.1904970Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250023c0a006403",
+            "monotonic_ms": 2328,
+            "utc": "2026-10-14T14:31:37.2459954Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "0250035303",
+            "monotonic_ms": 2829,
+            "utc": "2026-10-14T14:31:37.7472892Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0250030800025903",
+            "monotonic_ms": 2847,
+            "utc": "2026-10-14T14:31:37.7657464Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 2968,
+            "utc": "2026-10-14T14:31:37.8859324Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 2969,
+            "utc": "2026-10-14T14:31:37.8866773Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3386,
+            "utc": "2026-10-14T14:31:38.3045266Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 3552,
+            "utc": "2026-10-14T14:31:38.4703278Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 3552,
+            "utc": "2026-10-14T14:31:38.4703278Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 3945,
+            "utc": "2026-10-14T14:31:38.8636433Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 4032,
+            "utc": "2026-10-14T14:31:38.9497167Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4032,
+            "utc": "2026-10-14T14:31:38.9507216Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 4152,
+            "utc": "2026-10-14T14:31:39.0702540Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4153,
+            "utc": "2026-10-14T14:31:39.0708046Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 4502,
+            "utc": "2026-10-14T14:31:39.4202952Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 4632,
+            "utc": "2026-10-14T14:31:39.5498724Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4632,
+            "utc": "2026-10-14T14:31:39.5504113Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 4992,
+            "utc": "2026-10-14T14:31:39.9095564Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 4993,
+            "utc": "2026-10-14T14:31:39.9105578Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 5056,
+            "utc": "2026-10-14T14:31:39.9745368Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 5172,
+            "utc": "2026-10-14T14:31:40.0898867Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5232,
+            "utc": "2026-10-14T14:31:40.1501909Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 5614,
+            "utc": "2026-10-14T14:31:40.5322032Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 5712,
+            "utc": "2026-10-14T14:31:40.6298928Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 5712,
+            "utc": "2026-10-14T14:31:40.6298928Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 6012,
+            "utc": "2026-10-14T14:31:40.9297473Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6012,
+            "utc": "2026-10-14T14:31:40.9307471Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6169,
+            "utc": "2026-10-14T14:31:41.0869678Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 6312,
+            "utc": "2026-10-14T14:31:41.2293617Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6312,
+            "utc": "2026-10-14T14:31:41.2303529Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 6724,
+            "utc": "2026-10-14T14:31:41.6424884Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 6852,
+            "utc": "2026-10-14T14:31:41.7702893Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 6852,
+            "utc": "2026-10-14T14:31:41.7702893Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 7031,
+            "utc": "2026-10-14T14:31:41.9499397Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7032,
+            "utc": "2026-10-14T14:31:41.9505193Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7280,
+            "utc": "2026-10-14T14:31:42.1981352Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 7392,
+            "utc": "2026-10-14T14:31:42.3094906Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7392,
+            "utc": "2026-10-14T14:31:42.3105054Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": null,
+            "direction": "tx",
+            "frame_hex": "02515103",
+            "monotonic_ms": 7810,
+            "utc": "2026-10-14T14:31:42.7285695Z",
+            "write_status": "Success"
+        },
+        {
+            "characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "8c050000000000000000000000ffffff000000",
+            "monotonic_ms": 7931,
+            "utc": "2026-10-14T14:31:42.8496178Z",
+            "write_status": null
+        },
+        {
+            "characteristic_uuid": "0000fff1-0000-1000-8000-00805f9b34fb",
+            "direction": "rx",
+            "frame_hex": "0251005103",
+            "monotonic_ms": 7932,
+            "utc": "2026-10-14T14:31:42.8507016Z",
+            "write_status": null
+        }
+    ],
+    "ftms_cleanup_status": [
+        "00002acd-0000-1000-8000-00805f9b34fb: Success",
+        "00002ada-0000-1000-8000-00805f9b34fb: Success"
+    ],
+    "ftms_observation_status": "complete",
+    "last_operation": "nonmotor_query 51",
+    "motor_capabilities": "unknown: raw diagnostic replies only; no physical behavior verified",
+    "motor_execution_enabled": false,
+    "name": "FS-0F7A32",
+    "notification_cleanup_status": "Success",
+    "service_uuids": [
+    ],
+    "services": [
+    ],
+    "status": "complete",
+    "windows_version": "10.0.26300.0"
+}

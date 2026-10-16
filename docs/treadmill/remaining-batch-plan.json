@@ -1,0 +1,96 @@
+{
+    "abort_on_failure": true,
+    "batch": "remaining",
+    "physical_stop_verified": false,
+    "stop_between_trials": true,
+    "trials": [
+        {
+            "incline_ceiling_code": 0,
+            "return_hold_seconds": 3,
+            "speed_ceiling_code": 50,
+            "step_hold_seconds": 5,
+            "trial": "speed-50",
+            "windows_motor_deadline_seconds": 60
+        },
+        {
+            "incline_ceiling_code": 0,
+            "return_hold_seconds": 3,
+            "speed_ceiling_code": 60,
+            "step_hold_seconds": 5,
+            "trial": "speed-60",
+            "windows_motor_deadline_seconds": 60
+        },
+        {
+            "incline_ceiling_code": 1,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-1",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 2,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-2",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 3,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-3",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 4,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-4",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 5,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-5",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 6,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-6",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 7,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-7",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 8,
+            "return_hold_seconds": 15,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 15,
+            "trial": "incline-8",
+            "windows_motor_deadline_seconds": 80
+        },
+        {
+            "incline_ceiling_code": 0,
+            "return_hold_seconds": 0,
+            "speed_ceiling_code": 10,
+            "step_hold_seconds": 5,
+            "trial": "pause",
+            "windows_motor_deadline_seconds": 18
+        }
+    ]
+}

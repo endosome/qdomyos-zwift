@@ -1169,3 +1169,29 @@ Fix: the workout deadline is now `total + 120 s + 3 s per target` (uphill-walk-2
 uphill-walk-60: 4017 s, both under the 4500 s cap). This means the 60-minute acceptance run still needs
 a second, complete attempt. Thermal state could not be observed: the protocol has no temperature
 field and status 5 (fault) was never reported in any of our 93 logs.
+
+## Keep-awake research (2026-10-16)
+
+Goal: keep the W1 console awake during long sessions. All BLE-status variants had failed (plain 51,
+51/00, 52/00 polling slept at 343-572 s; READY starts a countdown and is retired).
+
+**Not a lead: `FS-0F7A32-A`.** The second advertisement at `DD:87:70:39:74:1F` is the console's classic
+Bluetooth *audio* speaker (class `0x00240414` = Audio/Video, BlueZ icon `audio-card`), not a BLE control
+channel; Qt's LE-only scan never sees it. It pairs without a PIN and exposes A2DP sink (0x110b),
+AVRCP (0x110c/0x110e) and a PnP record (0x1200); BlueZ showed an AVRCP transport volume of 105. Both radios
+remain powered while the console reports sleep. While the console was asleep, pairing and connecting
+to it for about 25 s did **not** change the BLE status (06/02 throughout 85 s). The pairing was removed
+afterwards (`bluetoothctl remove`). Untested: whether an *active* audio stream or the AVRCP volume
+affects the standby timer (needs an awake console and a 15 minute observation), and whether AVRCP
+volume 0 silences the console's beeps (relevant to the earlier sound question).
+
+**Other findings.** The protocol documents define no temperature, keep-alive or wake field (see the
+FitMonster table: status 6 reasons are only 1 = key, 2 = asleep). No manual or standby specification for the
+RunPad W1 is published; the box contains a remote ("pilot") that has not been identified. The official
+FitShow module manual says the app polls status 3 times per second and does not claim that this
+holds the console awake. Open leads, cheapest first: (1) identify the bundled remote (IR, 433 MHz or BLE;
+`btmon` while pressing it) and whether it wakes the console without starting the belt, (2) the
+audio-stream test above, (3) a held FTMS session with Request Control only (never Start), which
+needs a nonmotor helper mode with a one-opcode allowlist, (4) a mechanical button pusher.
+Any automated button press must be tried with the operator present: Play/Pause on an awake console
+may start the belt.

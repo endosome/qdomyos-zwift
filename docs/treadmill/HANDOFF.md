@@ -1335,3 +1335,12 @@ With the handrail down the console itself reports 6.0 km/h as its maximum. That 
 to override it. The running-speed validation stages (run-7, run-8, run-10, run-12, display-checked) are now possible with the handrail up.
 New: seven `run-` trainings and two plans (`plan-run-speed-hills-6w`, `plan-trail-race-build-10w`) using speeds up to 12 km/h with changing incline;
 `plan.py show` prints the running speed each week needs validated and marks sessions handrail up or down.
+
+### Running-mode stage run-7 validated (2026-10-16, 20:15)
+
+First running-speed motor trial on this treadmill. Handrail up, limit report 10-120 / tag 0, `control-test --backend linux --running-mode --trial run-7`: 6.0 -> 7.0 (15 s hold) ->
+6.0 -> 1.0 km/h, planned stop, three NORMAL replies, cleanup Success, no faults; FTMS stayed consistent for 48 samples at the top. The operator read the console display
+during the hold (6.0 -> 7.0 -> 6.0 -> 1.0 -> 0.0) and answered 7.0, so raw 70 = 7.0 km/h is confirmed against the console in running mode, and the validation
+record was written (`~/.local/state/treadmill/running-validated.json`: 7 km/h). A first attempt (20:11) was a clean run but the operator did not catch the display, so it correctly
+unlocked nothing. Next stage: run-8, then run-10 and run-12, each only after the previous passed, each with the display check. Logs (local):
+`~/treadmill-logs/run-7-stage-20261016-201403.jsonl` (validated) and `...-2011*.jsonl` (not validated).

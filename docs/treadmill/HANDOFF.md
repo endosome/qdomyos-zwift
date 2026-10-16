@@ -1219,3 +1219,45 @@ is still to do. Open decisions for the operator: whether to allow running-mode s
 10-120 report), sessions over 65-70 minutes, and keeping plans as manifests rather than FIT.
 
 **Keep-awake:** see the research section above (the `-A` device is the classic-Bluetooth speaker).
+
+## Garmin, running mode, long sessions, AVRCP (2026-10-16, later)
+
+**Garmin.** Garmin's workout builder has no incline target and some watches ignore step names, so planned FIT
+workouts now carry the incline where watches show it: each step's notes lead with it in plain ASCII ("Incline 8.3%
+(L6), 4.0 km/h, about 330 m/h up."), and the speed target is a +/- 0.2 km/h band. The secondary grade target stays for the
+CLI. What Garmin does *not* ignore is a completed **activity**: `treadmill-fit activity <run.jsonl> <out.fit>` exports a
+run as a FIT activity (1 Hz records of the reported speed and incline, distance, an estimated altitude from the working grade
+table, total ascent on lap and session). Checked against an independent model and Garmin's decoder; on the real 20-minute run
+it gives 932 m and 23 m estimated ascent. Not tested: loading any of this into a watch or Garmin Connect.
+
+**Running mode** (`--running-mode`, Linux only; decision: yes, but staged). Raw speed above 60 exists only with the console in
+running mode (limits 10-120, unit tag 0x20; the protocol document says speeds are in 0.1 km/h units but no motor trial has
+checked this here). Safeguards: separate gate profile that refuses walking limits (and vice versa); FTMS observation is
+mandatory (passive: only 2ACD/2ADA notifications, no FTMS writes); above 6 km/h both the CLI and the helper stop the run if FTMS speed
+disagrees with FitShow speed (> 0.6 km/h for 4 reports) or is not seen for 2 s; stage trials run-7, run-8, run-10, run-12 approach
+their top speed through 6.0 km/h and record the speed in `~/.local/state/treadmill/running-validated.json` only after FTMS agreed
+for 5 s at the top; workouts above the recorded speed are refused; the post-stop window scales with the speed at the stop.
+Nothing above 6 km/h has been commanded on the treadmill yet.
+
+**Long sessions.** Linux backend up to 120 minutes (Windows bridge stays at 70); runs of an hour or more print a notice. Nothing
+past 62 minutes has run. The three 90-100 minute trainings are marked UNPROVEN LENGTH and `plan.py` keeps them out of plans.
+The console may stop on its own at a fixed time (60/90/99 minutes are common); that is untested.
+
+**FIT SDK bug found (ASan).** The SDK stores a string's length in 8 bits, so a string over 255 bytes overruns its buffer
+(crashed building a long description). `treadmill-fit` now requires plain printable ASCII, a 250-byte description and bounded
+names/notes; all 26 trainings, their dumps and the activity export are clean under AddressSanitizer.
+
+**AVRCP / speaker.** `tools/treadmill/audio-probe.sh read|mute|max|restore` reads and sets the speaker's volume over D-Bus,
+always removing the pairing and checking the default sink. Verified (console asleep): reads 105, sets and reads back 0,
+cleans up. Side effect to know: the console REMEMBERS the volume and quantizes it; I left it muted for a few minutes during
+testing, then restored it (set 105, reads back 101). Whether volume 0 silences the console's own beeps still needs the console
+awake and someone listening.
+
+### Hardware checklist, in this order (one new feature per supervised run)
+1. Wait-for-wake, sleep -> wake -> start (`--wait-wake 10 --wait-wake-confirm`, then the unattended form).
+2. First `.fit` run: `hike-recovery-35`.
+3. The 60-minute rerun with the deadline fix (`uphill-walk-60`).
+4. AVRCP: `audio-probe.sh mute` with the console awake, press buttons, listen; then `restore`.
+5. Running-mode stages in order: console in running mode, you at the controls, `control-test --backend linux ... --running-mode --trial run-7`, then 8, 10, 12.
+6. A 90-minute run (`skimo-long-day-100` shortened or `hike-long-day-100`) before relying on anything over 65 minutes.
+Open: the bundled remote (IR, radio or Bluetooth?) and whether it wakes the console; keep-awake is still unsolved.

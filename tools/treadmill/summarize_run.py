@@ -161,8 +161,64 @@ def summarize(path):
                   f"normal_status_after_stop={row.get('normal_status_after_stop')}, "
                   f"physical_stop_verified={row.get('physical_stop_verified')}")
         elif event == "windows_report":
-            print(f"  {stamp} Windows cleanup: FitShow={row.get('notification_cleanup_status', '?')}, "
+            print(f"  {stamp} {row.get('backend', 'helper')} cleanup: FitShow={row.get('notification_cleanup_status', '?')}, "
                   f"FTMS={row.get('ftms_observation_status', 'not requested')}")
+    print_statistics(rows)
+
+
+def run_statistics(rows):
+    """Run-level numbers from a log: target progress, per-step overhead, status gaps, early STOPPING."""
+    plan = next((row for row in rows if row.get("event") == "trial_plan"), {})
+    steps = plan.get("workout_steps") or []
+    reported = [row for row in rows if row.get("event") == "reported_target" and isinstance(row.get("monotonic_ms"), (int, float))]
+    statuses = [row for row in rows if row.get("event") == "raw_status" and isinstance(row.get("monotonic_ms"), (int, float))]
+    stop = next((row for row in rows if row.get("event") == "stop_requested"), None)
+    stats = {"planned_targets": len(steps) or None, "reported_targets": len(reported),
+             "stop_reason": stop.get("reason") if stop else None}
+    timed = [row["monotonic_ms"] for row in rows if isinstance(row.get("monotonic_ms"), (int, float))]
+    if timed:
+        stats["elapsed_s"] = (max(timed) - min(timed)) / 1000.0
+    if steps:
+        stats["nominal_hold_s"] = sum(step.get("hold_seconds", 0) for step in steps)
+        stats["deadline_s"] = plan.get("windows_motor_deadline_seconds")
+    overhead = []
+    for current, following in zip(reported, reported[1:]):
+        index = current.get("stage")
+        if isinstance(index, int) and 0 <= index < len(steps):
+            overhead.append((following["monotonic_ms"] - current["monotonic_ms"]) / 1000.0 - steps[index].get("hold_seconds", 0))
+    if overhead:
+        stats["step_overhead_s"] = (sum(overhead) / len(overhead), min(overhead), max(overhead))
+        stats["step_overhead_total_s"] = sum(overhead)
+    if len(statuses) > 1:
+        stats["max_status_gap_s"] = max(b["monotonic_ms"] - a["monotonic_ms"] for a, b in zip(statuses, statuses[1:])) / 1000.0
+    cut = stop["monotonic_ms"] if stop and isinstance(stop.get("monotonic_ms"), (int, float)) else None
+    stats["stopping_before_stop_request_s"] = [round(row["monotonic_ms"] / 1000.0, 1) for row in statuses
+                                               if row.get("status_code") == 4 and (cut is None or row["monotonic_ms"] < cut)][:3]
+    stats["faults"] = [row.get("reason") for row in rows if row.get("event") == "fault"]
+    return stats
+
+
+def print_statistics(rows):
+    stats = run_statistics(rows)
+    planned = stats["planned_targets"]
+    print("Statistics:")
+    print(f"  targets reported: {stats['reported_targets']}" + (f" of {planned}" if planned else ""))
+    if "elapsed_s" in stats:
+        nominal = f" (plan {stats['nominal_hold_s']:.0f} s of holds, deadline {stats['deadline_s']} s)" if "nominal_hold_s" in stats else ""
+        print(f"  elapsed: {stats['elapsed_s']:.0f} s{nominal}")
+    if "step_overhead_s" in stats:
+        mean, low, high = stats["step_overhead_s"]
+        print(f"  per-step overhead: mean {mean:.2f} s, min {low:.2f} s, max {high:.2f} s, total {stats['step_overhead_total_s']:.0f} s")
+    if "max_status_gap_s" in stats:
+        print(f"  longest gap between status reports: {stats['max_status_gap_s']:.2f} s")
+    print(f"  faults: {stats['faults'] or 'none'}")
+    if stats["stopping_before_stop_request_s"]:
+        print("  STOPPING reported before any host stop at "
+              + ", ".join(f"+{value:.0f} s" for value in stats["stopping_before_stop_request_s"])
+              + " (a console stop looks the same; ask the operator)")
+    else:
+        print("  STOPPING before the host's stop request: none")
+    print(f"  stop reason: {stats['stop_reason'] or 'none recorded'}")
 
 
 def collect_paths(arguments):

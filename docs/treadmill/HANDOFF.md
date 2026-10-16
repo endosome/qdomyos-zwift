@@ -1270,3 +1270,17 @@ awake and someone listening.
 5. Running-mode stages in order: console in running mode, you at the controls, watching the display during the 15 s top hold and answering the prompt afterwards, `control-test --backend linux ... --running-mode --trial run-7`, then 8, 10, 12.
 6. A 90-minute run (`skimo-long-day-100` shortened or `hike-long-day-100`) before relying on anything over 65 minutes.
 Open: the bundled remote (IR, radio or Bluetooth?) and whether it wakes the console; keep-awake is still unsolved.
+
+## Hardware results, evening of 2026-10-16
+
+**First `.fit` training on the treadmill: `hike-recovery-35`, complete and clean.** 17:20-17:55, Linux backend, all 7 targets
+reported in order, STOP at the planned end (2119 s), three NORMAL replies after it, cleanup Success, no faults, no
+status 4 before the stop. Exported with `treadmill-fit activity` as a FIT activity: 35 min, 1.81 km, 24 m estimated ascent.
+Log (local): `~/treadmill-logs/hike-recovery-35-20261016-172034.jsonl`. This also exercised the new notes/speed-band FIT files
+and the FIT decoder on real hardware.
+
+**AVRCP volume does NOT silence the console's beeps.** With the speaker volume at 0 (read back 0) the operator pressed console buttons
+and still heard the beeps (the first attempt had no button presses, so it was repeated). The beeps come from the console's own
+buzzer, not the Bluetooth speaker path; there is no Bluetooth way to mute them that we know of. Untested: whether the volume
+affects audio streamed to the speaker. The volume was restored (set 105; the console reads 101-105) and the pairing removed
+after every test.

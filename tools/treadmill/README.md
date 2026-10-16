@@ -71,6 +71,17 @@ The format has these rules:
 - A plan can be up to 70 minutes long, with up to 512 distinct speed/incline
   changes.
 
+To generate a climb/recover plan instead of writing XML, use `make_plan.py`. It
+takes incline as W1 levels 0–8, applies the same grade table as the CLI, refuses
+anything outside the W1's limits, and with `--check` validates the file using the
+CLI's own dry run:
+
+```sh
+python3 tools/treadmill/make_plan.py --id hike-45 --repeats 5 --climb-minutes 4 \
+  --climb-level 5 --climb-speed 3.0 --out tools/treadmill/workouts/hike-45.xml \
+  --check ~/.local/bin/treadmill
+```
+
 ### W1 limits and incline levels
 
 - **Speed:** 1.0–6.0 km/h in 0.1 steps. The CLI refuses anything outside that

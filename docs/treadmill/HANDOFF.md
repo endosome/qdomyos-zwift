@@ -1284,3 +1284,30 @@ and still heard the beeps (the first attempt had no button presses, so it was re
 buzzer, not the Bluetooth speaker path; there is no Bluetooth way to mute them that we know of. Untested: whether the volume
 affects audio streamed to the speaker. The volume was restored (set 105; the console reads 101-105) and the pairing removed
 after every test.
+
+### First complete 60-minute run on the Linux backend, and the first wait-for-wake start (2026-10-16 evening)
+
+**`uphill-walk-60` completed.** Started 18:16:20, 99 of 99 targets reported in order, STOP at the planned end (3938 s), three NORMAL replies
+after it, cleanup Success, exit 0, no faults, no status 4 before the stop. 62 min 39 s of motor time (longest proven run now 62:39); the console
+did not stop itself at 60 minutes. Per-step overhead mean 1.51 s (148 s over 99 steps); the motor time used 3760 s of the 4017 s deadline, so the
+`+3 s per step` margin holds with about 4 minutes to spare. Longest gap between status reports 1.02 s. Exported as a FIT activity: 63 min,
+2.84 km, 82 m estimated ascent (Garmin's decoder: integrity true, no errors). Log (local): `~/treadmill-logs/uphill-walk-60-20261016-181314.jsonl`.
+
+**Wait-for-wake, confirm variant, verified on hardware (the unattended variant is not yet).** With the console asleep (06/02 for the
+whole wait), `--wait-wake 15 --wait-wake-confirm` connected, verified identity and sent nothing to the motor; the console was woken
+physically, the run detected three NORMAL replies and prompted; the start followed only after the operator's go-ahead (ENTER), and
+the treadmill reported RUNNING 4 s later. No motor frame was written before the ENTER.
+
+**Lesson: a driver must drain the CLI's output.** The first attempt (18:09-18:11) stopped after 131 s because the wrapper script
+captured the CLI's stdout/stderr through pipes it never read. The CLI prints every event, the pipe filled, the CLI froze, the helper's output
+queue overflowed and its guard sent an emergency STOP and exited. The treadmill, CLI and helper were fine: the fail-safe worked as designed. Drivers
+must write the CLI's output to files (the second attempt did, and ran clean). `summarize_run.py` now reports elapsed time from the start
+request and the wait before it separately.
+
+### Hardware checklist, updated
+1. Wait-for-wake, confirm variant: DONE. Unattended variant (`--wait-wake N` alone; starts 5 s after the wake unless Q): still to do, operator at the treadmill.
+2. First `.fit` run `hike-recovery-35`: DONE.
+3. 60-minute rerun: DONE.
+4. AVRCP volume: DONE (does not silence the console's beeps).
+5. Running-mode stages (console in running mode, operator reads the display): still to do. Needs the operator's answer about how running mode is selected.
+6. A 90-minute run before relying on anything over 65 minutes: still to do (`hike-long-day-100` or `skimo-long-day-100`).

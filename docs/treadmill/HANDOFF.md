@@ -1355,3 +1355,12 @@ the top step but did not watch the rest of the hold; run-8 and run-12 were watch
 Error" three times) before any motor frame; a retry a few seconds later connected every time. Lesson: the installed workout catalog is expanded when qmake runs, so after adding trainings run `qmake ... PREFIX=...`
 and `make install` again, otherwise `workout run <id>` says unknown workout.
 Checklist: 5 (running-mode stages) DONE. Still optional: a 90-minute run, and the first full running training on the treadmill (suggest `run-easy-aerobic-40`).
+
+### First sustained running session: `run-easy-aerobic-40` complete (2026-10-16, 20:55-21:36)
+
+Running mode (handrail up, validated to 12 km/h), confirm-mode wait-for-wake, `workout run run-easy-aerobic-40 --running-mode --wait-wake 30 --wait-wake-confirm`:
+all 11 targets reported in order (warm-up ramp 5 -> 7 km/h, 30 min at 8.5 km/h, cooldown), planned stop at 2549 s, three NORMAL replies, cleanup Success, FTMS observation complete, no faults,
+no status 4 before the stop; 40 min 24 s of motor time. FIT activity export: 40 min, 5.17 km, about 67 m estimated ascent. Log (local): `~/treadmill-logs/run-easy-aerobic-40-20261016-205329.jsonl`.
+An earlier arming of the same run (20:26) ended without any motor command: the operator's go arrived 22 minutes after the prompt, the console had gone back to sleep (wake_lost) and the 15-minute wait limit
+expired, which is the intended behavior. For an attended start, wake the console only when ready and answer the go promptly; a 30-minute wait limit is the maximum.
+Push: `gh` is signed in as `endosome` (ADMIN on endosome/qdomyos-zwift), so pushes work with `git -c credential.helper='!gh auth git-credential' push ...` (no SSH key needed).

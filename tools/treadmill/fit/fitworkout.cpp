@@ -44,6 +44,7 @@ QString intensityName(FIT_INTENSITY code) {
     }
 }
 double gradeOf(int level) { return level * kGradePerLevel; }
+thread_local double gMaxSpeedKmh = kMaxSpeedKmh; // set from the sport before steps are validated
 
 bool validateStep(const Step &step, const QString &where, QString &error) {
     if (step.name.isEmpty() || step.name.size() > 32) { error = where + ": name must be 1-32 characters"; return false; }
@@ -52,9 +53,9 @@ bool validateStep(const Step &step, const QString &where, QString &error) {
     if (step.seconds < kMinStepSeconds || step.seconds > kMaxStepSeconds) {
         error = where + QString(": duration must be %1-%2 seconds").arg(kMinStepSeconds).arg(kMaxStepSeconds); return false;
     }
-    if (!(step.speedKmh >= kMinSpeedKmh && step.speedKmh <= kMaxSpeedKmh) ||
+    if (!(step.speedKmh >= kMinSpeedKmh && step.speedKmh <= gMaxSpeedKmh) ||
         std::fabs(step.speedKmh * 10 - std::round(step.speedKmh * 10)) > 1e-6) {
-        error = where + QString(": speed %1 must be %2-%3 km/h in 0.1 steps").arg(step.speedKmh).arg(kMinSpeedKmh).arg(kMaxSpeedKmh); return false;
+        error = where + QString(": speed %1 must be %2-%3 km/h in 0.1 steps").arg(step.speedKmh).arg(kMinSpeedKmh).arg(gMaxSpeedKmh); return false;
     }
     if (step.level < 0 || step.level > kMaxLevel) { error = where + QString(": level %1 must be 0-%2").arg(step.level).arg(kMaxLevel); return false; }
     return true;
@@ -89,7 +90,7 @@ bool secondsField(const QJsonObject &object, const QString &minutesKey, const QS
 Step makeStep(const QString &name, int seconds, double speed, int level, const QString &intensity, const QString &userNotes) {
     Step step;
     step.name = name; step.seconds = seconds; step.speedKmh = std::round(speed * 10) / 10; step.level = level; step.intensity = intensity;
-    step.notes = stepSummary(step.speedKmh, level) + (userNotes.isEmpty() ? QString() : " | " + userNotes);
+    step.notes = stepSummary(step.speedKmh, level) + (userNotes.isEmpty() ? QString() : " " + userNotes);
     return step;
 }
 bool parseOneStep(const QJsonObject &object, Step &step, const QString &where, QString &error) {
@@ -175,9 +176,9 @@ fit::WorkoutStepMesg stepMesg(const Step &step, int index) {
     mesg.SetDurationTime(FIT_FLOAT32(step.seconds));
     mesg.SetTargetType(FIT_WKT_STEP_TARGET_SPEED);
     mesg.SetTargetValue(0); // 0 = custom range
-    const FIT_FLOAT32 metersPerSecond = FIT_FLOAT32(std::round(step.speedKmh / 3.6 * 1000.0) / 1000.0);
-    mesg.SetCustomTargetSpeedLow(metersPerSecond);
-    mesg.SetCustomTargetSpeedHigh(metersPerSecond);
+    // A +/- 0.2 km/h band: with identical low and high a watch would alert constantly.
+    mesg.SetCustomTargetSpeedLow(FIT_FLOAT32(std::round((step.speedKmh - kSpeedBandKmh) / 3.6 * 1000.0) / 1000.0));
+    mesg.SetCustomTargetSpeedHigh(FIT_FLOAT32(std::round((step.speedKmh + kSpeedBandKmh) / 3.6 * 1000.0) / 1000.0));
     mesg.SetIntensity(intensityCode(step.intensity));
     mesg.SetNotes(step.notes.toStdWString());
     mesg.SetSecondaryTargetType(FIT_WKT_STEP_TARGET_GRADE);
@@ -203,12 +204,14 @@ public:
     FIT_FILE fileType = FIT_FILE_INVALID;
     QString name, description;
     FIT_SPORT sport = FIT_SPORT_INVALID;
+    FIT_SUB_SPORT subSport = FIT_SUB_SPORT_INVALID;
     QVector<RawStep> steps;
     void OnMesg(fit::FileIdMesg &mesg) override { sawFileId = true; fileType = mesg.GetType(); }
     void OnMesg(fit::WorkoutMesg &mesg) override {
         name = QString::fromStdWString(mesg.GetWktName());
         description = QString::fromStdWString(mesg.GetWktDescription());
         sport = mesg.GetSport();
+        subSport = mesg.GetSubSport();
     }
     void OnMesg(fit::WorkoutStepMesg &mesg) override {
         RawStep raw;
@@ -232,21 +235,27 @@ public:
 
 } // namespace
 
+// Plain ASCII, incline first: watches that show notes show the start, and one forum report has notes cut at "~".
 QString stepSummary(double speedKmh, int level) {
     const double grade = gradeOf(level);
-    return QString("L%1 | %2% | %3 km/h | ~%4 m/h").arg(level).arg(grade, 0, 'f', 1).arg(speedKmh, 0, 'f', 1)
+    if (level == 0) return QString("Flat (L0), %1 km/h.").arg(speedKmh, 0, 'f', 1);
+    return QString("Incline %1% (L%2), %3 km/h, about %4 m/h up.").arg(grade, 0, 'f', 1).arg(level).arg(speedKmh, 0, 'f', 1)
         .arg(int(std::lround(speedKmh * grade * 10)));
 }
 
 bool fromSpec(const QJsonObject &spec, Training &out, QString &error) {
     out = Training();
-    if (!allowedKeys(spec, {"id", "name", "description", "sport", "steps"}, "spec", error)) return false;
+    if (!allowedKeys(spec, {"id", "name", "description", "sport", "sub_sport", "steps"}, "spec", error)) return false;
     out.name = spec.value("name").toString();
     out.description = spec.value("description").toString();
     out.sport = spec.value("sport").toString("hiking");
     if (out.name.isEmpty() || out.name.size() > 40) { error = "spec: name must be 1-40 characters"; return false; }
     if (out.description.size() > 400) { error = "spec: description exceeds 400 characters"; return false; }
-    if (out.sport != "hiking" && out.sport != "walking") { error = "spec: sport must be hiking or walking (the W1 runs in walking mode)"; return false; }
+    if (out.sport != "hiking" && out.sport != "walking" && out.sport != "running") { error = "spec: sport must be hiking, walking or running"; return false; }
+    out.subSport = spec.value("sub_sport").toString(out.sport == "running" ? "treadmill" : "");
+    if (out.sport != "running" && !out.subSport.isEmpty()) { error = "spec: sub_sport applies to running only"; return false; }
+    if (out.sport == "running" && out.subSport != "treadmill" && out.subSport != "trail") { error = "spec: sub_sport must be treadmill or trail"; return false; }
+    gMaxSpeedKmh = out.sport == "running" ? kMaxRunningSpeedKmh : kMaxSpeedKmh;
     if (!spec.value("steps").isArray() || spec.value("steps").toArray().isEmpty()) { error = "spec: 'steps' must be a non-empty array"; return false; }
     if (!parseItems(spec.value("steps").toArray(), out.nodes, false, "steps", error)) return false;
     if (totalSeconds(out) > kMaxTrainingSeconds) {
@@ -254,6 +263,13 @@ bool fromSpec(const QJsonObject &spec, Training &out, QString &error) {
         return false;
     }
     if (flatten(out).size() > 400) { error = "training has more than 400 steps after expanding repeats"; return false; }
+    int messages = 0;
+    for (const Node &node : out.nodes) messages += node.isRepeat ? int(node.body.size()) + 1 : 1;
+    if (messages > kGarminStepLimit) {
+        error = QString("training needs %1 workout steps; Garmin Connect is reported to accept %2. Use longer ramp steps or fewer steps")
+                    .arg(messages).arg(kGarminStepLimit);
+        return false;
+    }
     return true;
 }
 
@@ -283,7 +299,9 @@ QJsonObject toJson(const Training &training) {
         for (const Step &step : node.body) body.append(stepJson(step));
         nodes.append(QJsonObject{{"repeat", node.times}, {"steps", body}});
     }
-    return {{"name", training.name}, {"description", training.description}, {"sport", training.sport}, {"steps", nodes}};
+    QJsonObject json{{"name", training.name}, {"description", training.description}, {"sport", training.sport}, {"steps", nodes}};
+    if (!training.subSport.isEmpty()) json.insert("sub_sport", training.subSport);
+    return json;
 }
 
 QByteArray encode(const Training &training, QString &error) {
@@ -307,7 +325,8 @@ QByteArray encode(const Training &training, QString &error) {
     fileId.SetSerialNumber(1);
     fileId.SetTimeCreated(kCreatedStamp);
     fit::WorkoutMesg workout;
-    workout.SetSport(training.sport == "walking" ? FIT_SPORT_WALKING : FIT_SPORT_HIKING);
+    workout.SetSport(training.sport == "walking" ? FIT_SPORT_WALKING : training.sport == "running" ? FIT_SPORT_RUNNING : FIT_SPORT_HIKING);
+    if (training.sport == "running") workout.SetSubSport(training.subSport == "trail" ? FIT_SUB_SPORT_TRAIL : FIT_SUB_SPORT_TREADMILL);
     workout.SetNumValidSteps(FIT_UINT16(messages.size()));
     workout.SetWktName(training.name.toStdWString());
     if (!training.description.isEmpty()) workout.SetWktDescription(training.description.toStdWString());
@@ -340,10 +359,12 @@ bool decode(const QByteArray &bytes, Training &out, QString &error) {
         error = QString("FIT decoding failed: ") + exception.what(); return false;
     }
     if (!collector.sawFileId || collector.fileType != FIT_FILE_WORKOUT) { error = "FIT file is not a workout"; return false; }
-    if (collector.sport != FIT_SPORT_HIKING && collector.sport != FIT_SPORT_WALKING) { error = "workout sport is not hiking or walking"; return false; }
+    if (collector.sport != FIT_SPORT_HIKING && collector.sport != FIT_SPORT_WALKING && collector.sport != FIT_SPORT_RUNNING) { error = "workout sport is not hiking, walking or running"; return false; }
     out.name = collector.name;
     out.description = collector.description;
-    out.sport = collector.sport == FIT_SPORT_WALKING ? "walking" : "hiking";
+    out.sport = collector.sport == FIT_SPORT_WALKING ? "walking" : collector.sport == FIT_SPORT_RUNNING ? "running" : "hiking";
+    if (out.sport == "running") out.subSport = collector.subSport == FIT_SUB_SPORT_TRAIL ? "trail" : "treadmill";
+    gMaxSpeedKmh = out.sport == "running" ? kMaxRunningSpeedKmh : kMaxSpeedKmh;
     struct Pending { Node node; int firstIndex; };
     QVector<Pending> pending;
     for (int i = 0; i < collector.steps.size(); ++i) {
@@ -366,14 +387,14 @@ bool decode(const QByteArray &bytes, Training &out, QString &error) {
         if (raw.durationType != FIT_WKT_STEP_DURATION_TIME || raw.target != FIT_WKT_STEP_TARGET_SPEED || raw.secondary != FIT_WKT_STEP_TARGET_GRADE) {
             error = where + ": not a W1 step (needs a time duration, a speed target and a grade secondary target)"; return false;
         }
-        if (std::fabs(raw.speedLow - raw.speedHigh) > 0.002) { error = where + ": speed range is not a single value"; return false; }
+        if (std::fabs((raw.speedHigh - raw.speedLow) - 2 * kSpeedBandKmh / 3.6) > 0.004) { error = where + ": speed range is not the +/- 0.2 km/h band"; return false; }
         const double grade = raw.gradeLow / 100.0;
         const int level = int(std::lround(grade / kGradePerLevel));
         if (raw.gradeLow != raw.gradeHigh || std::fabs(grade - level * kGradePerLevel) > 0.02) { error = where + ": grade is not on a W1 level"; return false; }
         Step step;
         step.name = raw.name; step.notes = raw.notes; step.intensity = intensityName(raw.intensity);
         step.seconds = int(std::lround(raw.seconds));
-        step.speedKmh = std::round(raw.speedLow * 3.6 * 10) / 10;
+        step.speedKmh = std::round((raw.speedLow + raw.speedHigh) / 2 * 3.6 * 10) / 10;
         step.level = level;
         if (!validateStep(step, where, error)) return false;
         Node node; node.step = step;
@@ -381,7 +402,7 @@ bool decode(const QByteArray &bytes, Training &out, QString &error) {
     }
     for (const Pending &p : pending) out.nodes.append(p.node);
     if (out.nodes.isEmpty()) { error = "workout has no steps"; return false; }
-    if (totalSeconds(out) > kMaxTrainingSeconds) { error = "workout exceeds the 70 minute limit"; return false; }
+    if (totalSeconds(out) > kMaxTrainingSeconds) { error = "workout exceeds the 120 minute limit"; return false; }
     if (flatten(out).size() > 400) { error = "workout has more than 400 steps after expanding repeats"; return false; }
     return true;
 }

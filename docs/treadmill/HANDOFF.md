@@ -1195,3 +1195,27 @@ audio-stream test above, (3) a held FTMS session with Request Control only (neve
 needs a nonmotor helper mode with a one-opcode allowlist, (4) a mechanical button pusher.
 Any automated button press must be tried with the operator present: Play/Pause on an awake console
 may start the belt.
+
+## FIT trainings, plans, wait-for-wake (2026-10-16)
+
+**Wait-for-wake** (Linux backend): `--wait-wake <minutes>` polls without any motor command until the
+console is awake, then runs the normal preflight; unattended it starts 5 s after the wake unless Q is
+pressed, and with `--wait-wake-confirm` it starts only on ENTER (an earlier ENTER does not survive a
+sleep; the test for that fails without the fix). Verified on the sleeping W1 (no motor frame written,
+clean timeout); the real sleep -> wake -> start path has only been run against the fake peer and still
+needs one supervised hardware check when the console can be woken.
+
+**FIT format.** Trainings are Garmin FIT workout files written by `treadmill-fit` (official SDK in
+`src/fit-sdk`) from JSON specs in `tools/treadmill/trainings/`; the CLI plays `.fit` directly and lists them
+in the catalog. Speed is the standard custom speed target; incline level is a secondary GRADE target in
+hundredths of a percent, because FIT defines no grade scale (Garmin devices ignore it; notes repeat it).
+Verified with Garmin's own Python decoder. Not tested: loading these files into a Garmin watch.
+
+**Library.** 18 trainings (skimo, hike, mr = mountain-run power-hike, trail) and three plans in
+`tools/treadmill/plans/` (skimo 8 weeks, hiking 6, mountain running 8), all within walking mode (<= 6.0
+km/h), levels 0-8 and 65 minutes; `plan.py check` enforces the guard-rails and the README states what the
+W1 cannot train. No FIT training has been run on the treadmill yet: the first hardware run of a `.fit` file
+is still to do. Open decisions for the operator: whether to allow running-mode speeds (the gate refuses the
+10-120 report), sessions over 65-70 minutes, and keeping plans as manifests rather than FIT.
+
+**Keep-awake:** see the research section above (the `-A` device is the classic-Bluetooth speaker).

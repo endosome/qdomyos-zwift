@@ -1,0 +1,259 @@
+{
+  "id": "plan-trail-race-build-10w",
+  "name": "Trail and mountain race build, 10 weeks (running mode)",
+  "goal": "A longer build for a trail or mountain race: easy base, rolling terrain, VO2 hills, tempo with changing grade, hill repeats and a speed peak, with two recovery weeks and a taper.",
+  "audience": "Healthy runners who can already run 10 km/h for 30 minutes. Needs the console's handrail raised (running mode) and the staged running-speed validation (run-7 to run-12) done first; the CLI refuses speeds that are not validated. The treadmill has no downhill, so add outdoor running for descents.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: easy volume and rolling terrain",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor run or rest."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: first speed play",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-fartlek-incline-50"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Base: hills",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-hill-sprints-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sat",
+          "training": "mrun-uphill-tempo-50",
+          "note": "Even effort: the last 10 minutes like the first."
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Build: VO2 hills",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-vo2-hills-50",
+          "note": "Do not start too fast; the fifth rep should match the first."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Build: tempo and hill repeats",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-tempo-incline-ladder-55"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sat",
+          "training": "mrun-hill-repeats-6x3"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "Build: speed",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-speed-pyramid-55"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "run-hill-sprints-40",
+          "note": "Easier than week 3: fewer sprints if tired."
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 9,
+      "focus": "Peak",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-vo2-hills-50"
+        },
+        {
+          "day": "Wed",
+          "off": "Mobility or an easy outdoor run."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "run-tempo-incline-ladder-55"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 10,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "run-hill-sprints-40",
+          "note": "Only as many sprints as feel crisp."
+        },
+        {
+          "day": "Sat",
+          "off": "Your race."
+        }
+      ],
+      "note": "Cut the volume; keep a little speed."
+    }
+  ]
+}

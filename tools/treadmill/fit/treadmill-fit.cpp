@@ -2,6 +2,9 @@
 //   treadmill-fit build <spec.json> <out.fit> [--overwrite]   spec -> FIT, checked by a decode round trip
 //   treadmill-fit dump <file.fit>                              FIT -> JSON with totals
 //   treadmill-fit check <spec.json> <file.fit>                 exit 0 if the file is exactly what the spec builds
+//   treadmill-fit activity <run.jsonl> <out.fit> [--sport hiking|walking|running] [--overwrite]
+//                                                              completed run -> FIT activity (distance, speed, estimated ascent)
+#include "activity.h"
 #include "fitworkout.h"
 #include <QCoreApplication>
 #include <QFile>
@@ -29,7 +32,9 @@ static bool readSpec(const QString &path, Training &training, QString &id, QStri
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
     const QStringList args = app.arguments().mid(1);
-    if (args.isEmpty()) return fail("usage: build <spec.json> <out.fit> [--overwrite] | dump <file.fit> | check <spec.json> <file.fit>");
+    const QString usage = "usage: build <spec.json> <out.fit> [--overwrite] | dump <file.fit> | check <spec.json> <file.fit> | "
+                          "activity <run.jsonl> <out.fit> [--sport hiking|walking|running] [--overwrite]";
+    if (args.isEmpty()) return fail(usage);
     const QString command = args[0];
     QString error, id;
     if (command == "dump" && args.size() == 2) {
@@ -67,5 +72,32 @@ int main(int argc, char *argv[]) {
                             << qRound(verticalMetersEstimate(training)) << " m vertical (estimate)\n";
         return 0;
     }
-    return fail("usage: build <spec.json> <out.fit> [--overwrite] | dump <file.fit> | check <spec.json> <file.fit>");
+    if (command == "activity" && args.size() >= 3) {
+        QString sport = "hiking";
+        bool overwrite = false;
+        for (int i = 3; i < args.size(); ++i) {
+            if (args[i] == "--overwrite") overwrite = true;
+            else if (args[i] == "--sport" && i + 1 < args.size()) sport = args[++i];
+            else return fail(usage);
+        }
+        QFile log(args[1]);
+        if (!log.open(QIODevice::ReadOnly)) return fail(args[1] + ": " + log.errorString());
+        QVector<QJsonObject> rows;
+        for (const QByteArray &line : log.readAll().split('\n')) {
+            if (!line.startsWith('{')) continue;
+            const auto document = QJsonDocument::fromJson(line);
+            if (document.isObject()) rows.append(document.object());
+        }
+        ActivitySummary summary;
+        const QByteArray bytes = buildActivity(rows, sport, summary, error);
+        if (bytes.isEmpty()) return fail(args[1] + ": " + error, 1);
+        if (QFileInfo::exists(args[2]) && !overwrite) return fail(args[2] + " exists; pass --overwrite to replace it");
+        QFile out(args[2]);
+        if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate) || out.write(bytes) != bytes.size()) return fail(args[2] + ": " + out.errorString(), 1);
+        QTextStream(stdout) << args[2] << ": " << qRound(summary.seconds / 60.0) << " min, " << QString::number(summary.distanceMeters / 1000, 'f', 2)
+                            << " km, max " << QString::number(summary.maxSpeedKmh, 'f', 1) << " km/h, ascent " << qRound(summary.ascentMeters)
+                            << " m (estimate from the working grade table), " << summary.records << " records\n";
+        return 0;
+    }
+    return fail(usage);
 }

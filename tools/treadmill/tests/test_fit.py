@@ -133,6 +133,97 @@ class FitTests(unittest.TestCase):
         for bad in ('~', '|'):
             self.assertNotIn(bad, text)
 
+    # --- completed run -> FIT activity ------------------------------------------------------
+    def synthetic_log(self, segments, start_utc='2026-10-16T10:00:00.000Z', cadence_ms=500, stop_state_tail=True):
+        """segments: [(seconds, speed_tenths, level)] of RUNNING status, then a short STOPPING tail."""
+        import datetime
+        base = datetime.datetime.strptime(start_utc, '%Y-%m-%dT%H:%M:%S.%fZ')
+        rows, t = [{'event': 'trial_plan', 'monotonic_ms': 0, 'utc': start_utc}], 5000
+        def status(state, speed, level):
+            moment = base + datetime.timedelta(milliseconds=t)
+            rows.append({'event': 'raw_status', 'monotonic_ms': t, 'utc': moment.strftime('%Y-%m-%dT%H:%M:%S.') + '%03dZ' % (moment.microsecond // 1000),
+                         'status_code': state, 'has_motor_data': True, 'speed_code': speed, 'incline_code': level})
+        rows.append({'event': 'raw_status', 'monotonic_ms': 1000, 'utc': start_utc, 'status_code': 0, 'has_motor_data': False, 'speed_code': -1, 'incline_code': -1})
+        for seconds, speed, level in segments:
+            for _ in range(int(seconds * 1000 / cadence_ms)):
+                status(3, speed, level)
+                t += cadence_ms
+        if stop_state_tail:
+            for speed in (20, 10):
+                status(4, speed, 0)
+                t += cadence_ms
+        path = self.directory / 'run.jsonl'
+        path.write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+        return path
+
+    def expected(self, segments, cadence_ms=500):
+        """Independent model: per second distance += speed, altitude += speed x grade (1.375 % per level)."""
+        distance = altitude = 0.0
+        seq = [(sp, lv) for sec, sp, lv in segments for _ in range(int(sec * 1000 / cadence_ms))] + [(20, 0), (10, 0)]
+        total = len(seq) * cadence_ms // 1000
+        for k in range(1, total + 1):
+            sp, lv = seq[min(len(seq) - 1, (k * 1000) // cadence_ms)]
+            v = sp / 10 / 3.6
+            distance += v
+            altitude += v * lv * 11 / 8 / 100
+        return total, distance, altitude
+
+    def test_activity_matches_an_independent_model_and_garmin_decodes_it(self):
+        segments = [(120, 30, 4), (60, 50, 8), (90, 25, 0)]
+        log = self.synthetic_log(segments)
+        out = self.directory / 'run.fit'
+        result = run(FIT_TOOL, 'activity', str(log), str(out), '--sport', 'hiking')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('estimate from the working grade table', result.stdout)
+        seconds, distance, altitude = self.expected(segments)
+        try:
+            from garmin_fit_sdk import Decoder, Stream
+        except ImportError:
+            return
+        self.assertTrue(Decoder(Stream.from_file(str(out))).check_integrity())
+        messages, errors = Decoder(Stream.from_file(str(out))).read()
+        self.assertEqual(errors, [])
+        session = messages['session_mesgs'][0]
+        self.assertEqual((session['sport'], session['sub_sport'], session['num_laps']), ('hiking', 'generic', 1))
+        self.assertAlmostEqual(session['total_distance'], distance, delta=2.0)
+        self.assertAlmostEqual(session['total_ascent'], altitude, delta=1.0)
+        self.assertAlmostEqual(session['total_elapsed_time'], seconds, delta=1)
+        records = messages['record_mesgs']
+        self.assertEqual(len(records), int(session['total_elapsed_time']) + 1)
+        self.assertEqual([r['timestamp'] for r in records], sorted(r['timestamp'] for r in records))
+        self.assertEqual(records[-1]['altitude'], max(r['altitude'] for r in records))
+        self.assertEqual(max(r['grade'] for r in records), 11.0)
+        self.assertEqual(messages['activity_mesgs'][0]['num_sessions'], 1)
+        self.assertEqual(messages['lap_mesgs'][0]['total_ascent'], session['total_ascent'])
+
+    def test_activity_export_refuses_bad_input(self):
+        out = self.directory / 'run.fit'
+        empty = self.directory / 'empty.jsonl'
+        empty.write_text('{"event":"trial_plan","monotonic_ms":0}\n')
+        self.assertIn('no RUNNING status', run(FIT_TOOL, 'activity', str(empty), str(out)).stderr)
+        log = self.synthetic_log([(30, 30, 2)])
+        self.assertIn('hiking, walking or running', run(FIT_TOOL, 'activity', str(log), str(out), '--sport', 'swimming').stderr)
+        self.assertEqual(run(FIT_TOOL, 'activity', str(log), str(out)).returncode, 0)
+        again = run(FIT_TOOL, 'activity', str(log), str(out))
+        self.assertEqual(again.returncode, 2)
+        self.assertIn('--overwrite', again.stderr)
+        self.assertEqual(run(FIT_TOOL, 'activity', str(log), str(out), '--overwrite').returncode, 0)
+        no_utc = self.directory / 'noutc.jsonl'
+        no_utc.write_text('{"event":"raw_status","monotonic_ms":1000,"status_code":3,"has_motor_data":true,"speed_code":30,"incline_code":2}\n'
+                          '{"event":"raw_status","monotonic_ms":4000,"status_code":3,"has_motor_data":true,"speed_code":30,"incline_code":2}\n')
+        self.assertIn("'utc'", run(FIT_TOOL, 'activity', str(no_utc), str(self.directory / 'x.fit')).stderr)
+
+    def test_activity_ignores_statuses_outside_the_running_period(self):
+        # NORMAL/countdown rows before the run and rows without motor data must not add distance.
+        log = self.synthetic_log([(60, 40, 3)])
+        rows = [json.loads(line) for line in log.read_text().splitlines()]
+        rows.insert(2, {'event': 'raw_status', 'monotonic_ms': 2000, 'utc': rows[0]['utc'], 'status_code': 2, 'has_motor_data': False, 'speed_code': 99, 'incline_code': 8})
+        log.write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+        result = run(FIT_TOOL, 'activity', str(log), str(self.directory / 'o.fit'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        _, distance, _ = self.expected([(60, 40, 3)])
+        self.assertIn('%.2f km' % (distance / 1000), result.stdout)
+
     def test_nested_repeats_and_over_long_trainings_are_refused(self):
         inner = {'repeat': 2, 'steps': [{'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}]}
         self.refused({'steps': [{'repeat': 2, 'steps': [inner]}]}, 'cannot be nested')

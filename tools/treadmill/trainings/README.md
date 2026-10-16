@@ -30,9 +30,10 @@ Read this before you rely on any of it.
   measured and not calibrated.
 - **Effort is given as RPE** (1-10 perceived exertion) and the talk test, because the treadmill does not
   know your heart rate. Pick speeds you can hold; every step is a number you can override at the console.
-- **Sessions are capped at 65 minutes.** The longest continuous run so far on this machine is 62 minutes;
-  motor temperature cannot be read from the treadmill (the protocol has no such field), so check the motor
-  housing by hand on long sessions.
+- **Session length.** The library's sessions are 35-65 minutes. The tool and the Linux backend allow up to 120
+  minutes (the Windows bridge stays at 70). The longest continuous run on this machine so far is 62 minutes, so
+  anything longer is unproven: the console may stop on its own at a fixed time, and motor temperature cannot be
+  read from the treadmill (the protocol has no such field). Check the motor housing by hand on long sessions.
 - **This is general conditioning guidance, not medical advice and not individualised coaching.** Check with
   a doctor before starting if you have any health concern, stop if you feel unwell, and keep the safety key
   attached and the stop within reach.
@@ -93,12 +94,23 @@ outdoor and strength sessions as plain text; those are suggestions, not prescrip
   under 30 s and trainings over 70 minutes.
 - `workouts/<id>.fit` is generated: run `trainings/build.sh` (or `build.sh --check`, which CI runs, to prove
   the committed files are exactly what the specs build). Building is deterministic.
-- **FIT layout.** One FIT *workout* file per training, written with Garmin's official FIT SDK and verified
-  with Garmin's own Python decoder. Each step has a time duration, a **speed** primary target (a standard
-  custom speed range, m/s) and the incline as a secondary **grade** target. FIT defines no scale for grade, so
-  we store hundredths of a percent (the scale Garmin uses for `record.grade`) from the level mapping above;
-  Garmin devices ignore it, and each step's notes spell it out ("L6 | 8.3% | 4.0 km/h | ~330 m/h"). Repeats are
-  standard FIT repeat steps. Whether a given Garmin watch accepts these files has not been tested.
+- **FIT layout (planned workouts).** One FIT *workout* file per training, written with Garmin's official FIT SDK
+  and verified with Garmin's own Python decoder. Each step has a time duration, a **speed** target (a +/- 0.2 km/h
+  band, so a watch's own speed alert stays usable) and the incline level as a secondary **grade** target for our
+  CLI. Garmin's workout builder has **no incline target** and FIT defines no scale for grade, so watches ignore
+  that secondary target (we store hundredths of a percent, the scale Garmin uses for `record.grade`). What watches
+  do show is each step's **notes**, which lead with the incline in plain ASCII ("Incline 8.3% (L6), 4.0 km/h, about
+  330 m/h up. RPE 5."). Some watches show notes at the start of each step, others only in a menu, and some ignore
+  step names, so the notes carry the information. Garmin Connect is reported to accept at most 50 steps per
+  workout; the tool refuses more. Repeats are standard FIT repeat steps. Loading these files into a watch has not
+  been tested.
+- **Completed runs as FIT activities (what Garmin does not ignore).** `treadmill-fit activity <run.jsonl> <out.fit>`
+  turns a run log into a FIT *activity*: 1 Hz records of the speed and incline the treadmill reported, distance,
+  and an elevation estimate, with total ascent on the session and lap. Garmin Connect reads those and credits the
+  distance and elevation gain. The altitude is **an estimate** (speed x grade, with the working 1.375 %-per-level
+  table), not a measurement. The session sport is hiking, walking or running (`--sport`); its sub-sport is
+  generic on purpose, because treadmill activities may have their altitude dropped. If you also record the same
+  session on a watch you will have two activities in Garmin Connect; delete one.
 - **Plans are not FIT.** FIT has no practical multi-week plan format, so a plan is a small JSON manifest that
   references trainings by id.
 - Add a training by writing `trainings/<id>.json`, running `build.sh`, and adding it to a plan (the tests

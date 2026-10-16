@@ -5,8 +5,8 @@ TEMPLATE = app
 TARGET = treadmill-fit
 SDK = $$PWD/../../../src/fit-sdk
 INCLUDEPATH += $$SDK $$PWD $$PWD/..
-SOURCES += treadmill-fit.cpp fitworkout.cpp $$files($$SDK/*.cpp)
-HEADERS += fitworkout.h
+SOURCES += treadmill-fit.cpp fitworkout.cpp activity.cpp $$files($$SDK/*.cpp)
+HEADERS += fitworkout.h activity.h
 
 isEmpty(PREFIX): PREFIX = /usr/local
 target.path = $$PREFIX/bin

@@ -128,6 +128,23 @@ stale, a fault appears or the deadline passes. It needs a working BlueZ adapter
 (`bluetoothctl list` shows one) and no root. Pause, READY and operator-timed
 trials aren't available on Linux, and `--observe-ftms` is Windows only.
 
+#### Waiting for the console to wake
+
+The W1 can only be woken at its console, and it sleeps again after about 10
+minutes. `--wait-wake <minutes>` (0.05–30, Linux only) lets you start the CLI
+first: it polls status and sends nothing to the motor until the treadmill
+answers NORMAL, then runs the normal preflight.
+
+- `--wait-wake 10`: unattended. After the wake it prints a notice and **starts
+  the belt by itself 5 seconds later** unless you press `Q`. Use it only when you
+  will be at the treadmill. Typing `MOTOR` then means "start whenever it wakes".
+- `--wait-wake 10 --wait-wake-confirm`: after the wake it waits for you to press
+  `ENTER`. If the console falls asleep before you do, it waits again and an earlier
+  `ENTER` doesn't count. This keeps the normal "I'm here, start now" meaning.
+
+The key-detached state still stops the run, and a wait that reaches its limit ends
+without any motor command.
+
 A first connect sometimes fails with `Controller error: Unknown Error`. The
 helper retries three times before it sends anything. If a run still refuses at
 startup, retry it: nothing has moved the belt at that point.

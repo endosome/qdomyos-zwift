@@ -45,6 +45,7 @@ stopped = False
 target_count = 0
 speed, incline, paused = 10, 0, False
 normal_at = 0
+polls = 0
 def send(line):
     print(line, flush=True)
 def rx(payload):
@@ -69,6 +70,18 @@ for line in sys.stdin:
     elif payload == bytes.fromhex('5003'):
         rx(bytes.fromhex('5003080002'))
     elif payload[0] == 0x51:
+        if os.environ.get('MOTOR_WAKE_AFTER') is not None and not moving and not stopped:
+            polls += 1
+            asleep = polls <= int(os.environ['MOTOR_WAKE_AFTER'])
+            if os.environ.get('MOTOR_RESLEEP'):
+                begin, length = map(int, os.environ['MOTOR_RESLEEP'].split(','))
+                asleep = asleep or begin <= polls < begin + length
+            if asleep:
+                rx(bytes.fromhex('510602'))
+                continue
+            if os.environ.get('MOTOR_WAKE_KEY'):
+                rx(bytes.fromhex('510601'))
+                continue
         if not moving and not ready and not stopped and mode in ('sleep', 'key', 'unknown-disabled', 'sleep-stays'):
             rx(bytes.fromhex('510602') if mode in ('sleep', 'sleep-stays') else
                (bytes.fromhex('510601') if mode == 'key' else bytes.fromhex('5106')))
@@ -490,6 +503,136 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
         self.assertNotIn('02530214014403', motor)
         self.assertEqual(motor[-1], '0253035003')
+
+    # --- wait-for-wake (Linux backend) -------------------------------------------------
+    def waiting(self, extra, wake_after=4, resleep=None, key=False, first=b'MOTOR\n', actions=None, timeout=90):
+        """Run start-stop with --wait-wake against a fake peer that sleeps for the first polls."""
+        self.linux()
+        self.environment.update(MOTOR_MODE='normal', MOTOR_WAKE_AFTER=str(wake_after))
+        if resleep:
+            self.environment['MOTOR_RESLEEP'] = resleep
+        if key:
+            self.environment['MOTOR_WAKE_KEY'] = '1'
+        master, slave = pty.openpty()
+        process = subprocess.Popen([*self.arguments, '--trial', 'start-stop', '--confirm-motor', '--log', str(self.log), *extra],
+                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        started = time.monotonic()
+        def wait_for(name, count=1):
+            while time.monotonic() - started < timeout:
+                if self.log.exists() and sum(1 for row in self.events() if row['event'] == name) >= count:
+                    return
+                if process.poll() is not None:
+                    break
+                time.sleep(0.02)
+            self.fail('Never saw event %s x%d' % (name, count))
+        try:
+            os.write(master, first)
+            if actions:
+                actions(lambda data: os.write(master, data), wait_for)
+            output, errors = process.communicate(timeout=timeout)
+            return process.returncode, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def motor_frames(self):
+        return [value for value in json.loads(self.calls.read_text())
+                if value.startswith('0253')] if self.calls.exists() else []
+
+    def first(self, name):
+        return next(row for row in self.events() if row['event'] == name)
+
+    def test_wait_wake_unattended_sends_nothing_until_grace_ends_then_starts(self):
+        code, errors = self.waiting(['--wait-wake', '1'])
+        self.assertEqual(code, 0, errors)
+        grace, start = self.first('wake_grace_started'), self.first('start_requested')
+        self.assertGreaterEqual(start['monotonic_ms'] - grace['monotonic_ms'], 5000)
+        first_motor = next(row for row in self.events() if row['event'] == 'write_requested' and row['frame_hex'].startswith('0253'))
+        self.assertGreaterEqual(first_motor['monotonic_ms'] - grace['monotonic_ms'], 5000)
+        self.assertLess(self.first('waiting_for_wake')['monotonic_ms'], grace['monotonic_ms'])
+        self.assertTrue(self.events()[-1]['sequence_observed'])
+
+    def test_wait_wake_unattended_q_during_grace_cancels_without_motor_frames(self):
+        code, _ = self.waiting(['--wait-wake', '1'], actions=lambda send, wait_for: (wait_for('wake_grace_started'), send(b'Q')))
+        self.assertNotEqual(code, 0)
+        self.assertEqual(self.motor_frames(), [])
+        self.assertFalse(any(row['event'] == 'start_requested' for row in self.events()))
+
+    def test_wait_wake_confirm_starts_only_on_enter_and_ignores_early_enter(self):
+        def actions(send, wait_for):
+            wait_for('awake_waiting_for_confirmation')
+            time.sleep(2)
+            self.assertEqual(self.motor_frames(), [])
+            self.assertFalse(any(row['event'] == 'start_requested' for row in self.events()))
+            send(b'\n')
+        code, errors = self.waiting(['--wait-wake', '1', '--wait-wake-confirm'], first=b'MOTOR\n\n\n', actions=actions)
+        self.assertEqual(code, 0, errors)
+        self.assertEqual(sum(row['event'] == 'awake_waiting_for_confirmation' for row in self.events()), 1)
+        self.assertLess(self.first('start_confirmed')['monotonic_ms'], self.first('start_requested')['monotonic_ms'])
+        self.assertGreater(self.first('start_confirmed')['monotonic_ms'], self.first('awake_waiting_for_confirmation')['monotonic_ms'])
+
+    def test_wait_wake_confirm_asks_again_if_the_console_sleeps_before_enter(self):
+        def actions(send, wait_for):
+            wait_for('awake_waiting_for_confirmation')
+            wait_for('wake_lost')
+            wait_for('awake_waiting_for_confirmation', 2)
+            self.assertFalse(any(row['event'] == 'start_requested' for row in self.events()))
+            send(b'\n')
+        code, errors = self.waiting(['--wait-wake', '1', '--wait-wake-confirm'], resleep='10,6', actions=actions)
+        self.assertEqual(code, 0, errors)
+
+    def test_wait_wake_confirm_enter_does_not_survive_a_sleep(self):
+        # ENTER immediately after the prompt, then the console falls asleep: waking later must not start the belt.
+        def actions(send, wait_for):
+            wait_for('awake_waiting_for_confirmation')
+            send(b'\n')
+            wait_for('start_confirmed')
+            wait_for('wake_lost')
+            wait_for('awake_waiting_for_confirmation', 2)
+            time.sleep(2)
+            self.assertFalse(any(row['event'] == 'start_requested' for row in self.events()))
+            self.assertEqual(self.motor_frames(), [])
+            send(b'\n')
+        code, errors = self.waiting(['--wait-wake', '1', '--wait-wake-confirm'], resleep='8,6', actions=actions)
+        self.assertEqual(code, 0, errors)
+        self.assertEqual(sum(row['event'] == 'start_confirmed' for row in self.events()), 2)
+
+    def test_wait_wake_key_detached_after_wake_faults_without_starting(self):
+        code, _ = self.waiting(['--wait-wake', '1'], key=True)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(self.motor_frames(), [])
+        self.assertTrue(any(row['event'] == 'fault' for row in self.events()))
+
+    def test_wait_wake_limit_expires_without_motor_frames(self):
+        code, _ = self.waiting(['--wait-wake', '0.1'], wake_after=100000)
+        self.assertEqual(code, 1)
+        self.assertEqual(self.motor_frames(), [])
+        fault = self.first('fault')
+        self.assertIn('did not wake', fault['reason'])
+        self.assertIn('waiting_for_wake', [row['event'] for row in self.events()])
+
+    def test_wait_wake_options_are_validated_and_linux_only(self):
+        self.linux()
+        for extra, message in ((['--wait-wake-confirm'], b'requires --wait-wake'),
+                               (['--wait-wake', '0'], b'0.05-30'), (['--wait-wake', '31'], b'0.05-30'),
+                               (['--wait-wake', 'soon'], b'0.05-30')):
+            with self.subTest(extra=extra):
+                result = subprocess.run([*self.arguments, '--trial', 'start-stop', '--confirm-motor', '--log', str(self.log), *extra],
+                                        capture_output=True, env=self.environment, stdin=subprocess.DEVNULL)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(message, result.stderr)
+        windows = subprocess.run([BINARY, 'control-test', '--backend', 'windows', '--device', ADDRESS, '--expected-name', 'FS-TEST',
+                                  '--wait-wake', '1', '--dry-run'], capture_output=True, env=self.environment)
+        self.assertEqual(windows.returncode, 2)
+        self.assertIn(b'only available on the Linux backend', windows.stderr)
+        plan = subprocess.run([*self.arguments, '--wait-wake', '2', '--wait-wake-confirm', '--dry-run'],
+                              capture_output=True, text=True, env=self.environment)
+        self.assertEqual(plan.returncode, 0, plan.stderr)
+        self.assertEqual((json.loads(plan.stdout)['wait_wake_seconds'], json.loads(plan.stdout)['wait_wake_confirm']), (120, True))
+        self.assertFalse(self.calls.exists())
 
 
 if __name__ == '__main__':

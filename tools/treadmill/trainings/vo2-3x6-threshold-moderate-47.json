@@ -1,0 +1,56 @@
+{
+  "id": "vo2-3x6-threshold-moderate-47",
+  "name": "VO2 3x6 threshold moderate 47",
+  "description": "Three 6 min reps at 10.0 km/h level 1, just below VO2max pace, 3 min jogs: supports VO2 work with sustained hard running. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 9.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "repeat": 3,
+      "steps": [
+        {
+          "name": "Hard 6 min",
+          "minutes": 6,
+          "speed": 10.0,
+          "level": 1,
+          "intensity": "interval",
+          "notes": "RPE 7-8, comfortably hard, even pace."
+        },
+        {
+          "name": "Recover",
+          "minutes": 3,
+          "speed": 6.5,
+          "level": 0,
+          "intensity": "recovery",
+          "notes": "Easy jog or walk; let the breathing drop."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

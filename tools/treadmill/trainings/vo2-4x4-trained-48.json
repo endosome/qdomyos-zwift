@@ -1,0 +1,56 @@
+{
+  "id": "vo2-4x4-trained-48",
+  "name": "VO2 4x4 trained 48",
+  "description": "Classic 4 x 4 min at 12.0 km/h, level 2, with 3 min jog recoveries. Set the load from your ramp. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 10.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "repeat": 4,
+      "steps": [
+        {
+          "name": "VO2 4 min",
+          "minutes": 4,
+          "speed": 12.0,
+          "level": 2,
+          "intensity": "interval",
+          "notes": "RPE 8-9: hard but controlled; the last rep matches the first."
+        },
+        {
+          "name": "Recover",
+          "minutes": 3,
+          "speed": 7.0,
+          "level": 0,
+          "intensity": "recovery",
+          "notes": "Easy jog or walk; let the breathing drop."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "id": "plan-vo2max-build-trained-8w",
+  "name": "VO2max build, trained runner, 8 weeks (running mode)",
+  "goal": "Raise VO2max with a progression of interval formats (4x4, 3-minute and 2-minute reps, 30-30, hills, ladder), an easy recovery week, a taper and a retest.",
+  "audience": "Runners with a VO2max baseline from the ramp test (see plan-vo2max-*-4w and docs/treadmill/VO2MAX.md). Needs the handrail raised (running mode) and the staged running-speed validation (run-7 to run-12). The pace in each training is a starting point: set it from your own ramp result. The treadmill has no downhill, and 12.0 km/h is the maximum speed, so trained runners use grade for intensity.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: first 4x4",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "vo2-4x4-trained-48",
+          "note": "Pace and grade from your ramp result; RPE 8-9."
+        },
+        {
+          "day": "Sat",
+          "training": "run-easy-aerobic-40"
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Build: 3-minute reps and sustained work",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-5x3-trained-47"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-3x6-threshold-trained-47",
+          "note": "Even, comfortably hard."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Build: short reps and hills",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-6x2-trained-44"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-hill-5x3-trained-47"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Rest."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "off": "Rest or an easy outdoor run."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Build: 30-30 and variety",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-30-30-trained-38"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-6x2-trained-44"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Peak: ladder and 4x4",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-ladder-trained-50"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-4x4-trained-48",
+          "note": "Slightly faster or steeper than week 1 if week 5 felt easy."
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "Taper: keep one hard session",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-hill-5x3-trained-47"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "run-easy-aerobic-40"
+        }
+      ],
+      "note": "Cut the volume; keep the intensity of one session."
+    },
+    {
+      "week": 8,
+      "focus": "Retest",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Rest."
+        },
+        {
+          "day": "Thu",
+          "training": "vo2-ramp-trained-30",
+          "note": "Same ramp as your baseline; compare with the baseline."
+        },
+        {
+          "day": "Fri",
+          "off": "Rest."
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-verify-trained-24"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "id": "vo2-ladder-trained-50",
+  "name": "VO2 ladder trained 50",
+  "description": "Rising 1-2-3-4-3-2-1 min reps at 12.0 km/h, level 3, 4, 5, 6, 5, 4, 3, with 2 min jogs: steady total VO2 time. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 10.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "name": "VO2 1 min",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 3,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 2 min",
+      "minutes": 2,
+      "speed": 12.0,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 3 min",
+      "minutes": 3,
+      "speed": 12.0,
+      "level": 5,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 4 min",
+      "minutes": 4,
+      "speed": 12.0,
+      "level": 6,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 3 min",
+      "minutes": 3,
+      "speed": 12.0,
+      "level": 5,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 2 min",
+      "minutes": 2,
+      "speed": 12.0,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 1 min",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 3,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 7.0,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "vo2-30-30-moderate-38",
+  "name": "VO2 30-30 moderate 38",
+  "description": "Sixteen 30 s hard / 30 s easy alternations at 11.5 km/h and 6.5 km/h (level 1): a lot of time near VO2max with little fatigue. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 9.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "repeat": 16,
+      "steps": [
+        {
+          "name": "Fast 30 s",
+          "minutes": 0.5,
+          "speed": 11.5,
+          "level": 1,
+          "intensity": "interval",
+          "notes": "RPE 8-9, smooth and tall."
+        },
+        {
+          "name": "Easy 30 s",
+          "minutes": 0.5,
+          "speed": 6.5,
+          "level": 1,
+          "intensity": "recovery",
+          "notes": "Jog easy, breathe."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

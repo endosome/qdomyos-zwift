@@ -1370,3 +1370,6 @@ Push: `gh` is signed in as `endosome` (ADMIN on endosome/qdomyos-zwift), so push
 Added `vo2-economy-submax-35`, `vo2-ramp-moderate-30`, `vo2-ramp-trained-30`, `vo2-verify-moderate-24`, `vo2-verify-trained-24` and the plans
 `plan-vo2max-moderate-4w` / `plan-vo2max-trained-4w`, with the procedure and calibration checks in `docs/treadmill/VO2MAX.md`.
 None of them has run on the hardware yet; the ramps top out at 12.0 km/h level 8 (provisional incline calibration). Check incline with an inclinometer and belt speed by revolution count first.
+
+Also added 15 VO2-focused interval trainings (moderate and trained sets: 4x4, 5x3, 6x2, 30-30, hills, pyramid, ladder, 3x6 below VO2max) and the plans
+`plan-vo2max-build-moderate-8w` / `plan-vo2max-build-trained-8w` (see docs/treadmill/VO2MAX.md). None has run on the hardware; paces are starting points to set from a ramp result.

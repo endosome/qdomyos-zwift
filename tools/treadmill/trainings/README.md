@@ -81,7 +81,22 @@ Read this before you rely on any of it.
 | `trail-run-progression-45` | running | 45 | ~122 m | 10.0 km/h | 2 | easy/steady |
 | `trail-run-rolling-60` | running | 60 | ~273 m | 9.5 km/h | 7 | easy/steady |
 | `trail-tempo-progression-55` | hiking | 55 | ~175 m | 6.0 km/h | 4 | hard |
+| `vo2-30-30-moderate-38` | running | 38 | ~44 m | 11.5 km/h | 1 | hard |
+| `vo2-30-30-trained-38` | running | 38 | ~122 m | 12.0 km/h | 5 | hard |
+| `vo2-3x6-threshold-moderate-47` | running | 47 | ~52 m | 10.0 km/h | 1 | hard |
+| `vo2-3x6-threshold-trained-47` | running | 47 | ~107 m | 11.5 km/h | 2 | hard |
+| `vo2-4x4-moderate-48` | running | 48 | ~50 m | 10.5 km/h | 1 | hard |
+| `vo2-4x4-trained-48` | running | 48 | ~100 m | 12.0 km/h | 2 | hard |
+| `vo2-5x3-moderate-47` | running | 48 | ~49 m | 11.0 km/h | 1 | hard |
+| `vo2-5x3-trained-47` | running | 48 | ~177 m | 12.0 km/h | 4 | hard |
+| `vo2-6x2-moderate-44` | running | 44 | ~43 m | 11.5 km/h | 1 | hard |
+| `vo2-6x2-trained-44` | running | 44 | ~210 m | 12.0 km/h | 6 | hard |
 | `vo2-economy-submax-35` | running | 35 | ~51 m | 11.0 km/h | 1 | easy/steady |
+| `vo2-hill-4x4-moderate-48` | running | 48 | ~185 m | 9.5 km/h | 5 | hard |
+| `vo2-hill-5x3-trained-47` | running | 48 | ~276 m | 11.0 km/h | 7 | hard |
+| `vo2-ladder-moderate-47` | running | 48 | ~49 m | 11.6 km/h | 1 | hard |
+| `vo2-ladder-trained-50` | running | 50 | ~221 m | 12.0 km/h | 6 | hard |
+| `vo2-pyramid-moderate-44` | running | 44 | ~46 m | 11.5 km/h | 1 | hard |
 | `vo2-ramp-moderate-30` | running | 33 | ~128 m | 12.0 km/h | 8 | hard |
 | `vo2-ramp-trained-30` | running | 29 | ~122 m | 12.0 km/h | 8 | hard |
 | `vo2-verify-moderate-24` | running | 24 | ~46 m | 11.0 km/h | 3 | hard |
@@ -113,6 +128,8 @@ sessions on consecutive days or more than two in a week.
 | `plan-trail-race-build-10w` | 10 | a longer race build with two recovery weeks and a taper, using the whole running set; 80-198 min (running mode) |
 | `plan-vo2max-moderate-4w` | 4 | VO2max test with a mask: economy stages, ramp to exhaustion, verification bout, two easy weeks, retest; for a runner comfortable at 8 km/h (running mode) |
 | `plan-vo2max-trained-4w` | 4 | the same test and retest for a runner comfortable at 10 km/h (running mode) |
+| `plan-vo2max-build-moderate-8w` | 8 | VO2max build: 4x4, 3 min and 2 min reps, 30-30, hills, pyramid, ladder, recovery week, taper, retest; for a runner comfortable at 8 km/h (running mode) |
+| `plan-vo2max-build-trained-8w` | 8 | the same build with grade for intensity at 12 km/h, for a runner comfortable at 10 km/h (running mode) |
 
 `plan.py check` enforces the guard-rails on every plan: at least two rest days, at most two hard sessions a week
 and never on consecutive days (including across the Sunday-Monday boundary), weekly minutes at most 20 % above

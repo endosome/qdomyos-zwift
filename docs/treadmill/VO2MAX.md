@@ -12,7 +12,25 @@ Use running mode (handrail up): walking mode stops at 6.0 km/h, which is about 3
 | `vo2-ramp-trained-30` | the same from 9.0 km/h |
 | `vo2-verify-moderate-24`, `vo2-verify-trained-24` | constant-load verification bout, 2-3 days after the ramp |
 
-Plans: `plan-vo2max-moderate-4w`, `plan-vo2max-trained-4w` (baseline, two easy weeks, retest).
+### VO2-focused interval trainings (to raise VO2max)
+
+Moderate set (pace about 10-11.5 km/h at level 1) and trained set (12.0 km/h, intensity from grade, levels 2-7):
+
+| Format | Moderate | Trained |
+| --- | --- | --- |
+| 4 x 4 min | `vo2-4x4-moderate-48` | `vo2-4x4-trained-48` |
+| 5 x 3 min | `vo2-5x3-moderate-47` | `vo2-5x3-trained-47` |
+| 6 x 2 min | `vo2-6x2-moderate-44` | `vo2-6x2-trained-44` |
+| 16 x 30 s / 30 s | `vo2-30-30-moderate-38` | `vo2-30-30-trained-38` |
+| steep climbs | `vo2-hill-4x4-moderate-48` | `vo2-hill-5x3-trained-47` |
+| pyramid / ladder | `vo2-pyramid-moderate-44`, `vo2-ladder-moderate-47` | `vo2-ladder-trained-50` |
+| 3 x 6 min just below VO2max | `vo2-3x6-threshold-moderate-47` | `vo2-3x6-threshold-trained-47` |
+
+The paces are starting points; set the speed and grade from your ramp result (VO2max pace is about 95 to 100 percent of the load at the ramp's last completed stage;
+the 3 x 6 sits near 90 percent). None of these has run on the hardware yet. Plans: `plan-vo2max-build-moderate-8w` and `plan-vo2max-build-trained-8w`
+(progression, recovery week, taper, retest).
+
+Test plans: `plan-vo2max-moderate-4w`, `plan-vo2max-trained-4w` (baseline, two easy weeks, retest).
 Run with `treadmill workout run <id> ... --running-mode --wait-wake 10 --wait-wake-confirm`.
 
 ## Load model (ACSM running equation, flat plus grade)

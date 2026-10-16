@@ -103,6 +103,16 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     const QBluetoothAddress address(parser.value("device"));
     const QString name = parser.value("expected-name");
     if (address.isNull() || name.trimmed().isEmpty()) return fail("Control trial requires --device and exact --expected-name");
+    // Wait-for-wake: poll without any motor command until the console is awake, then run the normal preflight.
+    // Unattended mode starts by itself after a grace period; confirm mode starts only on ENTER.
+    bool waitOk = true;
+    const double waitMinutes = parser.isSet("wait-wake") ? parser.value("wait-wake").toDouble(&waitOk) : 0;
+    const bool waitConfirm = parser.isSet("wait-wake-confirm");
+    if (parser.isSet("wait-wake") && (!waitOk || waitMinutes < 0.05 || waitMinutes > 30)) return fail("--wait-wake must be 0.05-30 minutes");
+    if (waitConfirm && !parser.isSet("wait-wake")) return fail("--wait-wake-confirm requires --wait-wake");
+    if ((parser.isSet("wait-wake") || waitConfirm) && !linuxBackend) return fail("--wait-wake is only available on the Linux backend");
+    const qint64 waitWakeMs = qint64(std::llround(waitMinutes * 60000.0));
+    constexpr qint64 kWakeGraceMs = 5000;
     for (const QString option : {"simulate", "fast", "workouts-dir", "inject", "inject-at", "profile", "confirm-diagnostics", "timeout"})
         if (parser.isSet(option)) return fail("Unsupported control trial option: " + option);
     QJsonArray sequence;
@@ -145,6 +155,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                            {"step_hold_seconds", trial.stepHold}, {"workout_steps", workoutSteps},
                            {"return_hold_seconds", trial.returnHold}, {"windows_motor_deadline_seconds", trial.deadline},
                            {"operator_marks_required", trial.operatorMarks}, {"arrival_hold_seconds", trial.arrivalHoldSeconds}, {"ready_only", trial.readyOnly}, {"sleep_ready_allowed", trial.sleepReadyAllowed}, {"expected_ready_status", trial.readyOnly ? QJsonValue(9) : QJsonValue(QJsonValue::Null)}, {"physical_arrival_source", "operator observation only"},
+                           {"wait_wake_seconds", waitWakeMs / 1000.0}, {"wait_wake_confirm", waitConfirm},
                            {"initial_deck_baseline_confirmation_required", trial.operatorMarks},
                            {"ftms_observation_requested", parser.isSet("observe-ftms")},
                            {"frames", sequence}, {"physical_units_verified", false}, {"physical_stop_verified", false},
@@ -168,7 +179,11 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         << (linuxBackend ? "The Linux helper" : "Windows") << " attempts stop on EOF, faults, stale status, or the printed motor deadline.\n"
         << "A disconnected Bluetooth link cannot guarantee delivery.\n"
            "Confirm the belt is stopped and clear, safety key normally attached, other controllers disconnected,\n"
-           "and you are at the physical controls with an accessible stop. Type MOTOR to approve this exact trial: " << Qt::flush;
+           "and you are at the physical controls with an accessible stop.\n"
+        << (waitWakeMs <= 0 ? QString() : waitConfirm
+            ? QString("WAIT FOR WAKE: no motor command is sent until the treadmill is awake (up to %1 s); then press ENTER to start, or Q to cancel.\n").arg(waitWakeMs / 1000)
+            : QString("WAIT FOR WAKE, AUTO-START: nothing is sent to the motor until the treadmill is awake (up to %1 s); then the belt STARTS BY ITSELF after %2 s unless you press Q.\n").arg(waitWakeMs / 1000).arg(kWakeGraceMs / 1000))
+        << "Type MOTOR to approve this exact trial: " << Qt::flush;
     if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
     }
     if (trial.operatorMarks && batchConfirmed) return fail("Operator-timed trials must run individually");
@@ -192,6 +207,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     bool started = false, stopping = false, closing = false, failed = false, stopWritten = false;
     bool feedbackAfterStop = false, hasFinalReport = false, ready = false, identityObserved = false;
     qint64 startedAt = -1, runningAt = -1, stoppedAt = -1, latestStatusAt = -1;
+    bool sleepNoticed = false, startPrompted = false, startConfirmed = false;
+    qint64 graceUntil = -1, lastWaitNoticeAt = 0;
     int stage = 0;
     int targetMatchCount = 0;
     bool workoutInitialTargetSent = false;
@@ -252,6 +269,28 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             normalCount = (status.state == 0 || (trial.sleepReadyAllowed && status.state == 6 && status.disabledReason == 2))
                 ? normalCount + 1 : 0;
             const auto limits = control.limits();
+            if (waitWakeMs > 0 && normalCount == 0 && (startPrompted || graceUntil >= 0) && !startConfirmed) {
+                // Went back to sleep (or left NORMAL) before the start: begin the wake handshake again.
+                startPrompted = false; graceUntil = -1;
+                record("wake_lost", {{"status_code", status.state}});
+                QTextStream(stderr) << "Treadmill is no longer awake; waiting again.\n" << Qt::flush;
+            }
+            if (normalCount >= 3 && limits.complete() && waitWakeMs > 0 && !startConfirmed) {
+                if (waitConfirm) {
+                    if (!startPrompted) {
+                        startPrompted = true;
+                        record("awake_waiting_for_confirmation", {});
+                        QTextStream(stderr) << "Treadmill is awake. Press ENTER to start, or Q to cancel.\n" << Qt::flush;
+                    }
+                    return;
+                }
+                if (graceUntil < 0) {
+                    graceUntil = clock.elapsed() + kWakeGraceMs;
+                    record("wake_grace_started", {{"grace_ms", kWakeGraceMs}});
+                    QTextStream(stderr) << "Treadmill is awake. Starting in " << kWakeGraceMs / 1000 << " s; press Q to cancel.\n" << Qt::flush;
+                }
+                if (clock.elapsed() < graceUntil) return;
+            }
             if (normalCount >= 3 && limits.complete()) {
                 if (limits.minSpeed != 10 || limits.maxSpeed != 60 || limits.unit != 0 || limits.minIncline != 0 || limits.maxIncline != 8) {
                     failed = true; record("fault", {{"reason", "Live limits differ from the reviewed walking-mode trial"}}); close(); return;
@@ -362,6 +401,21 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                         response.valid && response.command == 0x51 &&
                         response.status.state == 6 && response.status.disabledReason == 2)
                         observeStatus(response.status);
+                    else if (waitWakeMs > 0 && !started && response.valid && response.command == 0x51 &&
+                             response.status.state == 6 && response.status.disabledReason == 2) {
+                        // Documented sleep before the start is the expected wait state. It never counts as NORMAL,
+                        // and the key-detached state (06/01) still goes to the generic fault path.
+                        normalCount = 0;
+                        if (startPrompted || graceUntil >= 0) { startPrompted = false; graceUntil = -1; }
+                        if (!sleepNoticed) {
+                            sleepNoticed = true;
+                            record("waiting_for_wake", {{"wait_limit_seconds", waitWakeMs / 1000.0}});
+                            QTextStream(stderr) << "Treadmill is asleep. Wake it at the console; nothing is sent to the motor meanwhile.\n" << Qt::flush;
+                        } else if (clock.elapsed() - lastWaitNoticeAt >= 30000) {
+                            QTextStream(stderr) << "Still waiting for the treadmill to wake (" << clock.elapsed() / 1000 << " s)...\n" << Qt::flush;
+                        }
+                        if (clock.elapsed() - lastWaitNoticeAt >= 30000) lastWaitNoticeAt = clock.elapsed();
+                    }
                     else control.receive(bytes);
                 }
             } else if (parts.size() == 4 && parts[0] == "TX") {
@@ -397,6 +451,11 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         if (count <= 0) { terminal.setEnabled(false); failed = true; stop("Operator input closed"); return; }
         for (ssize_t i = 0; i < count; ++i) {
             const char key = bytes[i];
+            if ((key == '\n' || key == '\r') && startPrompted && !startConfirmed && !started) {
+                startConfirmed = true;
+                record("start_confirmed", {});
+                continue;
+            }
             if (key == 'q' || key == 'Q' || key == 's' || key == 'S') {
                 failed = true; stop("Operator stop"); break;
             }
@@ -423,7 +482,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     QObject::connect(&pump, &QTimer::timeout, &app, [&]() {
         const auto now = clock.elapsed();
         if (closing) return;
-        if (!started && now > 30000) { failed = true; close(); return; }
+        if (!started && now > 30000 + waitWakeMs) { failed = true; record("fault", {{"reason", waitWakeMs > 0 ? "Treadmill did not wake within the wait limit" : "Preflight did not complete within 30 seconds"}}); close(); return; }
         if (started && !stopping && (now - latestStatusAt > 1500 || now - startedAt >= (trial.deadline - 2) * 1000 ||
             (stageReportedAt < 0 && pauseAt < 0 && now - stageRequestedAt > (stage == 0 ? 10000 : (trial.operatorMarks ? 60000 : 15000))))) {
             failed = true; stop("Missing status or start deadline");
@@ -473,6 +532,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             QStringList arguments {"--device", address.toString(), "--expected-name", name, "--confirm-motor",
                                    "--trial", trial.id, "--timeout", QString::number(trial.deadline)};
             if (trial.workout) arguments << "--target-sequence" << targetSequence;
+            if (waitWakeMs > 0) arguments << "--wait-wake" << QString::number(waitWakeMs / 1000);
             process.start(helper, arguments);
         } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,
@@ -550,7 +610,7 @@ int motorTrial(QCoreApplication &app, const QCommandLineParser &parser) {
 
 int motorBatch(QCoreApplication &app, const QCommandLineParser &parser) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
-    for (const QString option : {"trial", "list-trials", "confirm-motor", "simulate", "fast", "profile", "timeout", "confirm-diagnostics", "workouts-dir", "inject", "inject-at"})
+    for (const QString option : {"trial", "list-trials", "confirm-motor", "simulate", "fast", "profile", "timeout", "confirm-diagnostics", "workouts-dir", "inject", "inject-at", "wait-wake", "wait-wake-confirm"})
         if (parser.isSet(option)) return fail("Unsupported batch option: " + option);
     const QString selection = parser.value("batch");
     if (selection != "remaining" && selection != "speeds" && selection != "inclines" && selection != "all")

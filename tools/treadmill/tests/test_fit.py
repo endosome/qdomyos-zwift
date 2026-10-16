@@ -80,7 +80,8 @@ class FitTests(unittest.TestCase):
         self.assertEqual(dump['flat_steps'], 1 + 4 + 6 + 1)
         ramp = [s for s in dump['steps'] if s.get('name', '').startswith('Build')]
         self.assertEqual([(s['speed'], s['level']) for s in ramp], [(2.4, 0), (2.8, 1), (3.2, 3), (3.6, 4)])
-        self.assertTrue(dump['steps'][5]['steps'][0]['notes'].startswith('L6 | 8.3% | 4.0 km/h | ~330 m/h'))
+        self.assertEqual(dump['steps'][5]['steps'][0]['notes'], 'Incline 8.3% (L6), 4.0 km/h, about 330 m/h up.')
+        self.assertEqual(dump['steps'][0]['notes'], 'Flat (L0), 2.4 km/h. Easy.')
         self.assertEqual(dump['vertical_meters_estimate'], round(dump['vertical_meters_estimate']))
 
     def test_w1_limits_are_enforced_at_build_time(self):
@@ -99,18 +100,46 @@ class FitTests(unittest.TestCase):
         self.refused(with_step(name='x' * 33), 'name must be 1-32')
         self.refused(with_step(speeed=3.0), "unknown key 'speeed'")
         self.refused({'steps': [{'repeat': 1, 'steps': [{'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}]}]}, 'repeat must be a whole number from 2 to 40')
-        self.refused({'sport': 'running'}, 'hiking or walking')
+        self.refused({'sport': 'swimming'}, 'hiking, walking or running')
         self.refused({'name': ''}, 'name must be 1-40')
         self.refused({'steps': []}, "'steps' must be a non-empty array")
         self.refused({'extra': 1}, "unknown key 'extra'")
+    def test_running_sport_allows_running_speeds_and_hiking_does_not(self):
+        step = lambda speed: {'steps': [{'name': 'Fast', 'minutes': 2, 'speed': speed, 'level': 2}]}
+        self.refused(step(12.0), 'speed 12 must be 1-6')
+        self.refused(dict(step(12.1), sport='running'), 'speed 12.1 must be 1-12')
+        self.refused(dict(step(6.5), sport='hiking', sub_sport='trail'), 'sub_sport applies to running only')
+        self.refused(dict(step(8.0), sport='running', sub_sport='road'), 'sub_sport must be treadmill or trail')
+        for sub in (None, 'treadmill', 'trail'):
+            spec = self.spec(dict(step(12.0), sport='running', **({'sub_sport': sub} if sub else {})), name='run-' + (sub or 'default'))
+            result, out = self.build(spec)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            dump = json.loads(run(FIT_TOOL, 'dump', str(out)).stdout)
+            self.assertEqual((dump['sport'], dump['sub_sport']), ('running', sub or 'treadmill'))
+            self.assertEqual(dump['steps'][0]['speed'], 12.0)
+            self.assertEqual(run(FIT_TOOL, 'check', str(spec), str(out)).returncode, 0)
+
+    def test_garmin_step_limit_is_enforced_with_a_helpful_message(self):
+        ramp = {'ramp': {'name': 'R', 'minutes': 30, 'speed_from': 2.0, 'speed_to': 4.0, 'level_from': 0, 'level_to': 6, 'step_seconds': 30}}
+        self.refused({'steps': [ramp]}, 'needs 60 workout steps; Garmin Connect is reported to accept 50')
+        fits = {'ramp': dict(ramp['ramp'], step_seconds=60)}
+        result, _ = self.build(self.spec({'steps': [fits]}, name='sixty'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_notes_are_plain_ascii_and_lead_with_the_incline(self):
+        spec = self.spec()
+        _, out = self.build(spec)[0], spec.with_suffix('.fit')
+        text = json.dumps(json.loads(run(FIT_TOOL, 'dump', str(out)).stdout))
+        for bad in ('~', '|'):
+            self.assertNotIn(bad, text)
 
     def test_nested_repeats_and_over_long_trainings_are_refused(self):
         inner = {'repeat': 2, 'steps': [{'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}]}
         self.refused({'steps': [{'repeat': 2, 'steps': [inner]}]}, 'cannot be nested')
-        long = {'repeat': 5, 'steps': [{'name': 'S', 'minutes': 15, 'speed': 3.0, 'level': 2}]}
-        self.refused({'steps': [long]}, 'the W1 limit is 70')
-        ok = {'repeat': 4, 'steps': [{'name': 'S', 'minutes': 17.5, 'speed': 3.0, 'level': 2}]}
-        result, _ = self.build(self.spec({'steps': [ok]}, name='exactly70'))
+        long = {'repeat': 8, 'steps': [{'name': 'S', 'minutes': 17, 'speed': 3.0, 'level': 2}]}
+        self.refused({'steps': [long]}, 'the W1 limit is 120')
+        ok = {'repeat': 8, 'steps': [{'name': 'S', 'minutes': 15, 'speed': 3.0, 'level': 2}]}
+        result, _ = self.build(self.spec({'steps': [ok]}, name='exactly120'))
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_ramp_rules(self):
@@ -213,7 +242,8 @@ class FitTests(unittest.TestCase):
         self.assertEqual(messages['workout_mesgs'][0]['num_valid_steps'], len(steps))
         first = steps[0]
         self.assertEqual((first['duration_type'], first['duration_time'], first['target_type']), ('time', 180.0, 'speed'))
-        self.assertAlmostEqual(first['custom_target_speed_low'] * 3.6, 2.4, places=2)
+        self.assertAlmostEqual((first['custom_target_speed_low'] + first['custom_target_speed_high']) / 2 * 3.6, 2.4, places=2)
+        self.assertAlmostEqual((first['custom_target_speed_high'] - first['custom_target_speed_low']) * 3.6, 0.4, places=2)
         climb = steps[5]
         self.assertEqual((climb['secondary_target_type'], climb['secondary_custom_target_value_low']), ('grade', 825))
         repeat = steps[7]

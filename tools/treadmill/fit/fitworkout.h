@@ -5,9 +5,12 @@
 // level 0-8 (secondary target GRADE).
 //
 // Grade convention: FIT defines no scale for the grade target (its custom ranges have typed
-// fields for speed, heart rate, cadence and power only), so we store grade as hundredths of
-// a percent, the scale Garmin uses for record.grade, using the working W1 mapping of
-// 1.375 % per level. Garmin devices ignore it; every step's notes repeat it in words.
+// fields for speed, heart rate, cadence and power only), and Garmin's workout builder has no
+// incline target, so we store grade as hundredths of a percent, the scale Garmin uses for
+// record.grade, using the working W1 mapping of 1.375 % per level. Watches ignore that
+// secondary target (our CLI reads it). What watches do show is the step notes, which start
+// with the incline in plain ASCII, and the speed target, a +/- 0.2 km/h band so a watch's own
+// alert stays usable. The completed run carries the incline as a FIT activity (see activity.h).
 #include "../workout.h"
 #include <QByteArray>
 #include <QJsonObject>
@@ -19,8 +22,11 @@ namespace Fit {
 
 constexpr double kGradePerLevel = 11.0 / 8.0;
 constexpr int kMaxLevel = 8;
-constexpr double kMinSpeedKmh = 1.0, kMaxSpeedKmh = 6.0;
-constexpr int kMinStepSeconds = 30, kMaxStepSeconds = 3600, kMaxTrainingSeconds = 70 * 60;
+constexpr double kMinSpeedKmh = 1.0, kMaxSpeedKmh = 6.0;        // walking mode
+constexpr double kMaxRunningSpeedKmh = 12.0;                    // running mode (sport "running")
+constexpr double kSpeedBandKmh = 0.2;                           // the watch-facing target is speed +/- this
+constexpr int kMinStepSeconds = 30, kMaxStepSeconds = 3600, kMaxTrainingSeconds = 120 * 60;
+constexpr int kGarminStepLimit = 50;                            // workout_step messages Garmin Connect is reported to accept
 
 struct Step {
     QString name;
@@ -39,7 +45,8 @@ struct Node {
 struct Training {
     QString name;
     QString description;
-    QString sport = QStringLiteral("hiking"); // hiking or walking
+    QString sport = QStringLiteral("hiking"); // hiking, walking or running (running allows speeds above 6 km/h)
+    QString subSport;                         // running only: "treadmill" (default) or "trail"
     QVector<Node> nodes;
 };
 

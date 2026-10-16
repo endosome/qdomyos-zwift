@@ -1,0 +1,115 @@
+{
+  "id": "vo2-pyramid-moderate-44",
+  "name": "VO2 pyramid moderate 44",
+  "description": "Pyramid 2-3-4-3-2 min at 11.5, 11.0, 10.5, 11.0, 11.5 km/h (level 1) with 2 min jogs between: a long total time near VO2max. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 9.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "name": "VO2 2 min",
+      "minutes": 2,
+      "speed": 11.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 3 min",
+      "minutes": 3,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 4 min",
+      "minutes": 4,
+      "speed": 10.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 3 min",
+      "minutes": 3,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "VO2 2 min",
+      "minutes": 2,
+      "speed": 11.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8-9."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

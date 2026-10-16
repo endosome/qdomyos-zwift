@@ -1,0 +1,56 @@
+{
+  "id": "vo2-6x2-trained-44",
+  "name": "VO2 6x2 trained 44",
+  "description": "Six 2 min reps at 12.0 km/h level 6 with 2 min jog recoveries: short, steep and fast. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 10.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "repeat": 6,
+      "steps": [
+        {
+          "name": "VO2 2 min",
+          "minutes": 2,
+          "speed": 12.0,
+          "level": 6,
+          "intensity": "interval",
+          "notes": "RPE 8-9: hard but controlled; the last rep matches the first."
+        },
+        {
+          "name": "Recover",
+          "minutes": 2,
+          "speed": 7.0,
+          "level": 0,
+          "intensity": "recovery",
+          "notes": "Easy jog or walk; let the breathing drop."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

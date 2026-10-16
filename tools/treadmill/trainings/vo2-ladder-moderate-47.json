@@ -1,0 +1,115 @@
+{
+  "id": "vo2-ladder-moderate-47",
+  "name": "VO2 ladder moderate 47",
+  "description": "Five 3 min reps that rise 0.3 km/h each rep from 10.4 to 11.6 km/h (level 1), 2.5 min jogs: teaches pacing up to your top sustainable speed. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 9.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently. Last minutes just under the first rep pace."
+      }
+    },
+    {
+      "name": "Rep 1",
+      "minutes": 3,
+      "speed": 10.4,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 7 rising to 9. Hold form."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2.5,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "Rep 2",
+      "minutes": 3,
+      "speed": 10.7,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 7 rising to 9. Hold form."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2.5,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "Rep 3",
+      "minutes": 3,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 7 rising to 9. Hold form."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2.5,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "Rep 4",
+      "minutes": 3,
+      "speed": 11.3,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 7 rising to 9. Hold form."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2.5,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "name": "Rep 5",
+      "minutes": 3,
+      "speed": 11.6,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 7 rising to 9. Hold form."
+    },
+    {
+      "name": "Recover",
+      "minutes": 2.5,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Easy jog."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

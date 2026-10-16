@@ -45,6 +45,8 @@ public:
         if (terminalChanged) ::tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
     }
     bool valid() const { return signalPipe[0] >= 0 && installed == 3; }
+    // Back to the caller's terminal mode (line input, echo) so the CLI can ask a question after the run.
+    void lineMode() { if (terminalChanged) ::tcsetattr(STDIN_FILENO, TCSANOW, &terminal); }
     int signalPipe[2] = {-1, -1};
 private:
     const int terminationSignals[3] = {SIGINT, SIGTERM, SIGHUP};

@@ -492,8 +492,12 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             os.close(slave)
 
     # --- running mode (Linux backend) ----------------------------------------------------------
-    def stage(self, trial, env=None, actions=None, timeout=120, validated=None, keep_helper=False):
-        """Run a staged running-mode trial against the fake peer; returns (exit code, stderr)."""
+    def stage(self, trial, env=None, actions=None, timeout=120, validated=None, keep_helper=False, display='match'):
+        """Run a staged running-mode trial against the fake peer; returns (exit code, stderr).
+        After a clean stage the CLI asks what the console display showed: 'match' answers with the stage speed."""
+        if actions is None and display is not None:
+            answer = ('%.1f' % float(trial[4:]) if display == 'match' else display) + '\n'
+            actions = lambda send, wait_for: (wait_for('display_check_requested'), send(answer.encode()))
         if not keep_helper:
             self.linux()
         state = self.directory / 'state'
@@ -565,7 +569,9 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         result = next(row for row in events if row['event'] == 'running_stage_result')
         self.assertTrue(result['validated'])
         self.assertGreaterEqual(result['ftms_agreed_samples_at_top'], 10)
+        self.assertEqual((result['display_answer'], result['display_matched']), ('7.0', True))
         self.assertEqual(result['validated_kmh_now'], 7.0)
+        self.assertEqual(json.loads((self.directory / 'state' / 'running-validated.json').read_text())['display_kmh_reported_by_operator'], 7.0)
         self.assertTrue(events[-1]['sequence_observed'])
         motor = [f for f in json.loads(self.calls.read_text()) if f.startswith('0253')]
         self.assertEqual(motor[0], '02530100000000000000005203')
@@ -599,8 +605,39 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertEqual(tall.returncode, 2)
         self.assertIn(b'1.0', tall.stderr)
 
+    def test_a_stage_unlocks_only_when_the_operator_reports_the_matching_display(self):
+        # FTMS agrees in every case (it is the same module's number); only the operator's reading of the console can validate.
+        import shutil
+        for number, (answer, expected) in enumerate((('7.1', True), ('7.2', False), ('', False), ('fast', False))):
+            with self.subTest(answer=answer):
+                shutil.rmtree(self.directory / 'state', ignore_errors=True)
+                self.log = self.directory / f'display-{number}.jsonl'
+                self.calls.unlink(missing_ok=True)
+                code, errors = self.stage('run-7', display=answer)
+                self.assertEqual(code, 0, errors)  # the run itself is fine either way
+                result = next(row for row in self.events() if row['event'] == 'running_stage_result')
+                self.assertEqual(result['display_answer'], answer)
+                self.assertEqual((result['display_matched'], result['validated']), (expected, expected))
+                self.assertEqual(self.validated_kmh(), 7.0 if expected else None)
+                self.assertIn(b'DISPLAY', errors)
+
+    def test_a_stage_warns_the_operator_to_watch_the_display_before_the_belt_starts(self):
+        self.linux()
+        master, slave = pty.openpty()
+        process = subprocess.Popen([*self.arguments, '--trial', 'run-7', '--running-mode', '--confirm-motor', '--log', str(self.log)],
+                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        try:
+            os.write(master, b'NO\n')
+            _, errors = process.communicate(timeout=30)
+        finally:
+            os.close(master); os.close(slave)
+        self.assertIn(b'WATCH THE CONSOLE DISPLAY', errors)
+        self.assertIn(b'same module', errors)
+        self.assertNotIn(b'independent', errors)
+        self.assertFalse(self.calls.exists())
+
     def test_a_stage_is_stopped_when_ftms_speed_disagrees_and_nothing_is_unlocked(self):
-        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'mismatch'})
+        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'mismatch'}, display=None)
         self.assertNotEqual(code, 0)
         self.assertIsNone(self.validated_kmh())
         events = self.events()
@@ -609,7 +646,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertFalse(next(row for row in events if row['event'] == 'running_stage_result')['validated'])
 
     def test_a_stage_is_stopped_when_ftms_speed_is_not_observed(self):
-        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'silent'})
+        code, _ = self.stage('run-7', env={'MOTOR_FTMS': 'silent'}, display=None)
         self.assertNotEqual(code, 0)
         self.assertIsNone(self.validated_kmh())
         stop = next(row for row in self.events() if row['event'] == 'stop_requested')
@@ -623,7 +660,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         source = Path(self.environment['TREADMILL_LINUX_HELPER']).read_text().replace("running_profile = argument('-Profile', '--profile') == 'running'", 'running_profile = False')
         walking = self.executable('walking-console-helper', source.split('\n', 1)[1])
         self.environment['TREADMILL_LINUX_HELPER'] = str(walking)
-        code, _ = self.stage('run-7', keep_helper=True)
+        code, _ = self.stage('run-7', keep_helper=True, display=None)
         self.assertNotEqual(code, 0)
         self.assertEqual([f for f in json.loads(self.calls.read_text()) if f.startswith('0253')], [])
         fault = next(row for row in self.events() if row['event'] == 'fault')

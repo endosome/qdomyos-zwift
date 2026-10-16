@@ -179,7 +179,8 @@ def show(plan, trainings, only_week=None):
             print(f"  {session['day']}  {info['name']} - {info['minutes']:.0f} min, ~{info['vertical']:.0f} m, {tag}")
             if session.get("note"):
                 print(f"       {session['note']}")
-            print(f"       treadmill workout run {session['training']} --wait-wake 10 --wait-wake-confirm")
+            flags = "--wait-wake 10 --wait-wake-confirm" + (" --running-mode" if info["sport"] == "running" else "")
+            print(f"       treadmill workout run {session['training']} {flags}")
 
 
 def catalog(trainings):

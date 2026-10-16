@@ -51,6 +51,13 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn('disabled', result.stderr)
 
+    def test_the_linux_helper_is_installed_where_the_cli_looks_for_it(self):
+        # `workout run` defaults to the Linux backend outside WSL; without the helper next to the CLI it cannot run.
+        result = self.command('-c', 'test -x /usr/local/libexec/treadmill/treadmill-linux-helper && '
+                              'test -x "$(dirname "$(command -v treadmill)")/../libexec/treadmill/treadmill-linux-helper" && echo present', shell=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('present', result.stdout)
+
     def test_runtime_and_corresponding_source(self):
         result = self.command('-c',
             'test ! -e /source && test ! -e /build && test "$(id -u)" = 65534 '

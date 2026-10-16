@@ -9,8 +9,10 @@
 // tag 0. Running is opt-in, workouts only, and accepts only the 10-120 / tag 0x20 report the W1 has been seen
 // to send; walking limits are refused in it and running limits are refused in walking, so a plan can never
 // promote itself. The raw speed scale in running mode (raw 100 = 10.0 km/h) is not verified by any
-// motor trial yet, so in the running profile a started run is stopped if the speed the treadmill reports over
-// FTMS disagrees with its FitShow speed, or cannot be observed, while above 6 km/h.
+// motor trial yet. FTMS speed is NOT an independent check of it: in 5,152 logged samples it equals FitShow
+// raw/10 exactly, because both come from the same module. It still catches gross faults, so in the running
+// profile a started run is stopped if FTMS speed disagrees with FitShow speed, or cannot be observed, while
+// above 6 km/h. The scale itself is validated by the operator reading the console display (see motortrial.cpp).
 #include <QByteArray>
 #include <QString>
 #include <QStringList>

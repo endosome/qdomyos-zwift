@@ -501,7 +501,7 @@ int main(int argc, char *argv[]) {
     const QString profileName = parser.value("profile");
     if (profileName != "walking" && profileName != "running") return fail("--profile must be walking or running");
     const Treadmill::Profile profile = profileName == "running" ? Treadmill::Profile::Running : Treadmill::Profile::Walking;
-    if (profile == Treadmill::Profile::Running && !parser.isSet("observe-ftms")) return fail("The running profile requires --observe-ftms: FTMS is the independent speed check");
+    if (profile == Treadmill::Profile::Running && !parser.isSet("observe-ftms")) return fail("The running profile requires --observe-ftms: FTMS is the consistency guard for the speed (it comes from the same module, so it is not a measurement)");
     std::unique_ptr<Helper> helper;
     try {
         helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile)));

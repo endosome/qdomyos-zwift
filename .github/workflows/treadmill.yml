@@ -87,6 +87,8 @@ jobs:
         run: |
           cd /tmp/treadmill-build
           make INSTALL_ROOT=/tmp/treadmill-stage install
+          (cd /tmp/treadmill-linux-helper && make INSTALL_ROOT=/tmp/treadmill-stage install)
+          test -x /tmp/treadmill-stage/usr/local/libexec/treadmill/treadmill-linux-helper
           /tmp/treadmill-stage/usr/local/bin/treadmill workout list
       - name: Build and check clean Linux package
         run: |

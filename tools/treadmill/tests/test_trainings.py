@@ -160,7 +160,15 @@ class PlanTests(unittest.TestCase):
         for path in PLANS:
             result = run(sys.executable, ROOT / 'plan.py', 'show', path, '--fit-tool', FIT_TOOL)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn('treadmill workout run', result.stdout)
+            commands = [line.strip() for line in result.stdout.splitlines() if line.strip().startswith('treadmill workout run')]
+            self.assertTrue(commands)
+            plan = json.loads(path.read_text())
+            running = {s['training'] for w in plan['weeks'] for s in w['sessions'] if 'training' in s
+                       and json.loads((ROOT / 'trainings' / (s['training'] + '.json')).read_text())['sport'] == 'running'}
+            for command in commands:
+                training = command.split()[3]
+                self.assertEqual('--running-mode' in command, training in running, command)
+                self.assertIn('--wait-wake 10 --wait-wake-confirm', command)
 
     def test_guard_rails_reject_unsafe_or_malformed_plans(self):
         weeks = lambda *w: self.plan(list(w))

@@ -66,8 +66,10 @@ static QByteArray targetPayload(int speed, int incline) {
 // ---- Running mode (Linux backend only, opt-in with --running-mode) ----
 // Raw speed above 60 (6.0 km/h) exists only when the console is in running mode, and no motor trial has yet verified
 // that raw 100 means 10.0 km/h there. So running speeds unlock in stages: each staged trial (run-7, run-8, run-10,
-// run-12) approaches its top speed through 6.0 km/h, and only after one completes with the treadmill's FTMS speed
-// agreeing with its FitShow speed is that speed recorded as validated. Workouts above the validated speed are refused.
+// run-12) approaches its top speed through 6.0 km/h. FTMS speed cannot validate the scale (it is the same module's
+// translation of the same raw value; it equals raw/10 exactly in every logged sample), so a stage unlocks its speed only when
+// it completes cleanly AND the operator, asked afterwards, reports that the console display showed the stage speed
+// within 0.1 km/h. Workouts above the validated speed are refused.
 static QString stateDirectory() {
     return qEnvironmentVariableIsSet("TREADMILL_STATE_DIR") ? qEnvironmentVariable("TREADMILL_STATE_DIR")
                                                             : QDir::homePath() + "/.local/state/treadmill";
@@ -79,12 +81,12 @@ static double validatedRunningKmh() {
     const double value = QJsonDocument::fromJson(file.readAll()).object().value("validated_kmh").toDouble(6.0);
     return qBound(6.0, value, 12.0);
 }
-static bool recordRunningValidation(double kmh, const QString &logPath) {
+static bool recordRunningValidation(double kmh, double displayKmh, const QString &logPath) {
     if (kmh <= validatedRunningKmh()) return true;
     QDir().mkpath(stateDirectory());
     QFile file(runningValidationPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
-    file.write(QJsonDocument(QJsonObject{{"validated_kmh", kmh}, {"utc", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
+    file.write(QJsonDocument(QJsonObject{{"validated_kmh", kmh}, {"display_kmh_reported_by_operator", displayKmh}, {"utc", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
                                          {"log", logPath}}).toJson());
     return true;
 }
@@ -254,8 +256,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             : QString("WAIT FOR WAKE, AUTO-START: nothing is sent to the motor until the treadmill is awake (up to %1 s); then the belt STARTS BY ITSELF after %2 s unless you press Q.\n").arg(waitWakeMs / 1000).arg(kWakeGraceMs / 1000))
         << (!runningMode ? QString() : QString(
             "RUNNING MODE, up to %1 km/h. The console must be in running mode and the belt clear of everyone unless you will run at that speed.\n"
-            "The raw speed scale in running mode is unproven: the run stops if the treadmill's FTMS speed disagrees with its own speed or is not seen.\n"
-            "%2").arg(trial.speed / 10.0).arg(stagedRunning ? QString("This is a staged validation trial: it approaches the top speed through 6.0 km/h and returns.\n")
+            "The raw speed scale in running mode is unproven. FTMS (the same module) only guards against gross faults: the run stops if it disagrees with the raw speed or is missing.\n"
+            "%2").arg(trial.speed / 10.0).arg(stagedRunning ? QString("This is a staged validation trial: it approaches the top speed through 6.0 km/h and returns.\n"
+                                                                    "WATCH THE CONSOLE DISPLAY during the 15 s hold at the top speed: afterwards you will be asked what it showed, and the stage unlocks only if you answer within 0.1 km/h of the stage speed.\n")
                                                               : QString("Validated so far: %1 km/h.\n").arg(validatedRunningKmh())))
         << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no pause and no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
         << "Type MOTOR to approve this exact trial: " << Qt::flush;
@@ -283,7 +286,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     bool feedbackAfterStop = false, hasFinalReport = false, ready = false, identityObserved = false;
     qint64 startedAt = -1, runningAt = -1, stoppedAt = -1, latestStatusAt = -1;
     bool sleepNoticed = false, startPrompted = false, startConfirmed = false;
-    // Running mode: the treadmill's FTMS speed is the independent check on the FitShow raw speed scale.
+    // Running mode: FTMS speed is a consistency guard only (same module as FitShow; not a measurement).
     double ftmsKmh = 0;
     qint64 ftmsAt = -1, ftmsMissingSince = -1;
     int speedMismatch = 0, agreeAtTop = 0, lastSpeedTenths = 0, speedAtStop = 0;
@@ -414,7 +417,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             }
             lastSpeedTenths = status.speedTenths;
             if (runningMode && status.state == 3 && status.speedTenths > 60) {
-                // Independent of the helper: above 6 km/h the treadmill's FTMS speed must be visible and agree with FitShow's.
+                // Consistency guard, separate from the helper's: above 6 km/h FTMS speed must be visible and agree with FitShow's.
                 const qint64 nowMs = clock.elapsed();
                 const double fitshowKmh = status.speedTenths / 10.0;
                 if (ftmsAt < 0 || nowMs - ftmsAt > 3000) {
@@ -663,10 +666,26 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     app.exec();
     const bool sequenceObserved = started && stopWritten && feedbackAfterStop && hasFinalReport && !failed;
     if (stagedRunning) {
-        // Unlock a speed only if the whole stage completed and FTMS agreed with FitShow for at least 5 s at the top speed.
-        const bool validated = sequenceObserved && !failed && agreeAtTop >= 10;
-        const bool recorded = validated && recordRunningValidation(trial.speed / 10.0, log.fileName());
+        // Unlock a speed only if the whole stage completed, FTMS and FitShow stayed consistent for at least 5 s at the top
+        // speed, AND the operator reports that the console display showed the stage speed (within 0.1 km/h).
+        const bool clean = sequenceObserved && !failed && agreeAtTop >= 10;
+        QString displayAnswer;
+        double shown = 0;
+        bool displayMatched = false;
+        if (clean) {
+            input.lineMode();
+            record("display_check_requested", {{"stage_kmh", trial.speed / 10.0}});
+            QTextStream(stderr) << "Stage complete and the belt has stopped. What speed did the console DISPLAY during the 15 s hold at the top, in km/h? "
+                                   "(Enter to skip; the stage then unlocks nothing): " << Qt::flush;
+            displayAnswer = QTextStream(stdin).readLine().trimmed();
+            bool numeric = false;
+            shown = displayAnswer.toDouble(&numeric);
+            displayMatched = numeric && std::fabs(shown - trial.speed / 10.0) <= 0.1 + 1e-9;
+        }
+        const bool validated = clean && displayMatched;
+        const bool recorded = validated && recordRunningValidation(trial.speed / 10.0, shown, log.fileName());
         record("running_stage_result", {{"stage_kmh", trial.speed / 10.0}, {"ftms_agreed_samples_at_top", agreeAtTop},
+                                        {"display_answer", displayAnswer}, {"display_matched", displayMatched},
                                         {"validated", validated}, {"validation_recorded", recorded}, {"validated_kmh_now", validatedRunningKmh()}});
     }
     record("trial_result", {{"sequence_observed", sequenceObserved}, {"stop_write_succeeded", stopWritten},

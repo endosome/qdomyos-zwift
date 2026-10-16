@@ -84,7 +84,7 @@ class CliTests(unittest.TestCase):
         self.assertFalse(plan['physical_units_verified'])
         self.assertFalse(plan['physical_stop_verified'])
         self.assertEqual(plan['workout_id'], 'runpad-w1-discovery-demo')
-        self.assertEqual(plan['windows_motor_deadline_seconds'], 430)
+        self.assertEqual(plan['windows_motor_deadline_seconds'], 499)
         self.assertEqual(plan['speed_ceiling_code'], 60)
         self.assertEqual(plan['incline_ceiling_code'], 8)
         steps = plan['workout_steps']

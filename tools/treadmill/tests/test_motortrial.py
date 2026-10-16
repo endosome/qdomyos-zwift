@@ -36,7 +36,7 @@ expected_name = argument('-ExpectedName', '--expected-name')
 Path(os.environ['MOTOR_CALLS'] + '.argv').write_text(json.dumps(sys.argv[1:]))
 if mode == 'batch-fault':
     mode = 'bounds' if trial == 'speed-60' else 'normal'
-observe_ftms = '-ObserveFtms' in sys.argv
+observe_ftms = '-ObserveFtms' in sys.argv or '--observe-ftms' in sys.argv
 calls = []
 moving = False
 ready = False
@@ -457,6 +457,33 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertEqual(next(row for row in events if row['event'] == 'trial_plan')['backend'], 'linux-bluez')
         self.assertTrue(events[-1]['sequence_observed'])
         self.assertFalse(events[-1]['physical_stop_verified'])
+
+    def test_linux_backend_can_observe_ftms_and_requires_the_helper_to_confirm_it(self):
+        self.linux()
+        code, _, errors = self.trial_with(['--observe-ftms'])
+        self.assertEqual(code, 0, errors)
+        events = self.events()
+        self.assertTrue(any(row['event'] == 'ftms_notification' for row in events))
+        self.assertIn('--observe-ftms', json.loads(Path(str(self.calls) + '.argv').read_text()))
+        refused = subprocess.run([BINARY, 'status', '--backend', 'linux', '--observe-ftms'], capture_output=True, env=self.environment)
+        self.assertEqual(refused.returncode, 2)
+        self.assertIn(b'requires control trials or hardware workouts', refused.stderr)
+
+    def trial_with(self, extra, mode='normal'):
+        self.environment['MOTOR_MODE'] = mode
+        master, slave = pty.openpty()
+        process = subprocess.Popen([*self.arguments, '--trial', 'start-stop', '--confirm-motor', '--log', str(self.log), *extra],
+                                   stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        try:
+            os.write(master, b'MOTOR\n')
+            output, errors = process.communicate(timeout=60)
+            return process.returncode, output, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
 
     def test_linux_backend_refuses_a_report_from_another_backend(self):
         self.linux(backend_report='windows-winrt')

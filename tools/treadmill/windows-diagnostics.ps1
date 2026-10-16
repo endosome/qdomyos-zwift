@@ -1,7 +1,7 @@
 # Windows PowerShell 5.1 / native WinRT. Probe requires explicit write approval.
 param(
     [ValidateSet('scan', 'info', 'probe', 'control-test')][string]$Command = 'scan',
-    [ValidateRange(1, 1800)][int]$Timeout = 15,
+    [ValidateRange(1, 4500)][int]$Timeout = 15,
     [string]$Device = '',
     [ValidateSet('unknown', 'public', 'random')][string]$AddressType = 'unknown',
     [switch]$ConfirmDiagnostics,
@@ -31,7 +31,7 @@ if (($Command -eq 'scan' -or $Command -eq 'info') -and $Timeout -gt 60) { throw 
 if ($Command -eq 'probe' -and $Timeout -gt $(if ($MeasureSleepTimer) { 900 } else { 600 })) {
     throw 'Probe timeout exceeds the command-specific bound (600 or 900 seconds)'
 }
-if ($Command -eq 'control-test' -and $Trial -eq 'workout' -and $Timeout -gt 1800) { throw 'Workout timeout is limited to 1800 seconds' }
+if ($Command -eq 'control-test' -and $Trial -eq 'workout' -and $Timeout -gt 4500) { throw 'Workout timeout is limited to 4500 seconds' }
 if ($Command -eq 'control-test' -and $Trial -ne 'workout' -and $Timeout -gt 60) {
     # Existing bounded motor plans have their own fixed 120/240 second budgets.
     $Timeout = 240

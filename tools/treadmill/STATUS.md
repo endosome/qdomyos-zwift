@@ -1,17 +1,18 @@
 # Implementation status
 
-Experimental Windows/WSL playback for predefined W1 workouts is implemented,
-but has not been physically run end to end. It uses the user's provisional
-linear grade assumption and exact-device/raw-limit gates. Native Linux workout
-playback is not connected. See the current checkpoint in
-[HANDOFF.md](../../docs/treadmill/HANDOFF.md#resume-checkpoint-w1-workout-playback-implemented).
+Experimental Windows/WSL playback for predefined W1 workouts is implemented
+and has completed a 120-second on-device command/telemetry run. Physical belt
+stop and incline attainment were not independently verified. It uses the
+user's provisional linear grade assumption and exact-device/raw-limit gates.
+Native Linux workout playback is not connected. See the current checkpoint in
+[HANDOFF.md](../../docs/treadmill/HANDOFF.md#short-workout-playback-experiment-2026-10-16).
 
 Bounded Windows/WSL motor control is physically confirmed for start/stop,
 walking speeds 1.0–6.0 km/h and incline codes 1–8. Pause did not work in the
 verified path. Experimental W1 workout playback is now implemented through the
-Windows/WSL bridge; it has not yet been physically run end to end. Playback is
-pinned to the exact W1, raw bounds and 1.0–6.0 km/h, and requires manual wake,
-interactive MOTOR approval and physical stop access. The RunPad W1
+Windows/WSL bridge and has passed a short on-device command/telemetry run.
+Playback is pinned to the exact W1, raw bounds and 1.0–6.0 km/h, and requires
+manual wake, interactive MOTOR approval and physical stop access. The RunPad W1
 specification provides only a maximum 11% grade and eight levels, not a percent
 for each level; firmware revision and raw speed zero are also unknown. Native
 Linux remains available. The display requires manual wake. In a synchronized
@@ -562,9 +563,103 @@ independently verified. The earlier unsolicited STOPPING remains unexplained,
 but did not recur in this replay. Local log:
 `/tmp/runpad-stop-context-6min-repeat-ftms-20261015-01.jsonl`.
 
+The prepared 120-second `interval-demo` workout subsequently completed all five
+stages at raw speed/incline 10/0, 20/1, 10/0, 20/1 and 10/0, with passive FTMS
+observation. FitShow remained RUNNING through the sequence; 2ACD tracked each
+reported target. After the explicit STOP, FitShow returned to NORMAL and FTMS
+reported zero speed. FitShow and both FTMS subscriptions cleaned up
+successfully; `sequence_observed=true`, `physical_stop_verified=false`.
+This confirms the bounded workout command/telemetry path, not physical stop,
+physical incline arrival, speed-unit calibration or grade mapping. Log:
+`/tmp/runpad-interval-demo-20261016-01.jsonl`.
+
 The previously authorized prepared `remaining` batch is complete: its speed
 50/60 and incline 1–8 trials were completed, and pause was separately found not
 to pause the treadmill. No prepared speed/incline trial remains. Next useful
 FTMS work is to resolve the 2ACC speed-capability mismatch and physically
 verify the low incline target. Do not treat the temporary 2ACD inclination
 echo as proof of deck position; it returned to 0.0% during startup.
+
+### FTMS capability bitmap analysis (2026-10-16)
+
+The captured 2ACC value `9c5600000e000000` advertises Target Setting Features
+`0x0000000e` (little-endian), with speed-target bit 0 clear and inclination
+bit 1 set. Despite that, the W1 accepted FTMS Set Target Speed 1.00 km/h
+(`026400` → `800201`) and 2ACD reported 1.00 km/h while running. Bluetooth SIG's
+FTMS test suite requires the speed-target feature bit for that procedure
+([FTMS TS](https://files.bluetooth.com/wp-content/uploads/dlm_uploads/2024/10/FTMS.TS_.p6.pdf)).
+This is inconsistent device capability reporting; the exact firmware/module
+cause is unknown. Keep FTMS speed control experimental and retain FitShow as
+the production motor path. No source code change was indicated by this review.
+
+The FitShow incline-4 positive-control protocol sequence completed, but settled
+phone readings at levels 4 and returned 0 were not recorded. The earlier
+`incline-measure-4` trials received no live physical arrival marks. Per the
+operator's later instruction, those readings are excluded from grade estimation
+and playback uses the equal-spacing 0–11% interpolation documented in README.
+Physical deck position and FTMS incline actuation remain unverified; telemetry
+and target acknowledgments do not answer those physical questions.
+
+Attempt 03 (2026-10-16) passed identity, limit and NORMAL preflight, then
+reported RUNNING at raw 10/0 and raw 10/4 after the FitShow incline target.
+The runner received no physical B/U arrival marks within 60 seconds and
+requested STOP. It observed the FitShow deceleration to incline 0, three
+NORMAL replies, and successful Windows notification cleanup. `sequence_observed`
+is false; physical arrival, incline readings and physical belt stop are not
+verified. Capture: `/tmp/runpad-incline-measure-4-20261016-03.jsonl`. Do not
+retry until physical stopping is confirmed and an operator can relay the timing
+marks while the CLI waits.
+
+After physical-stop confirmation, attempt 04 was refused at preflight with
+FitShow sleep/safety `06/02`, before motor commands. A five-second read-only
+status probe likewise received five `06/02` replies and cleaned up notifications
+successfully (`/tmp/runpad-status-after-sleep-20261016-01.json`). Wait for a
+manual display wake and a successful read-only NORMAL probe before another
+motor attempt.
+
+After the operator reported awake, a five-second read-only probe returned five
+NORMAL replies. Attempt 05 began at raw 10/0 and reported target 10/4, but no
+physical incline marks were received. The host stopped early; the STOP write
+succeeded, FitShow reported deceleration to incline 0 and speed 1, then three
+NORMAL replies, with notification cleanup Success. The attempt is incomplete;
+physical readings and stop are unverified. Capture:
+`/tmp/runpad-incline-measure-4-20261016-05.jsonl`. Obtain physical-stop
+confirmation before more motor activity and agree on how to send live marks.
+
+The fixed-hold `incline-4` experiment passed its communication sequence after
+an awake/NORMAL preflight: raw 10/0 → 10/4 → 10/0, successful STOP, three
+NORMAL reports and successful notification cleanup (`sequence_observed=true`).
+Capture: `/tmp/runpad-incline-4-fixed-20261016-01.jsonl`. The CLI held each
+reported target for 15 seconds without physical arrival marks. Physical deck
+position and stop remain unverified; do not treat reported incline as physical
+position or as grade calibration. The operator has directed that phone readings
+be ignored and grade values interpolated from the product's 11% maximum across
+eight levels; see the selected estimate in README.
+
+No additional bounded speed/incline control trial remains in the prepared
+suite. The 120-second interval workout also completed end to end at raw speeds
+10/20 and incline codes 0/1 with FTMS observation; see the earlier entry in
+this status file and the latest handoff checkpoint. Remaining acceptance work
+depends on physical observations that the CLI cannot sense: confirmation that
+the belt physically stopped after the latest runs. The exact firmware/model
+label and physical speed-unit validation are also not in the captured BLE
+data. The user-approved grade interpolation remains provisional. No further
+motor run is justified by protocol-only telemetry without a current physical
+stop/controls check.
+
+The next prepared experiment is the 5:10 `runpad-w1-discovery-demo`, which
+steps raw speed 10–60 at incline 0 and then incline codes 1–8–0 at raw speed
+10, using the operator-approved grade interpolation. Its dry-run plan is
+within the 430-second deadline. The current live attempt was stopped at the
+safety gate: a fresh 5-second probe and 30-second read-only observation both
+returned sleep/safety `06/02`; notification cleanup succeeded and no motor
+frames were sent. Do not use the retired READY wake path. A physical console
+wake followed by fresh NORMAL preflight is required before this sampler can
+run.
+
+After the operator reported the display awake, the next read-only probe failed
+before Bluetooth access: WSL could not execute `powershell.exe` (`Exec format
+error`) and `/proc/sys/fs/binfmt_misc/WSLInterop` was absent. No motor commands
+were sent. The existing CLI backend cannot perform WinRT BLE until Windows
+interop is restored. Once restored, repeat the read-only NORMAL preflight and
+continue with the prepared 5:10 discovery sampler.

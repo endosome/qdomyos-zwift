@@ -176,8 +176,14 @@ def run_statistics(rows):
     stats = {"planned_targets": len(steps) or None, "reported_targets": len(reported),
              "stop_reason": stop.get("reason") if stop else None}
     timed = [row["monotonic_ms"] for row in rows if isinstance(row.get("monotonic_ms"), (int, float))]
+    started = next((row["monotonic_ms"] for row in rows if row.get("event") == "start_requested"
+                    and isinstance(row.get("monotonic_ms"), (int, float))), None)
     if timed:
-        stats["elapsed_s"] = (max(timed) - min(timed)) / 1000.0
+        # From the start request when there was one: a wait-for-wake before the start is reported separately.
+        begin = started if started is not None else min(timed)
+        stats["elapsed_s"] = (max(timed) - begin) / 1000.0
+        if started is not None and started - min(timed) >= 10000:
+            stats["wait_before_start_s"] = (started - min(timed)) / 1000.0
     if steps:
         stats["nominal_hold_s"] = sum(step.get("hold_seconds", 0) for step in steps)
         stats["deadline_s"] = plan.get("windows_motor_deadline_seconds")
@@ -206,6 +212,8 @@ def print_statistics(rows):
     if "elapsed_s" in stats:
         nominal = f" (plan {stats['nominal_hold_s']:.0f} s of holds, deadline {stats['deadline_s']} s)" if "nominal_hold_s" in stats else ""
         print(f"  elapsed: {stats['elapsed_s']:.0f} s{nominal}")
+    if "wait_before_start_s" in stats:
+        print(f"  waited {stats['wait_before_start_s']:.0f} s before the start (connecting, then waiting for the console to wake and for the start)")
     if "step_overhead_s" in stats:
         mean, low, high = stats["step_overhead_s"]
         print(f"  per-step overhead: mean {mean:.2f} s, min {low:.2f} s, max {high:.2f} s, total {stats['step_overhead_total_s']:.0f} s")

@@ -81,6 +81,16 @@ class SummarizeRunTests(unittest.TestCase):
         self.assertIn('targets reported: 3 of 4', output.getvalue())
         self.assertIn('a console stop looks the same', output.getvalue())
 
+    def test_elapsed_counts_from_the_start_and_reports_the_wait_separately(self):
+        rows = [{'event': 'trial_plan', 'monotonic_ms': 0}, {'event': 'waiting_for_wake', 'monotonic_ms': 3000},
+                {'event': 'start_requested', 'monotonic_ms': 185000}, {'event': 'raw_status', 'monotonic_ms': 190000, 'status_code': 3},
+                {'event': 'raw_status', 'monotonic_ms': 285000, 'status_code': 3}]
+        stats = summarize_run.run_statistics(rows)
+        self.assertEqual(stats['elapsed_s'], 100.0)
+        self.assertEqual(stats['wait_before_start_s'], 185.0)
+        short = summarize_run.run_statistics([{'event': 'start_requested', 'monotonic_ms': 4000}, {'event': 'raw_status', 'monotonic_ms': 9000}])
+        self.assertNotIn('wait_before_start_s', short)  # a normal few-second preflight is not a "wait"
+
     def test_statistics_without_a_plan_do_not_fail(self):
         stats = summarize_run.run_statistics([{'event': 'raw_status', 'monotonic_ms': 5, 'status_code': 0}])
         self.assertIsNone(stats['planned_targets'])

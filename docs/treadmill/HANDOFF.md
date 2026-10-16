@@ -1142,15 +1142,14 @@ after the trial deadline, and a refused first BlueZ connect is retried up to thr
 any command is sent. A 60-minute plan, `workouts/uphill-walk-60.xml` (99 targets, same speed and
 incline ceilings), was added; its first run is next.
 
-### First 60-minute attempt: device-initiated STOPPING reproduced on Linux (2026-10-16)
+### First 60-minute attempt: stopped by the operator (2026-10-16)
 
-`uphill-walk-60` ran from 13:19:28 and ended at 824 s (13:33:12 wall clock), stage 14 of 99, with
-the host's own `Unexpected motor feedback` stop. The W1 reported status 4 (decelerating) at raw
-speed 29/incline 3 while the host had sent nothing but 51 polls for the previous 90 s and was
-inside a 190 s hold (3.0 km/h, incline 4) whose next target change was due at 869 s. Incline then
-fell 4 -> 3 -> 0 and speed 29 -> 1 over about 5 s, then three NORMAL replies; the host's STOP
-and CCCD cleanup succeeded. So this is the same unexplained device-side STOPPING seen earlier on
-the Windows bridge, now on the native Linux transport: WSL interop is not (the only) cause.
-Earlier occurrences: 5:28, 8:37 (FTMS repeat), about 18 s, about 57 s. The 20-minute run on Linux
-(1273 s) did not hit it. No operator input was recorded; whether anyone touched the console around
-13:33:12 is the first thing to establish. Log: `~/treadmill-logs/uphill-walk-60-20261016-131928.jsonl`.
+`uphill-walk-60` ran from 13:19:28 and ended at 824 s (13:33:12 wall clock), stage 14 of 99. The W1
+reported status 4 (decelerating) at raw speed 29/incline 3 with no host command beforehand (only
+51 polls), then incline fell 4 -> 3 -> 0 and speed 29 -> 1 over about 5 s, followed by three
+NORMAL replies. The operator confirmed afterwards that they stopped the session by accident on
+the console, so this is NOT an unexplained device-side STOPPING and is not evidence either way
+about the earlier Windows-bridge events (5:28, 8:37, about 18 s, about 57 s). The host reacted
+correctly: it stopped on the unexpected status 4, STOP and cleanup succeeded. A console stop is
+indistinguishable in the telemetry from a device-initiated one. Log:
+`~/treadmill-logs/uphill-walk-60-20261016-131928.jsonl`. The run is being restarted.

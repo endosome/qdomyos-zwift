@@ -85,12 +85,29 @@ class Helper : public QObject {
         if (state_ != State::Scanning || info.address() != address_) return;
         if (info.name() != name_) { shutdown("Selected device name differs from the operator-confirmed name: " + info.name()); return; }
         agent_.stop();
+        info_ = info;
+        openController();
+    }
+
+    // BlueZ sometimes refuses the first connect with "Unknown Error". Nothing has been written at that
+    // point, so the connect phase alone is retried (three attempts); later errors still shut down.
+    void openController() {
         state_ = State::Connecting;
         step("connect");
-        controller_ = QLowEnergyController::createCentral(info, this);
+        controller_ = QLowEnergyController::createCentral(info_, this);
         controller_->setRemoteAddressType(QLowEnergyController::PublicAddress);
-        connect(controller_, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this,
-                [this]() { shutdown("Controller error: " + controller_->errorString()); });
+        connect(controller_, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, [this]() {
+            const QString reason = controller_->errorString();
+            if (state_ == State::Connecting && ++connectAttempts_ < 3) {
+                auto *failed = controller_;
+                controller_ = nullptr;
+                failed->disconnect(this);
+                failed->deleteLater();
+                QTimer::singleShot(1500, this, [this]() { if (state_ == State::Connecting) openController(); });
+                return;
+            }
+            shutdown("Controller error: " + reason);
+        });
         connect(controller_, &QLowEnergyController::disconnected, this, [this]() {
             disconnected_ = true;
             if (state_ != State::Closing) shutdown("Device disconnected");
@@ -174,7 +191,7 @@ class Helper : public QObject {
 
     void onDescriptorWritten(const QByteArray &value) {
         if (state_ == State::Subscribing) {
-            state_ = State::Running; step("running");
+            state_ = State::Running; step("running"); readyAt_ = clock_.elapsed();
             emitLine("READY\t" + name_);
         } else if (state_ == State::Closing && closeStep_ == CloseStep::Unsubscribe && value == QByteArray::fromHex("0000")) {
             cleanupStatus_ = "Success";
@@ -220,10 +237,11 @@ class Helper : public QObject {
         if (overflow_) { shutdown("Output queue overflow; closing connection"); return; }
         if (!inputFault_.isEmpty()) { shutdown(inputFault_); return; }
         if (cancelled_) { shutdown(QString()); return; }
-        if (clock_.elapsed() >= qint64(seconds_) * 1000) {
-            shutdown(state_ == State::Running ? QString() : "Inspection deadline exceeded");
-            return;
-        }
+        // Setup (scan, connect, identity) has its own 30 s budget, like the host's preflight limit. Once running,
+        // the gate bounds the motor to the trial deadline and forces a STOP; this is only a backstop that leaves
+        // room for the host's 30 s preflight and 10 s post-stop observation after READY.
+        if (state_ != State::Running && clock_.elapsed() >= 30000) { shutdown("Inspection deadline exceeded"); return; }
+        if (state_ == State::Running && clock_.elapsed() - readyAt_ >= (qint64(seconds_) + 45) * 1000) { shutdown(QString()); return; }
         if (state_ != State::Running) return;
         if (gate_.needsStop(clock_.elapsed())) { shutdown("Linux motor watchdog requested stop"); return; }
         if (writeInFlight_ || commands_.isEmpty()) return;
@@ -364,6 +382,9 @@ class Helper : public QObject {
     QString writeHex_, inputFault_, lastOperation_, status_ = "complete", error_, cleanupStatus_ = "not_enabled";
     QList<QByteArray> commands_, output_;
     int offset_ = 0;
+    qint64 readyAt_ = 0;
+    int connectAttempts_ = 0;
+    QBluetoothDeviceInfo info_;
     bool subscribed_ = false, collecting_ = true, writeInFlight_ = false, overflow_ = false, cancelled_ = false, disconnected_ = false;
 };
 

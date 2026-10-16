@@ -45,7 +45,7 @@ class LinuxHelperTests(unittest.TestCase):
     def test_deadline_is_bounded(self):
         self.refused(*BASE, '--timeout', '0', message='Session duration')
         self.refused(*BASE, '--timeout', '241', message='Session duration')
-        self.refused(*BASE, '--trial', 'workout', '--target-sequence', '20:1', '--timeout', '4501',
+        self.refused(*BASE, '--trial', 'workout', '--target-sequence', '20:1', '--timeout', '9001',
                      message='Session duration')
         self.refused(*BASE, '--timeout', 'soon', message='Session duration')
 

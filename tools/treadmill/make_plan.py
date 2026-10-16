@@ -15,7 +15,7 @@ from xml.sax.saxutils import quoteattr
 
 GRADE_PER_LEVEL = 11.0 / 8.0
 MIN_SPEED, MAX_SPEED = 1.0, 6.0
-MAX_MINUTES = 70
+MAX_MINUTES = 120  # the Linux backend; the Windows bridge stops at 70
 W1_ADDRESS, W1_NAME = "DD:87:70:39:74:20", "FS-0F7A32"
 
 

@@ -224,6 +224,48 @@ class FitTests(unittest.TestCase):
         _, distance, _ = self.expected([(60, 40, 3)])
         self.assertIn('%.2f km' % (distance / 1000), result.stdout)
 
+    @unittest.skipUnless(CLI, 'needs the treadmill binary')
+    def test_long_sessions_are_allowed_on_linux_only_and_announce_themselves(self):
+        import os, pty
+        long_block = {'repeat': 10, 'steps': [{'name': 'Climb', 'minutes': 8, 'speed': 4.0, 'level': 6, 'intensity': 'active'},
+                                              {'name': 'Ease', 'minutes': 2, 'speed': 3.0, 'level': 2, 'intensity': 'recovery'}]}
+        spec = self.spec({'steps': [long_block]}, name='long100')
+        result, out = self.build(spec)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        linux = run(CLI, 'workout', 'run', str(out), '--dry-run', *ADDRESS)
+        self.assertEqual(linux.returncode, 0, linux.stderr)
+        plan = json.loads(linux.stdout)
+        self.assertEqual(plan['windows_motor_deadline_seconds'], 6000 + 120 + 3 * plan['step_count'])
+        self.assertGreater(plan['windows_motor_deadline_seconds'], 4500)
+        windows = run(CLI, 'workout', 'run', str(out), '--dry-run', '--backend', 'windows', '--device', 'DD:87:70:39:74:20',
+                      '--expected-name', 'FS-0F7A32', '--address-type', 'public')
+        self.assertEqual(windows.returncode, 2)
+        self.assertIn('limited to 70 minutes', windows.stderr)
+        # The MOTOR prompt warns about a long run; answering anything else cancels before Bluetooth is opened.
+        master, slave = pty.openpty()
+        try:
+            process = subprocess.Popen([CLI, 'workout', 'run', str(out), '--confirm-motor', '--log', str(self.directory / 'long.jsonl'), *ADDRESS],
+                                       stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(os.environ, TREADMILL_LINUX_HELPER='/nonexistent'))
+            os.write(master, b'NO\n')
+            _, errors = process.communicate(timeout=30)
+        finally:
+            os.close(master); os.close(slave)
+        self.assertIn(b'LONG RUN (100 min)', errors)
+        self.assertIn(b'check the motor housing', errors)
+        self.assertEqual(process.returncode, 2)
+        self.assertFalse((self.directory / 'long.jsonl').exists())
+        short = self.spec(name='short')
+        self.build(short)
+        master, slave = pty.openpty()
+        try:
+            process = subprocess.Popen([CLI, 'workout', 'run', str(short.with_suffix('.fit')), '--confirm-motor', '--log', str(self.directory / 'short.jsonl'), *ADDRESS],
+                                       stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(os.environ, TREADMILL_LINUX_HELPER='/nonexistent'))
+            os.write(master, b'NO\n')
+            _, errors = process.communicate(timeout=30)
+        finally:
+            os.close(master); os.close(slave)
+        self.assertNotIn(b'LONG RUN', errors)
+
     def test_nested_repeats_and_over_long_trainings_are_refused(self):
         inner = {'repeat': 2, 'steps': [{'name': 'S', 'minutes': 2, 'speed': 3.0, 'level': 2}]}
         self.refused({'steps': [{'repeat': 2, 'steps': [inner]}]}, 'cannot be nested')

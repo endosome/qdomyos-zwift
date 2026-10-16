@@ -68,7 +68,7 @@ The format has these rules:
   `inclinationto`.
 - Ramps play as 10-second steps.
 - `<repeat times="N">` can wrap rows. Repeats can't be nested.
-- A plan can be up to 70 minutes long, with up to 512 distinct speed/incline
+- A plan can be up to 120 minutes long on the Linux backend (70 on the Windows bridge), with up to 512 distinct speed/incline
   changes.
 
 To generate a climb/recover plan instead of writing XML, use `make_plan.py`. It

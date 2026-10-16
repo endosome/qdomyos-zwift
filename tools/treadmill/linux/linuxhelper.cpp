@@ -411,7 +411,7 @@ int main(int argc, char *argv[]) {
     const QString trial = parser.value("trial");
     bool timeoutOk = false;
     const int seconds = parser.value("timeout").toInt(&timeoutOk);
-    if (!timeoutOk || seconds < 1 || seconds > (trial == "workout" ? 4500 : 240)) return fail("Session duration exceeds its bounded scope");
+    if (!timeoutOk || seconds < 1 || seconds > (trial == "workout" ? 9000 : 240)) return fail("Session duration exceeds its bounded scope");
     bool waitOk = false;
     const int waitWake = parser.value("wait-wake").toInt(&waitOk);
     if (!waitOk || waitWake < 0 || waitWake > 1800) return fail("--wait-wake must be 0-1800 seconds");

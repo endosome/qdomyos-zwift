@@ -45,7 +45,7 @@ class MakePlanTests(unittest.TestCase):
         self.assertIn('0.1 steps', self.refused('--climb-speed', '3.05'))
         self.assertIn('level from 0 to 8', self.refused('--climb-level', '9'))
         self.assertIn('must not exceed', self.refused('--climb-level', '2', '--recover-level', '3'))
-        self.assertIn('limit is 70', self.refused('--repeats', '12', '--climb-minutes', '5'))
+        self.assertIn('limit is 120', self.refused('--repeats', '20', '--climb-minutes', '5'))
         self.assertIn('at least 10', self.refused('--recover-minutes', '0.1'))
         self.assertIn('--id', make_plan_error(['--id', 'bad id']))
 

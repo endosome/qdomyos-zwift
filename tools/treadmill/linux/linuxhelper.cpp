@@ -233,6 +233,7 @@ class Helper : public QObject {
         connect(ftms_, &QLowEnergyService::characteristicChanged, this, [this](const QLowEnergyCharacteristic &c, const QByteArray &bytes) {
             // Qt can deliver other FTMS characteristics (it reads values itself, e.g. 2ad3); the host accepts only these two.
             if (!collecting_ || (c.uuid() != kFtmsData && c.uuid() != kFtmsStatus)) return;
+            if (c.uuid() == kFtmsData) gate_.observeFtms(bytes, clock_.elapsed());
             emitLine("FTMS\t" + c.uuid().toString(QUuid::WithoutBraces) + '\t' + QString::fromLatin1(bytes.toHex()));
         });
         connect(ftms_, &QLowEnergyService::descriptorWritten, this,
@@ -299,7 +300,11 @@ class Helper : public QObject {
         if (state_ != State::Running && clock_.elapsed() >= 30000) { shutdown("Inspection deadline exceeded"); return; }
         if (state_ == State::Running && clock_.elapsed() - readyAt_ >= (qint64(seconds_) + waitWake_ + 45) * 1000) { shutdown(QString()); return; }
         if (state_ != State::Running) return;
-        if (gate_.needsStop(clock_.elapsed())) { shutdown("Linux motor watchdog requested stop"); return; }
+        if (gate_.needsStop(clock_.elapsed())) {
+            shutdown(gate_.stopReason().isEmpty() ? QString("Linux motor watchdog requested stop")
+                                                  : "Linux motor watchdog requested stop: " + gate_.stopReason());
+            return;
+        }
         if (writeInFlight_ || commands_.isEmpty()) return;
         processCommand(commands_.takeFirst());
     }
@@ -479,6 +484,7 @@ int main(int argc, char *argv[]) {
     parser.addOption({"confirm-motor", "The CLI host obtained typed MOTOR approval."});
     parser.addOption({"wait-wake", "Extra seconds the host may wait for the console to wake before the start.", "seconds", "0"});
     parser.addOption({"observe-ftms", "Also stream FTMS Treadmill Data and Status notifications (observation only, no FTMS writes)."});
+    parser.addOption({"profile", "Motor profile: walking (default, raw speed 10-60) or running (opt-in, 10-120, needs --observe-ftms).", "name", "walking"});
     parser.process(app);
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
     const QBluetoothAddress address(parser.value("device"));
@@ -492,9 +498,13 @@ int main(int argc, char *argv[]) {
     bool waitOk = false;
     const int waitWake = parser.value("wait-wake").toInt(&waitOk);
     if (!waitOk || waitWake < 0 || waitWake > 1800) return fail("--wait-wake must be 0-1800 seconds");
+    const QString profileName = parser.value("profile");
+    if (profileName != "walking" && profileName != "running") return fail("--profile must be walking or running");
+    const Treadmill::Profile profile = profileName == "running" ? Treadmill::Profile::Running : Treadmill::Profile::Walking;
+    if (profile == Treadmill::Profile::Running && !parser.isSet("observe-ftms")) return fail("The running profile requires --observe-ftms: FTMS is the independent speed check");
     std::unique_ptr<Helper> helper;
     try {
-        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds)));
+        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile)));
     } catch (const std::exception &error) { return fail(QString::fromUtf8(error.what())); }
     QTimer::singleShot(0, &app, [&]() { helper->start(); });
     return app.exec();

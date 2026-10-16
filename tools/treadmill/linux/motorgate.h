@@ -4,17 +4,29 @@
 // the CLI host has its own gates, and this one still refuses anything the host gets wrong.
 // Only start-stop, speed-N, incline-N and workout plans are supported. Pause, READY and
 // operator-timed trials are not available on the Linux backend.
+//
+// Two profiles. Walking (default) accepts only the reviewed walking-mode limits, raw speed 10-60 with unit
+// tag 0. Running is opt-in, workouts only, and accepts only the 10-120 / tag 0x20 report the W1 has been seen
+// to send; walking limits are refused in it and running limits are refused in walking, so a plan can never
+// promote itself. The raw speed scale in running mode (raw 100 = 10.0 km/h) is not verified by any
+// motor trial yet, so in the running profile a started run is stopped if the speed the treadmill reports over
+// FTMS disagrees with its FitShow speed, or cannot be observed, while above 6 km/h.
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
+#include <cmath>
 #include <stdexcept>
 #include <vector>
 
 namespace Treadmill {
 
+enum class Profile { Walking, Running };
+
 class MotorGate {
   public:
-    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds) {
+    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds, Profile profile = Profile::Walking)
+        : profile_(profile) {
+        if (profile == Profile::Running && trial != "workout") throw std::invalid_argument("The running profile supports workouts only");
         targets_ = {targetFrame(10, 0)};
         const QStringList parts = trial.split('-');
         bool numeric = false;
@@ -31,7 +43,7 @@ class MotorGate {
                 bool speedOk = false, inclineOk = false;
                 const int speed = fields.size() == 2 ? fields[0].toInt(&speedOk) : 0;
                 const int incline = fields.size() == 2 ? fields[1].toInt(&inclineOk) : 0;
-                if (!speedOk || !inclineOk || speed < 10 || speed > 60 || incline < 0 || incline > 8 ||
+                if (!speedOk || !inclineOk || speed < 10 || speed > maxSpeedCode() || incline < 0 || incline > 8 ||
                     (speed == previousSpeed && incline == previousIncline))
                     throw std::invalid_argument("Workout targets must be distinct, validated W1 speed/incline codes");
                 targets_.push_back(targetFrame(speed, incline));
@@ -68,6 +80,16 @@ class MotorGate {
         return bytes;
     }
 
+    // Feeds one FTMS Treadmill Data (2ACD) notification; only the instantaneous speed is read.
+    void observeFtms(const QByteArray &bytes, qint64 now) {
+        if (bytes.size() < 4) return;
+        const int flags = int(quint8(bytes[0])) | (int(quint8(bytes[1])) << 8);
+        if (flags & 1) return; // "more data": speed is absent from this frame
+        ftmsSpeedKmh_ = (int(quint8(bytes[2])) | (int(quint8(bytes[3])) << 8)) / 100.0;
+        ftmsAt_ = now;
+    }
+    QString stopReason() const { return stopReason_; }
+
     // Feeds one FFF1 notification. Only checksum-valid frames of the lengths QZ uses refresh the clock.
     void observe(const QByteArray &bytes, qint64 now) {
         try { parse(QString::fromLatin1(bytes.toHex())); } catch (const std::exception &) { return; }
@@ -84,10 +106,11 @@ class MotorGate {
             if (state != 0 && state != 2 && !motorData && state != 5 && state != 6 && state != 7) return;
             statusAt_ = now;
             normalReports_ = state == 0 ? normalReports_ + 1 : 0;
-            if (started() && (state == 5 || state == 6 || state == 7 || state == 10 || state == 1)) stopRequired_ = true;
-            if (started() && motorData && (at(3) > speedCeiling_ || at(4) > inclineCeiling_ || at(4) > 127)) stopRequired_ = true;
+            if (started() && (state == 5 || state == 6 || state == 7 || state == 10 || state == 1)) require("Treadmill reported fault, disabled or paused state");
+            if (started() && motorData && (at(3) > speedCeiling_ || at(4) > inclineCeiling_ || at(4) > 127)) require("Unexpected motor feedback");
+            if (started() && profile_ == Profile::Running && state == 3 && motorData && at(3) > 60) checkSpeedAgreement(at(3) / 10.0, now);
         }
-        if (started() && !boundsMatch()) stopRequired_ = true;
+        if (started() && !boundsMatch()) require("Limits changed during the run");
     }
 
     bool needsStop(qint64 now) const {
@@ -125,14 +148,37 @@ class MotorGate {
                                char(0x53 ^ 2 ^ speed ^ incline) + char(3)};
         return QString::fromLatin1(bytes.toHex());
     }
+    int maxSpeedCode() const { return profile_ == Profile::Running ? 120 : 60; }
+    int unitTag() const { return profile_ == Profile::Running ? 0x20 : 0; }
     bool boundsMatch() const {
-        return minimum_ == 10 && maximum_ == 60 && unit_ == 0 && inclineMinimum_ == 0 && inclineMaximum_ == 8;
+        return minimum_ == 10 && maximum_ == maxSpeedCode() && unit_ == unitTag() && inclineMinimum_ == 0 && inclineMaximum_ == 8;
+    }
+    void require(const QString &reason) { stopRequired_ = true; if (stopReason_.isEmpty()) stopReason_ = reason; }
+    // Above 6 km/h the raw speed scale is unverified: FTMS must be observable and must agree. The two streams
+    // have no guaranteed order, so missing or stale FTMS speed stops the run only if it persists for 2 s.
+    void checkSpeedAgreement(double fitshowKmh, qint64 now) {
+        if (ftmsAt_ < 0 || now - ftmsAt_ > 3000) {
+            if (ftmsMissingSince_ < 0) ftmsMissingSince_ = now;
+            if (now - ftmsMissingSince_ >= 2000) require("FTMS speed cannot be observed; the raw speed scale is unverified");
+            return;
+        }
+        ftmsMissingSince_ = -1;
+        if (std::fabs(ftmsSpeedKmh_ - fitshowKmh) > 0.6) {
+            if (++speedMismatch_ >= 4) require(QString("FTMS speed %1 km/h disagrees with FitShow speed %2 km/h").arg(ftmsSpeedKmh_).arg(fitshowKmh));
+        } else {
+            speedMismatch_ = 0;
+        }
     }
 
     int minimum_ = -1, maximum_ = -1, unit_ = -1, inclineMinimum_ = -1, inclineMaximum_ = -1;
     int normalReports_ = 0;
     qint64 statusAt_ = -1, startedAt_ = -1;
     bool stopRequired_ = false, stopAttempted_ = false;
+    Profile profile_ = Profile::Walking;
+    double ftmsSpeedKmh_ = 0;
+    qint64 ftmsAt_ = -1, ftmsMissingSince_ = -1;
+    int speedMismatch_ = 0;
+    QString stopReason_;
     int speedCeiling_ = 10, inclineCeiling_ = 0, deadlineMs_ = 12000;
     std::vector<QString> targets_;
     size_t targetIndex_ = 0;

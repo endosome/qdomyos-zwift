@@ -1,6 +1,7 @@
 #include "motorgate.h"
 #include <gtest/gtest.h>
 using Treadmill::MotorGate;
+using Treadmill::Profile;
 
 namespace {
 const QString kStart = "02530100000000000000005203";
@@ -221,4 +222,148 @@ TEST(MotorGate, SpeedAndInclineTrialsOnlyAllowTheirOwnTargets) {
     EXPECT_NO_THROW(gate.approve(target(10, 0), 0));
     EXPECT_NO_THROW(gate.approve(target(30, 0), 0));
     EXPECT_NO_THROW(gate.approve(target(10, 0), 0));
+}
+
+namespace {
+QByteArray runningLimits() { return frame(QByteArray::fromHex("50027" "80a20")); } // max 120, min 10, unit tag 0x20
+QByteArray ftmsFrame(double kmh) {
+    const int hundredths = int(kmh * 100 + 0.5);
+    QByteArray bytes = QByteArray::fromHex("8c05") + char(hundredths & 0xff) + char(hundredths >> 8) + QByteArray(15, '\0');
+    return bytes;
+}
+void runningPreflight(MotorGate &gate, qint64 now = 0) {
+    gate.observe(runningLimits(), now);
+    gate.observe(inclineLimits(), now);
+    for (int i = 0; i < 3; ++i) gate.observe(normal(), now);
+}
+// A started 12 km/h-ceiling workout in the running profile.
+MotorGate startedRunning(const QString &sequence = "80:0,120:2") {
+    MotorGate gate("workout", sequence, 600, Profile::Running);
+    runningPreflight(gate);
+    gate.approve(kStart, 0);
+    return gate;
+}
+}
+
+TEST(MotorGateRunning, OnlyTheRunningLimitsStartARunningWorkoutAndOnlyWalkingLimitsStartAWalkingOne) {
+    MotorGate running("workout", "80:0", 600, Profile::Running);
+    preflight(running); // walking-mode limits: 10-60, unit 0
+    EXPECT_THROW(running.approve(kStart, 0), std::invalid_argument);
+    runningPreflight(running);
+    EXPECT_NO_THROW(running.approve(kStart, 0));
+    MotorGate walking("workout", "50:0", 600);
+    runningPreflight(walking); // running-mode limits must never start a walking plan
+    EXPECT_THROW(walking.approve(kStart, 0), std::invalid_argument);
+}
+
+TEST(MotorGateRunning, ChangedLimitsAfterTheStartStopTheRun) {
+    MotorGate gate = startedRunning();
+    gate.observe(runningLimits(), 100);
+    gate.observe(status(3, 80, 0), 100);
+    gate.observeFtms(ftmsFrame(8.0), 100);
+    EXPECT_FALSE(gate.needsStop(101));
+    gate.observe(limits(), 200); // the console switched back to walking limits mid-run
+    gate.observe(status(3, 80, 0), 200);
+    EXPECT_TRUE(gate.needsStop(201));
+    EXPECT_EQ(gate.stopReason(), "Limits changed during the run");
+}
+
+TEST(MotorGateRunning, SpeedLimitsFollowTheProfile) {
+    EXPECT_NO_THROW(MotorGate("workout", "120:8", 600, Profile::Running));
+    EXPECT_THROW(MotorGate("workout", "121:0", 600, Profile::Running), std::invalid_argument);
+    EXPECT_THROW(MotorGate("workout", "70:0", 600), std::invalid_argument); // walking profile stays at raw 60
+    EXPECT_NO_THROW(MotorGate("workout", "60:8", 600));
+    EXPECT_THROW(MotorGate("speed-30", "", 60, Profile::Running), std::invalid_argument);
+    EXPECT_THROW(MotorGate("start-stop", "", 12, Profile::Running), std::invalid_argument);
+}
+
+TEST(MotorGateRunning, RunningTargetsAreAllowedInOrderAndAboveTheCeilingStops) {
+    MotorGate gate = startedRunning("80:0,120:2");
+    EXPECT_NO_THROW(gate.approve(target(80, 0), 0));
+    EXPECT_NO_THROW(gate.approve(target(120, 2), 0));
+    gate.observe(status(3, 120, 2), 100);
+    gate.observeFtms(ftmsFrame(12.0), 100);
+    EXPECT_FALSE(gate.needsStop(101));
+    gate.observe(status(3, 121, 2), 200);
+    EXPECT_TRUE(gate.needsStop(201));
+}
+
+TEST(MotorGateRunning, FtmsAgreementIsRequiredAboveSixKmh) {
+    {   // agreeing speeds: fine
+        MotorGate gate = startedRunning();
+        for (int i = 0; i < 10; ++i) { gate.observeFtms(ftmsFrame(8.1), 100 + i * 100); gate.observe(status(3, 80, 0), 100 + i * 100); }
+        EXPECT_FALSE(gate.needsStop(1000));
+    }
+    {   // four consecutive disagreeing status reports: stop, with the reason
+        MotorGate gate = startedRunning();
+        gate.observeFtms(ftmsFrame(6.5), 100);
+        for (int i = 0; i < 3; ++i) { gate.observe(status(3, 80, 0), 100 + i * 100); EXPECT_FALSE(gate.needsStop(101 + i * 100)); }
+        gate.observe(status(3, 80, 0), 400);
+        EXPECT_TRUE(gate.needsStop(401));
+        EXPECT_TRUE(gate.stopReason().contains("disagrees"));
+    }
+    {   // a transient mismatch that clears does not accumulate
+        MotorGate gate = startedRunning();
+        for (int round = 0; round < 3; ++round) {
+            gate.observeFtms(ftmsFrame(6.5), 100 + round * 1000);
+            for (int i = 0; i < 3; ++i) gate.observe(status(3, 80, 0), 100 + round * 1000 + i);
+            gate.observeFtms(ftmsFrame(8.0), 500 + round * 1000);
+            gate.observe(status(3, 80, 0), 600 + round * 1000);
+        }
+        EXPECT_FALSE(gate.needsStop(3100));
+    }
+    {   // no FTMS speed at all above 6 km/h: tolerated for a moment (the streams are unordered), then stopped
+        MotorGate gate = startedRunning();
+        gate.observe(status(3, 80, 0), 100);
+        EXPECT_FALSE(gate.needsStop(101));
+        gate.observe(status(3, 80, 0), 1500);
+        EXPECT_FALSE(gate.needsStop(1501));
+        gate.observe(status(3, 80, 0), 2200);
+        EXPECT_TRUE(gate.needsStop(2201));
+        EXPECT_TRUE(gate.stopReason().contains("cannot be observed"));
+    }
+    {   // an FTMS sample arriving just after the first status clears the doubt
+        MotorGate gate = startedRunning();
+        gate.observe(status(3, 80, 0), 100);
+        gate.observeFtms(ftmsFrame(8.0), 600);
+        for (int t = 700; t <= 5000; t += 500) { gate.observeFtms(ftmsFrame(8.0), t); gate.observe(status(3, 80, 0), t); }
+        EXPECT_FALSE(gate.needsStop(5001));
+    }
+    {   // FTMS went silent: stale after 3 s, stop 2 s later
+        MotorGate gate = startedRunning();
+        gate.observeFtms(ftmsFrame(8.0), 100);
+        gate.observe(status(3, 80, 0), 3000);
+        EXPECT_FALSE(gate.needsStop(3050));
+        gate.observe(status(3, 80, 0), 3200); // FTMS is 3.1 s old: the doubt starts here
+        EXPECT_FALSE(gate.needsStop(3201));
+        gate.observe(status(3, 80, 0), 5300);
+        EXPECT_TRUE(gate.needsStop(5301));
+    }
+    {   // up to 6 km/h the check does not apply, even without FTMS
+        MotorGate gate = startedRunning("50:0,80:0");
+        gate.observe(status(3, 50, 0), 100);
+        gate.observe(status(3, 60, 0), 200);
+        EXPECT_FALSE(gate.needsStop(250));
+    }
+    {   // a "more data" frame carries no speed and must not refresh the clock
+        MotorGate gate = startedRunning();
+        gate.observeFtms(ftmsFrame(8.0), 100);
+        QByteArray more = ftmsFrame(8.0);
+        more[0] = char(0x8d);
+        gate.observeFtms(more, 2000);
+        gate.observe(status(3, 80, 0), 3500); // the last real speed sample is 3.4 s old: the doubt starts
+        EXPECT_FALSE(gate.needsStop(3501));
+        gate.observeFtms(more, 5000);
+        gate.observe(status(3, 80, 0), 5600);
+        EXPECT_TRUE(gate.needsStop(5601));
+    }
+    {   // the walking profile ignores FTMS entirely
+        MotorGate gate("workout", "60:0", 600);
+        preflight(gate);
+        gate.approve(kStart, 0);
+        gate.observeFtms(ftmsFrame(2.0), 100);
+        gate.observe(status(3, 60, 0), 100);
+        gate.observe(status(3, 60, 0), 200);
+        EXPECT_FALSE(gate.needsStop(250));
+    }
 }

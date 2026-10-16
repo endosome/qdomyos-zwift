@@ -1,0 +1,160 @@
+{
+  "id": "plan-run-speed-hills-6w",
+  "name": "Running speed with varying incline, 6 weeks (running mode)",
+  "goal": "Raise running speed and hill power: fartlek with grade changes, short steep sprints, a speed pyramid up to 12 km/h and incline tempo blocks, then a taper.",
+  "audience": "Healthy runners who can already run 10 km/h for 30 minutes. Needs the console's handrail raised (running mode) and the staged running-speed validation (run-7 to run-12) done first; the CLI refuses speeds that are not validated. The treadmill has no downhill, so add outdoor running for descents.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: speed play with hills",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-fartlek-incline-50",
+          "note": "Fast RPE 7, climb RPE 7, float RPE 4."
+        },
+        {
+          "day": "Sat",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest or an easy outdoor walk."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: hill sprints",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-hill-sprints-40",
+          "note": "Ten 30-second sprints; stop a rep early if the form goes."
+        },
+        {
+          "day": "Sat",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35",
+          "note": "Keep it very easy."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Build: two quality sessions",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-fartlek-incline-50"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-hill-sprints-40"
+        },
+        {
+          "day": "Sat",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sun",
+          "training": "run-easy-aerobic-40"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Peak: speed and sustained effort",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-speed-pyramid-55",
+          "note": "The 12 km/h block is the machine maximum; hold form, do not strain."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "run-tempo-incline-ladder-55",
+          "note": "Same effort on the flat and the climb."
+        },
+        {
+          "day": "Sat",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Thu",
+          "training": "run-hill-sprints-40",
+          "note": "Only as many sprints as feel crisp."
+        },
+        {
+          "day": "Sat",
+          "off": "Your race or a time trial."
+        }
+      ],
+      "note": "Cut the volume; keep a little speed."
+    }
+  ]
+}

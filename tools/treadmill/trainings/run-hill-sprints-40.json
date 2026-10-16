@@ -1,0 +1,56 @@
+{
+  "id": "run-hill-sprints-40",
+  "name": "Run hill sprints 40",
+  "description": "Ten short, steep, fast sprints with full recoveries: hill power and running economy. Stop a rep early if form breaks. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 10,
+      "steps": [
+        {
+          "name": "Hill sprint",
+          "minutes": 0.5,
+          "speed": 9.0,
+          "level": 6,
+          "intensity": "interval",
+          "notes": "RPE 9 for 30 s. Drive hard, stay tall."
+        },
+        {
+          "name": "Recover",
+          "minutes": 1.5,
+          "speed": 5.0,
+          "level": 0,
+          "intensity": "recovery",
+          "notes": "Walk or jog very easy."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 6.5,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

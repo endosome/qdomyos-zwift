@@ -2,7 +2,7 @@
   "id": "plan-trail-runner-8w",
   "name": "Trail and mountain running, 8 weeks (running mode)",
   "goal": "For runners: build uphill running strength and pacing on the treadmill with real running speeds, hill repeats, tempo and vertical intervals, then taper.",
-  "audience": "Healthy runners who already run regularly. Needs the console in running mode and the staged running-mode validation (run-7 to run-12) done first; the CLI refuses speeds that are not validated. The treadmill has no downhill, so add outdoor running for descents.",
+  "audience": "Healthy runners who already run regularly. Needs the console's handrail raised (running mode) and the staged running-mode validation (run-7 to run-12) done first; the CLI refuses speeds that are not validated. The treadmill has no downhill, so add outdoor running for descents.",
   "weeks": [
     {
       "week": 1,

@@ -31,7 +31,7 @@ class TrainingLibraryTests(unittest.TestCase):
     def test_there_are_trainings_for_each_discipline(self):
         ids = [path.stem for path in SPECS]
         self.assertGreaterEqual(len(ids), 15)
-        for prefix in ('skimo-', 'hike-', 'mr-', 'mrun-', 'trail-'):
+        for prefix in ('skimo-', 'hike-', 'mr-', 'mrun-', 'trail-', 'run-'):
             self.assertGreaterEqual(sum(i.startswith(prefix) for i in ids), 3, prefix)
 
     def test_every_fit_file_is_exactly_what_its_spec_builds(self):
@@ -70,7 +70,7 @@ class TrainingLibraryTests(unittest.TestCase):
                 self.assertLessEqual(max(s['level'] for s in steps), 8)
                 self.assertTrue(all(s['seconds'] >= 30 for s in steps))
                 self.assertIn(info['sport'], ('hiking', 'running'))
-                self.assertEqual(info.get('sub_sport'), 'trail' if running else None)
+                self.assertIn(info.get('sub_sport'), ('trail', 'treadmill') if running else (None,))
                 if running:
                     self.assertGreater(max(s['speed'] for s in steps), 6.0, 'a running training should use running speeds')
                     self.assertIn('--running-mode', info['description'])
@@ -169,6 +169,11 @@ class PlanTests(unittest.TestCase):
                 training = command.split()[3]
                 self.assertEqual('--running-mode' in command, training in running, command)
                 self.assertIn('--wait-wake 10 --wait-wake-confirm', command)
+            if running:
+                self.assertIn('handrail UP (running mode)', result.stdout)
+                self.assertIn('Running mode: the console', result.stdout)
+            else:
+                self.assertNotIn(', handrail', result.stdout)  # per-session annotations only appear in plans that mix modes
 
     def test_guard_rails_reject_unsafe_or_malformed_plans(self):
         weeks = lambda *w: self.plan(list(w))

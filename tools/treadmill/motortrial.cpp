@@ -541,6 +541,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                                    "--trial", trial.id, "--timeout", QString::number(trial.deadline)};
             if (trial.workout) arguments << "--target-sequence" << targetSequence;
             if (waitWakeMs > 0) arguments << "--wait-wake" << QString::number(waitWakeMs / 1000);
+            if (parser.isSet("observe-ftms")) arguments << "--observe-ftms";
             process.start(helper, arguments);
         } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,

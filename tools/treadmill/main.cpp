@@ -83,11 +83,12 @@ int main(int argc, char *argv[]) {
         arguments.first() != "status" || parser.isSet("simulate"))) {
         QTextStream(stderr) << "--status-heart-rate-zero requires Windows protocol status.\n"; return 2;
     }
-    if (parser.isSet("observe-ftms") && (backend != "windows" ||
+    if (parser.isSet("observe-ftms") && ((backend != "windows" && backend != "linux") ||
+        (backend == "linux" && !hardwareWorkout && (arguments.size() != 1 || (arguments.first() != "control-test" && arguments.first() != "control-batch"))) ||
         (!hardwareWorkout && (arguments.size() != 1 ||
          (arguments.first() != "status" && arguments.first() != "control-test" && arguments.first() != "control-batch"))) ||
         parser.isSet("simulate"))) {
-        QTextStream(stderr) << "--observe-ftms requires Windows protocol status or control trials/workouts.\n"; return 2;
+        QTextStream(stderr) << "--observe-ftms requires control trials or hardware workouts (Windows also supports protocol status).\n"; return 2;
     }
     if ((parser.isSet("wait-wake") || parser.isSet("wait-wake-confirm")) &&
         !(hardwareWorkout || (arguments.size() == 1 && arguments.first() == "control-test")) ) {

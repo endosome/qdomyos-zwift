@@ -19,6 +19,7 @@
 #include <QLowEnergyController>
 #include <QLowEnergyDescriptor>
 #include <QLowEnergyService>
+#include <QPair>
 #include <QSet>
 #include <QSocketNotifier>
 #include <QTextStream>
@@ -33,12 +34,18 @@ const QBluetoothUuid kIdentityService(quint16(0x180a));
 const QBluetoothUuid kFitShowService(quint16(0xfff0));
 const QBluetoothUuid kFitShowNotify(quint16(0xfff1));
 const QBluetoothUuid kFitShowWrite(quint16(0xfff2));
+// FTMS is observed only: notifications for Treadmill Data and Fitness Machine Status. The control point
+// (0x2ad9) is never touched, and there is deliberately no FTMS write code in this helper.
+const QBluetoothUuid kFtmsService(quint16(0x1826));
+const QBluetoothUuid kFtmsData(quint16(0x2acd));
+const QBluetoothUuid kFtmsStatus(quint16(0x2ada));
 const QString kStopFrame = QStringLiteral("0253035003");
 
 class Helper : public QObject {
   public:
-    Helper(const QBluetoothAddress &address, const QString &name, const QString &trial, int seconds, int waitWakeSeconds, Treadmill::MotorGate gate)
-        : address_(address), name_(name), trial_(trial), seconds_(seconds), waitWake_(waitWakeSeconds), gate_(std::move(gate)) {}
+    Helper(const QBluetoothAddress &address, const QString &name, const QString &trial, int seconds, int waitWakeSeconds, bool observeFtms,
+           Treadmill::MotorGate gate)
+        : address_(address), name_(name), trial_(trial), seconds_(seconds), waitWake_(waitWakeSeconds), observeFtms_(observeFtms), gate_(std::move(gate)) {}
 
     void start() {
         clock_.start();
@@ -60,7 +67,7 @@ class Helper : public QObject {
     }
 
   private:
-    enum class State { Scanning, Connecting, Discovering, Identity, FitShow, Subscribing, Running, Closing };
+    enum class State { Scanning, Connecting, Discovering, Identity, FitShow, Subscribing, Ftms, Running, Closing };
 
     void step(const QString &operation) { lastOperation_ = operation; }
 
@@ -125,6 +132,7 @@ class Helper : public QObject {
         const auto services = controller_->services();
         if (services.count(kIdentityService) != 1) { shutdown("Module identity service unavailable; motor control remains blocked"); return; }
         if (services.count(kFitShowService) != 1) { shutdown("Expected exactly one accessible FFF0 service"); return; }
+        if (observeFtms_ && services.count(kFtmsService) != 1) { shutdown("FTMS observation requires exactly one FTMS service"); return; }
         state_ = State::Identity; step("verify_fitshow_module_identity");
         identity_ = controller_->createServiceObject(kIdentityService, this);
         if (!identity_) { shutdown("Cannot create identity service"); return; }
@@ -171,7 +179,7 @@ class Helper : public QObject {
         connect(fitshow_, &QLowEnergyService::characteristicWritten, this,
                 [this](const QLowEnergyCharacteristic &c, const QByteArray &) { if (c.uuid() == kFitShowWrite) completeWrite("Success"); });
         connect(fitshow_, &QLowEnergyService::descriptorWritten, this,
-                [this](const QLowEnergyDescriptor &, const QByteArray &value) { onDescriptorWritten(value); });
+                [this](const QLowEnergyDescriptor &, const QByteArray &value) { onDescriptorWritten(fitshow_, value); });
         fitshow_->discoverDetails();
     }
 
@@ -189,20 +197,68 @@ class Helper : public QObject {
         fitshow_->writeDescriptor(cccd, QByteArray::fromHex("0100"));
     }
 
-    void onDescriptorWritten(const QByteArray &value) {
-        if (state_ == State::Subscribing) {
-            state_ = State::Running; step("running"); readyAt_ = clock_.elapsed();
-            emitLine("READY\t" + name_);
+    void becomeRunning() {
+        state_ = State::Running; step("running"); readyAt_ = clock_.elapsed();
+        emitLine("READY\t" + name_);
+    }
+
+    void onDescriptorWritten(QLowEnergyService *from, const QByteArray &value) {
+        if (state_ == State::Subscribing && from == fitshow_) {
+            if (observeFtms_) beginFtms(); else becomeRunning();
+        } else if (state_ == State::Ftms && from == ftms_) {
+            if (ftmsStep_ == 0) {
+                ftmsStep_ = 1;
+                ftms_->writeDescriptor(ftmsStatus_.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration), QByteArray::fromHex("0100"));
+            } else {
+                ftmsEnabled_ = true;
+                becomeRunning();
+            }
         } else if (state_ == State::Closing && closeStep_ == CloseStep::Unsubscribe && value == QByteArray::fromHex("0000")) {
-            cleanupStatus_ = "Success";
-            advanceClose();
+            unsubscribeNext();
         }
+    }
+
+    // Passive FTMS observation: discover the service, then enable notifications for 2ACD and 2ADA, one at a time.
+    void beginFtms() {
+        state_ = State::Ftms; step("discover_ftms_observation");
+        ftms_ = controller_->createServiceObject(kFtmsService, this);
+        if (!ftms_) { shutdown("Cannot create the FTMS service"); return; }
+        connect(ftms_, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this]() {
+            if (state_ == State::Closing) { if (closeStep_ == CloseStep::Unsubscribe) { unsubscribeFailed_ = true; unsubscribeNext(); } }
+            else shutdown("FTMS service error");
+        });
+        connect(ftms_, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState s) {
+            if (s == QLowEnergyService::ServiceDiscovered && state_ == State::Ftms) subscribeFtms();
+        });
+        connect(ftms_, &QLowEnergyService::characteristicChanged, this, [this](const QLowEnergyCharacteristic &c, const QByteArray &bytes) {
+            // Qt can deliver other FTMS characteristics (it reads values itself, e.g. 2ad3); the host accepts only these two.
+            if (!collecting_ || (c.uuid() != kFtmsData && c.uuid() != kFtmsStatus)) return;
+            emitLine("FTMS\t" + c.uuid().toString(QUuid::WithoutBraces) + '\t' + QString::fromLatin1(bytes.toHex()));
+        });
+        connect(ftms_, &QLowEnergyService::descriptorWritten, this,
+                [this](const QLowEnergyDescriptor &, const QByteArray &value) { onDescriptorWritten(ftms_, value); });
+        ftms_->discoverDetails();
+    }
+
+    void subscribeFtms() {
+        ftmsData_ = ftms_->characteristic(kFtmsData);
+        ftmsStatus_ = ftms_->characteristic(kFtmsStatus);
+        for (const auto &c : {ftmsData_, ftmsStatus_}) {
+            if (!c.isValid() || !(c.properties() & QLowEnergyCharacteristic::Notify) ||
+                !c.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration).isValid()) {
+                shutdown("FTMS observation needs Notify on 2ACD and 2ADA"); return;
+            }
+        }
+        step("enable_ftms_notifications");
+        ftmsSubscribed_ = true; // cleanup is attempted whenever enabling was requested
+        ftmsStep_ = 0;
+        ftms_->writeDescriptor(ftmsData_.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration), QByteArray::fromHex("0100"));
     }
 
     void onFitShowError(QLowEnergyService::ServiceError error) {
         if (state_ == State::Closing) {
             if (closeStep_ == CloseStep::Stop) completeWrite("Failed: service error " + QString::number(int(error)));
-            else if (closeStep_ == CloseStep::Unsubscribe) { cleanupStatus_ = "unconfirmed: service error"; advanceClose(); }
+            else if (closeStep_ == CloseStep::Unsubscribe) { unsubscribeFailed_ = true; unsubscribeNext(); }
             return;
         }
         if (writeInFlight_) completeWrite("Failed: service error " + QString::number(int(error)));
@@ -320,11 +376,14 @@ class Helper : public QObject {
         if (closeStep_ == CloseStep::Stop) {
             closeStep_ = CloseStep::Unsubscribe;
             collecting_ = false;
-            if (subscribed_ && linked && notify_.isValid()) {
-                cccdWrite();
-                return;
+            unsubscribeList_.clear();
+            unsubscribeFailed_ = false;
+            if (linked) {
+                if (ftmsSubscribed_) { unsubscribeList_.append({ftms_, ftmsStatus_}); unsubscribeList_.append({ftms_, ftmsData_}); }
+                if (subscribed_ && notify_.isValid()) unsubscribeList_.append({fitshow_, notify_});
             }
-            if (subscribed_) cleanupStatus_ = "unconfirmed: link unavailable";
+            if (!unsubscribeList_.isEmpty()) { unsubscribeNext(true); return; }
+            if (subscribed_ || ftmsSubscribed_) cleanupStatus_ = "unconfirmed: link unavailable";
         }
         if (closeStep_ == CloseStep::Unsubscribe) {
             closeStep_ = CloseStep::Disconnect;
@@ -337,24 +396,37 @@ class Helper : public QObject {
         if (closeStep_ == CloseStep::Disconnect) finish();
     }
 
-    void cccdWrite() {
+    // Disables each enabled notification in turn; success is reported only if every one was confirmed.
+    void unsubscribeNext(bool first = false) {
+        closeTimeout_.stop();
+        if (!first && !unsubscribeList_.isEmpty()) unsubscribeList_.removeFirst();
+        if (unsubscribeList_.isEmpty()) {
+            cleanupStatus_ = unsubscribeFailed_ ? "unconfirmed: a notification could not be disabled" : "Success";
+            advanceClose();
+            return;
+        }
+        disconnect(&closeTimeout_, nullptr, nullptr, nullptr);
+        closeTimeout_.setSingleShot(true);
+        connect(&closeTimeout_, &QTimer::timeout, this, [this]() { onCloseTimeout(); });
         closeTimeout_.start(2000);
-        fitshow_->writeDescriptor(notify_.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration), QByteArray::fromHex("0000"));
+        const auto &item = unsubscribeList_.first();
+        item.first->writeDescriptor(item.second.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration), QByteArray::fromHex("0000"));
     }
 
     void onCloseTimeout() {
         if (closeStep_ == CloseStep::Stop) completeWrite("Failed: timeout");
-        else if (closeStep_ == CloseStep::Unsubscribe) { cleanupStatus_ = "unconfirmed: timeout"; advanceClose(); }
+        else if (closeStep_ == CloseStep::Unsubscribe) { unsubscribeFailed_ = true; unsubscribeNext(); }
         else if (closeStep_ == CloseStep::Disconnect) finish();
     }
 
     void finish() {
         if (closeStep_ == CloseStep::Done) return;
         closeStep_ = CloseStep::Done;
-        if (status_ == "complete" && subscribed_ && cleanupStatus_ != "Success") { status_ = "error"; if (error_.isEmpty()) error_ = "Notification cleanup unconfirmed"; }
+        if (status_ == "complete" && (subscribed_ || ftmsSubscribed_) && cleanupStatus_ != "Success") { status_ = "error"; if (error_.isEmpty()) error_ = "Notification cleanup unconfirmed"; }
         QJsonObject report{{"command", "control-test"}, {"backend", "linux-bluez"}, {"motor_execution_enabled", true},
                            {"status", status_}, {"address", address_.toString()}, {"name", name_}, {"trial", trial_},
-                           {"last_operation", lastOperation_}, {"notification_cleanup_status", cleanupStatus_}};
+                           {"last_operation", lastOperation_}, {"notification_cleanup_status", cleanupStatus_},
+                           {"ftms_observation_status", !observeFtms_ ? "not requested" : ftmsEnabled_ ? "complete" : "failed"}};
         if (!error_.isEmpty()) report.insert("error", error_);
         output_.append(QJsonDocument(report).toJson(QJsonDocument::Compact) + '\n');
         // Final flush must not be lost: block briefly for the parent to drain the pipe.
@@ -367,6 +439,7 @@ class Helper : public QObject {
     QBluetoothAddress address_;
     QString name_, trial_;
     int seconds_, waitWake_;
+    bool observeFtms_;
     Treadmill::MotorGate gate_;
     State state_ = State::Scanning;
     CloseStep closeStep_ = CloseStep::None;
@@ -374,8 +447,11 @@ class Helper : public QObject {
     QTimer tick_, writeTimeout_, closeTimeout_;
     QBluetoothDeviceDiscoveryAgent agent_;
     QLowEnergyController *controller_ = nullptr;
-    QLowEnergyService *identity_ = nullptr, *fitshow_ = nullptr;
-    QLowEnergyCharacteristic notify_, write_;
+    QLowEnergyService *identity_ = nullptr, *fitshow_ = nullptr, *ftms_ = nullptr;
+    QLowEnergyCharacteristic notify_, write_, ftmsData_, ftmsStatus_;
+    QList<QPair<QLowEnergyService *, QLowEnergyCharacteristic>> unsubscribeList_;
+    int ftmsStep_ = 0;
+    bool ftmsSubscribed_ = false, ftmsEnabled_ = false, unsubscribeFailed_ = false;
     std::unique_ptr<QSocketNotifier> stdinNotifier_;
     QSet<quint16> pendingIdentity_;
     QByteArray input_, writeId_;
@@ -402,6 +478,7 @@ int main(int argc, char *argv[]) {
     parser.addOption({"timeout", "Motor deadline in seconds.", "seconds", "120"});
     parser.addOption({"confirm-motor", "The CLI host obtained typed MOTOR approval."});
     parser.addOption({"wait-wake", "Extra seconds the host may wait for the console to wake before the start.", "seconds", "0"});
+    parser.addOption({"observe-ftms", "Also stream FTMS Treadmill Data and Status notifications (observation only, no FTMS writes)."});
     parser.process(app);
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
     const QBluetoothAddress address(parser.value("device"));
@@ -417,7 +494,7 @@ int main(int argc, char *argv[]) {
     if (!waitOk || waitWake < 0 || waitWake > 1800) return fail("--wait-wake must be 0-1800 seconds");
     std::unique_ptr<Helper> helper;
     try {
-        helper.reset(new Helper(address, name, trial, seconds, waitWake, Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds)));
+        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds)));
     } catch (const std::exception &error) { return fail(QString::fromUtf8(error.what())); }
     QTimer::singleShot(0, &app, [&]() { helper->start(); });
     return app.exec();

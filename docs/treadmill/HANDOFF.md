@@ -1239,6 +1239,15 @@ their top speed through 6.0 km/h and record the speed in `~/.local/state/treadmi
 for 5 s at the top; workouts above the recorded speed are refused; the post-stop window scales with the speed at the stop.
 Nothing above 6 km/h has been commanded on the treadmill yet.
 
+**Correction (review, same day): FTMS is not an independent check.** Across 5,152 running samples in 22 logs FTMS speed equals
+FitShow raw/10 exactly (max difference 0.00 km/h; 0.10 while decelerating), because both come from the same FITSHOW module, so it can
+never disagree with the raw scale and cannot validate it. It remains a guard against gross faults only. A staged trial now unlocks its speed
+only if it completes cleanly, FTMS stayed consistent, AND the operator, asked after the belt stops, reports that the console
+display showed the stage speed within 0.1 km/h (recorded as `display_kmh_reported_by_operator`). Anything else unlocks nothing.
+Still unasked of the operator: how running mode is selected on the console, and whether the display then reads 12 km/h as its
+maximum. The whole running profile assumes the 10-120 / tag 0x20 limit report means "running mode"; that report was seen earlier
+without a known cause.
+
 **Long sessions.** Linux backend up to 120 minutes (Windows bridge stays at 70); runs of an hour or more print a notice. Nothing
 past 62 minutes has run. The three 90-100 minute trainings are marked UNPROVEN LENGTH and `plan.py` keeps them out of plans.
 The console may stop on its own at a fixed time (60/90/99 minutes are common); that is untested.
@@ -1258,6 +1267,6 @@ awake and someone listening.
 2. First `.fit` run: `hike-recovery-35`.
 3. The 60-minute rerun with the deadline fix (`uphill-walk-60`).
 4. AVRCP: `audio-probe.sh mute` with the console awake, press buttons, listen; then `restore`.
-5. Running-mode stages in order: console in running mode, you at the controls, `control-test --backend linux ... --running-mode --trial run-7`, then 8, 10, 12.
+5. Running-mode stages in order: console in running mode, you at the controls, watching the display during the 15 s top hold and answering the prompt afterwards, `control-test --backend linux ... --running-mode --trial run-7`, then 8, 10, 12.
 6. A 90-minute run (`skimo-long-day-100` shortened or `hike-long-day-100`) before relying on anything over 65 minutes.
 Open: the bundled remote (IR, radio or Bluetooth?) and whether it wakes the console; keep-awake is still unsolved.

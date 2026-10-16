@@ -6,8 +6,9 @@
 // operator-timed trials are not available on the Linux backend.
 //
 // Two profiles. Walking (default) accepts only the reviewed walking-mode limits, raw speed 10-60 with unit
-// tag 0. Running is opt-in, workouts only, and accepts only the 10-120 / tag 0x20 report the W1 has been seen
-// to send; walking limits are refused in it and running limits are refused in walking, so a plan can never
+// tag 0. Running is opt-in, workouts only, and accepts only the 10-120 / tag 0 report the console gives with its
+// handrail raised (read live on 2026-10-16). An older, unexplained 10-120 / tag 0x20 report is refused in both
+// profiles. Walking limits are refused in the running profile and running limits are refused in walking, so a plan can never
 // promote itself. The raw speed scale in running mode (raw 100 = 10.0 km/h) is not verified by any
 // motor trial yet. FTMS speed is NOT an independent check of it: in 5,152 logged samples it equals FitShow
 // raw/10 exactly, because both come from the same module. It still catches gross faults, so in the running
@@ -151,7 +152,7 @@ class MotorGate {
         return QString::fromLatin1(bytes.toHex());
     }
     int maxSpeedCode() const { return profile_ == Profile::Running ? 120 : 60; }
-    int unitTag() const { return profile_ == Profile::Running ? 0x20 : 0; }
+    int unitTag() const { return 0; } // the handrail-up report has tag 0 too; any other tag (e.g. 0x20, unexplained) is refused
     bool boundsMatch() const {
         return minimum_ == 10 && maximum_ == maxSpeedCode() && unit_ == unitTag() && inclineMinimum_ == 0 && inclineMaximum_ == 8;
     }

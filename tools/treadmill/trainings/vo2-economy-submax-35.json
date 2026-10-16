@@ -1,0 +1,67 @@
+{
+  "id": "vo2-economy-submax-35",
+  "name": "VO2 economy submax 35",
+  "description": "Running economy: four 5 min stages at 8, 9, 10, 11 km/h, about 1.4 percent grade; measure the last 2 min of each. See docs/treadmill/VO2MAX.md. Needs --running-mode, handrail up.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 7.5,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, mask on and fitted, breathing settles."
+      }
+    },
+    {
+      "name": "Stage 8.0 km/h",
+      "minutes": 5,
+      "speed": 8.0,
+      "level": 1,
+      "intensity": "active",
+      "notes": "Last 2 minutes are the measurement window."
+    },
+    {
+      "name": "Stage 9.0 km/h",
+      "minutes": 5,
+      "speed": 9.0,
+      "level": 1,
+      "intensity": "active",
+      "notes": "Last 2 minutes are the measurement window."
+    },
+    {
+      "name": "Stage 10.0 km/h",
+      "minutes": 5,
+      "speed": 10.0,
+      "level": 1,
+      "intensity": "active",
+      "notes": "Last 2 minutes are the measurement window."
+    },
+    {
+      "name": "Stage 11.0 km/h",
+      "minutes": 5,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "active",
+      "notes": "Last 2 minutes are the measurement window."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; keep the mask on for the first minutes of recovery data."
+      }
+    }
+  ]
+}

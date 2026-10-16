@@ -1,4 +1,0 @@
-<rows version="1" id="transition-speed20-to21" name="Speed transition 2.0 to 2.1 km/h" speedunit="km/h" inclineunit="percent" device="treadmill">
-  <row name="Hold 2.0 km/h" duration="00:00:10" forcespeed="1" speed="2" inclination="0" />
-  <row name="Raise to 2.1 km/h" duration="00:00:30" forcespeed="1" speed="2.1" inclination="0" />
-</rows>

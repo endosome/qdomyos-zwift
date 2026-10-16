@@ -1,0 +1,179 @@
+{
+  "id": "vo2-ramp-moderate-30",
+  "name": "VO2 ramp moderate 30",
+  "description": "VO2max ramp, moderate runner: 7.0 km/h, +0.5 km/h per minute to 12.0, then +1 grade level per minute. Aim for 8-12 min. See docs/treadmill/VO2MAX.md. Stop with the console STOP key at exhaustion. Needs --running-mode, handrail up.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 7.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, mask on and fitted, breathing settles."
+      }
+    },
+    {
+      "name": "Ramp 1: 7.0 km/h",
+      "minutes": 1,
+      "speed": 7.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 2: 7.5 km/h",
+      "minutes": 1,
+      "speed": 7.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 3: 8.0 km/h",
+      "minutes": 1,
+      "speed": 8.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 4: 8.5 km/h",
+      "minutes": 1,
+      "speed": 8.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 5: 9.0 km/h",
+      "minutes": 1,
+      "speed": 9.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 6: 9.5 km/h",
+      "minutes": 1,
+      "speed": 9.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 7: 10.0 km/h",
+      "minutes": 1,
+      "speed": 10.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 8: 10.5 km/h",
+      "minutes": 1,
+      "speed": 10.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 9: 11.0 km/h",
+      "minutes": 1,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 10: 11.5 km/h",
+      "minutes": 1,
+      "speed": 11.5,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 11: 12.0 km/h",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "Speed +0.5 km/h per minute at about 1.4 percent grade. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 12: 12.0 km/h level 2",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 2,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 13: 12.0 km/h level 3",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 3,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 14: 12.0 km/h level 4",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 15: 12.0 km/h level 5",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 5,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 16: 12.0 km/h level 6",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 6,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 17: 12.0 km/h level 7",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 7,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "name": "Ramp 18: 12.0 km/h level 8",
+      "minutes": 1,
+      "speed": 12.0,
+      "level": 8,
+      "intensity": "interval",
+      "notes": "Speed stays 12.0 km/h; grade +1 level (about 1.4 percent) per minute. Hold on as long as you can."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; keep the mask on for the first minutes of recovery data."
+      }
+    }
+  ]
+}

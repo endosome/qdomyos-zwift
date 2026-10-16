@@ -81,6 +81,11 @@ Read this before you rely on any of it.
 | `trail-run-progression-45` | running | 45 | ~122 m | 10.0 km/h | 2 | easy/steady |
 | `trail-run-rolling-60` | running | 60 | ~273 m | 9.5 km/h | 7 | easy/steady |
 | `trail-tempo-progression-55` | hiking | 55 | ~175 m | 6.0 km/h | 4 | hard |
+| `vo2-economy-submax-35` | running | 35 | ~51 m | 11.0 km/h | 1 | easy/steady |
+| `vo2-ramp-moderate-30` | running | 33 | ~128 m | 12.0 km/h | 8 | hard |
+| `vo2-ramp-trained-30` | running | 29 | ~122 m | 12.0 km/h | 8 | hard |
+| `vo2-verify-moderate-24` | running | 24 | ~46 m | 11.0 km/h | 3 | hard |
+| `vo2-verify-trained-24` | running | 24 | ~82 m | 12.0 km/h | 6 | hard |
 <!-- catalog:end -->
 
 "Effort": a training is **hard** when it contains interval-intensity steps; the plans never put hard
@@ -106,6 +111,8 @@ sessions on consecutive days or more than two in a week.
 | `plan-trail-runner-8w` | 8 | the same shape with real running speeds; 80-198 min (needs running mode, validated) |
 | `plan-run-speed-hills-6w` | 6 | higher-speed running with changing incline (fartlek, hill sprints, speed pyramid to 12 km/h, tempo ladder); 80-205 min (running mode) |
 | `plan-trail-race-build-10w` | 10 | a longer race build with two recovery weeks and a taper, using the whole running set; 80-198 min (running mode) |
+| `plan-vo2max-moderate-4w` | 4 | VO2max test with a mask: economy stages, ramp to exhaustion, verification bout, two easy weeks, retest; for a runner comfortable at 8 km/h (running mode) |
+| `plan-vo2max-trained-4w` | 4 | the same test and retest for a runner comfortable at 10 km/h (running mode) |
 
 `plan.py check` enforces the guard-rails on every plan: at least two rest days, at most two hard sessions a week
 and never on consecutive days (including across the Sunday-Monday boundary), weekly minutes at most 20 % above

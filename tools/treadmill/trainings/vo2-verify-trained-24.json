@@ -1,0 +1,51 @@
+{
+  "id": "vo2-verify-trained-24",
+  "name": "VO2 verify trained 24",
+  "description": "Verification bout after the trained ramp, 2-3 days later: 12.0 km/h level 6 to exhaustion (cap 4 min). See docs/treadmill/VO2MAX.md. Stop with the console STOP key at exhaustion. Needs --running-mode, handrail up.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 9.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, mask on and fitted, breathing settles."
+      }
+    },
+    {
+      "name": "Settle",
+      "minutes": 2,
+      "speed": 10.0,
+      "level": 1,
+      "intensity": "active",
+      "notes": "Steady, relaxed."
+    },
+    {
+      "name": "Verification load",
+      "minutes": 4,
+      "speed": 12.0,
+      "level": 6,
+      "intensity": "interval",
+      "notes": "Hold to exhaustion; stop the belt when you cannot continue."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 6,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; keep the mask on for the first minutes of recovery data."
+      }
+    }
+  ]
+}

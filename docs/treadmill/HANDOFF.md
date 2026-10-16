@@ -1364,3 +1364,9 @@ no status 4 before the stop; 40 min 24 s of motor time. FIT activity export: 40 
 An earlier arming of the same run (20:26) ended without any motor command: the operator's go arrived 22 minutes after the prompt, the console had gone back to sleep (wake_lost) and the 15-minute wait limit
 expired, which is the intended behavior. For an attended start, wake the console only when ready and answer the go promptly; a 30-minute wait limit is the maximum.
 Push: `gh` is signed in as `endosome` (ADMIN on endosome/qdomyos-zwift), so pushes work with `git -c credential.helper='!gh auth git-credential' push ...` (no SSH key needed).
+
+### VO2max test trainings (2026-10-17)
+
+Added `vo2-economy-submax-35`, `vo2-ramp-moderate-30`, `vo2-ramp-trained-30`, `vo2-verify-moderate-24`, `vo2-verify-trained-24` and the plans
+`plan-vo2max-moderate-4w` / `plan-vo2max-trained-4w`, with the procedure and calibration checks in `docs/treadmill/VO2MAX.md`.
+None of them has run on the hardware yet; the ramps top out at 12.0 km/h level 8 (provisional incline calibration). Check incline with an inclinometer and belt speed by revolution count first.

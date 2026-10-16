@@ -1,0 +1,110 @@
+{
+  "id": "plan-vo2max-trained-4w",
+  "name": "VO2max test and retest, trained runner, 4 weeks (running mode)",
+  "goal": "A baseline VO2max test (economy stages, ramp to exhaustion, verification bout on another day), two easy weeks, then the same test again to see the change.",
+  "audience": "Runners who can run 8 km/h for 30 minutes and want a VO2max measurement with a mask (for example a VO2 Master) on the W1. Needs the handrail raised (running mode) and the staged running-speed validation (run-7 to run-12) done first. Check incline and belt speed first (docs/treadmill/VO2MAX.md); the incline calibration is provisional.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Baseline test",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-economy-submax-35",
+          "note": "Fit the mask first; this also checks the mask and the log alignment."
+        },
+        {
+          "day": "Wed",
+          "off": "Rest. No hard running before the ramp."
+        },
+        {
+          "day": "Thu",
+          "training": "vo2-ramp-trained-30",
+          "note": "Rested, fed 2-3 hours before, same time of day for the retest. A spotter stands by."
+        },
+        {
+          "day": "Fri",
+          "off": "Rest or an easy walk."
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-verify-trained-24",
+          "note": "The verification bout: a constant load a little above the ramp end point."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Easy aerobic running",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Rest."
+        },
+        {
+          "day": "Thu",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Sat",
+          "off": "Rest or an easy outdoor run."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Easy aerobic plus rolling terrain",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "run-easy-aerobic-40"
+        },
+        {
+          "day": "Wed",
+          "off": "Rest."
+        },
+        {
+          "day": "Thu",
+          "training": "run-rolling-varied-60"
+        },
+        {
+          "day": "Sat",
+          "off": "Rest."
+        }
+      ],
+      "note": "Keep the last two days before the retest easy."
+    },
+    {
+      "week": 4,
+      "focus": "Retest",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "vo2-economy-submax-35",
+          "note": "Same stages as week 1; compare VO2 at each speed."
+        },
+        {
+          "day": "Wed",
+          "off": "Rest."
+        },
+        {
+          "day": "Thu",
+          "training": "vo2-ramp-trained-30",
+          "note": "The same ramp as week 1."
+        },
+        {
+          "day": "Fri",
+          "off": "Rest."
+        },
+        {
+          "day": "Sat",
+          "training": "vo2-verify-trained-24"
+        }
+      ]
+    }
+  ]
+}

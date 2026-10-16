@@ -63,6 +63,61 @@ static QByteArray targetPayload(int speed, int incline) {
     return payload;
 }
 
+// ---- Running mode (Linux backend only, opt-in with --running-mode) ----
+// Raw speed above 60 (6.0 km/h) exists only when the console is in running mode, and no motor trial has yet verified
+// that raw 100 means 10.0 km/h there. So running speeds unlock in stages: each staged trial (run-7, run-8, run-10,
+// run-12) approaches its top speed through 6.0 km/h, and only after one completes with the treadmill's FTMS speed
+// agreeing with its FitShow speed is that speed recorded as validated. Workouts above the validated speed are refused.
+static QString stateDirectory() {
+    return qEnvironmentVariableIsSet("TREADMILL_STATE_DIR") ? qEnvironmentVariable("TREADMILL_STATE_DIR")
+                                                            : QDir::homePath() + "/.local/state/treadmill";
+}
+static QString runningValidationPath() { return stateDirectory() + "/running-validated.json"; }
+static double validatedRunningKmh() {
+    QFile file(runningValidationPath());
+    if (!file.open(QIODevice::ReadOnly)) return 6.0;
+    const double value = QJsonDocument::fromJson(file.readAll()).object().value("validated_kmh").toDouble(6.0);
+    return qBound(6.0, value, 12.0);
+}
+static bool recordRunningValidation(double kmh, const QString &logPath) {
+    if (kmh <= validatedRunningKmh()) return true;
+    QDir().mkpath(stateDirectory());
+    QFile file(runningValidationPath());
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    file.write(QJsonDocument(QJsonObject{{"validated_kmh", kmh}, {"utc", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
+                                         {"log", logPath}}).toJson());
+    return true;
+}
+static const int kRunningLadder[] = {7, 8, 10, 12}; // km/h of the staged trials
+static bool buildRunningStage(const QString &id, Trial &trial, QString &error) {
+    bool ok = false;
+    const int kmh = id.mid(4).toInt(&ok);
+    int rung = -1;
+    for (int i = 0; i < 4; ++i) if (ok && kRunningLadder[i] == kmh) rung = i;
+    if (rung < 0) { error = "Unknown running stage; the stages are run-7, run-8, run-10 and run-12"; return false; }
+    const double validated = validatedRunningKmh();
+    const int next = [&]() { for (int v : kRunningLadder) if (v > validated + 1e-9) return v; return 12; }();
+    if (kmh > next) {
+        error = QString("Stage run-%1 is not unlocked: validated so far is %2 km/h, so the next stage is run-%3. Stages run in order.")
+                    .arg(kmh).arg(validated).arg(next);
+        return false;
+    }
+    trial = Trial();
+    trial.id = "workout"; trial.workout = true; trial.workoutId = id;
+    trial.workoutName = QString("Running-mode stage %1 km/h").arg(kmh);
+    trial.speed = kmh * 10; trial.incline = 0; trial.deadline = 150;
+    trial.steps = {{60, 0, 8, "Approach 6.0 km/h"}, {kmh * 10, 0, 15, QString("Stage %1 km/h").arg(kmh)},
+                   {60, 0, 8, "Return to 6.0 km/h"}, {10, 0, 6, "Return to 1.0 km/h"}};
+    trial.stepHold = trial.steps.first().holdSeconds;
+    return true;
+}
+// FTMS Treadmill Data (2ACD): flags bit 0 clear means instantaneous speed (0.01 km/h) follows the flags.
+static bool ftmsSpeedKmh(const QByteArray &bytes, double &kmh) {
+    if (bytes.size() < 4 || (quint8(bytes[0]) & 1)) return false;
+    kmh = (int(quint8(bytes[2])) | (int(quint8(bytes[3])) << 8)) / 100.0;
+    return true;
+}
+
 // The Linux transport is a separate helper process that speaks the same line protocol as the Windows helper.
 static QString linuxHelperPath(QString &error) {
     QStringList candidates;
@@ -81,6 +136,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
     const bool linuxBackend = parser.value("backend") == "linux";
     if (!linuxBackend && parser.value("backend") != "windows") return fail("The bounded control trial requires --backend windows or --backend linux");
+    const bool runningMode = parser.isSet("running-mode");
+    if (runningMode && !linuxBackend) return fail("--running-mode is only available on the Linux backend");
     const auto trials = preparedTrials();
     if (parser.isSet("list-trials")) {
         for (const QString option : {"device", "expected-name", "address-type", "dry-run", "confirm-motor", "log", "trial", "timeout", "simulate", "fast", "profile", "confirm-diagnostics", "workouts-dir", "inject", "inject-at"})
@@ -96,8 +153,16 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     bool found = workoutOverride != nullptr;
     if (workoutOverride) trial = *workoutOverride;
     const QString trialId = trialOverride.isEmpty() ? parser.value("trial") : trialOverride;
+    bool stagedRunning = false;
+    if (!found && trialId.startsWith("run-")) {
+        if (!runningMode) return fail("The run-N stage trials need --running-mode");
+        QString stageError;
+        if (!buildRunningStage(trialId, trial, stageError)) return fail(stageError);
+        found = stagedRunning = true;
+    }
     if (!found) for (const auto &candidate : trials) if (candidate.id == trialId) { trial = candidate; found = true; break; }
     if (!found) return fail("Unknown trial; use control-test --backend windows --list-trials");
+    if (runningMode && !trial.workout) return fail("Running mode supports workouts and the run-N stage trials only");
     if (linuxBackend && (trial.pause || trial.readyOnly || trial.operatorMarks))
         return fail("Pause, READY and operator-timed trials are not available on the Linux backend");
     const QBluetoothAddress address(parser.value("device"));
@@ -156,6 +221,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                            {"return_hold_seconds", trial.returnHold}, {"windows_motor_deadline_seconds", trial.deadline},
                            {"operator_marks_required", trial.operatorMarks}, {"arrival_hold_seconds", trial.arrivalHoldSeconds}, {"ready_only", trial.readyOnly}, {"sleep_ready_allowed", trial.sleepReadyAllowed}, {"expected_ready_status", trial.readyOnly ? QJsonValue(9) : QJsonValue(QJsonValue::Null)}, {"physical_arrival_source", "operator observation only"},
                            {"wait_wake_seconds", waitWakeMs / 1000.0}, {"wait_wake_confirm", waitConfirm},
+                           {"profile", runningMode ? "running" : "walking"}, {"running_validated_kmh", runningMode ? validatedRunningKmh() : QJsonValue()},
                            {"initial_deck_baseline_confirmation_required", trial.operatorMarks},
                            {"ftms_observation_requested", parser.isSet("observe-ftms")},
                            {"frames", sequence}, {"physical_units_verified", false}, {"physical_stop_verified", false},
@@ -186,6 +252,11 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         << (waitWakeMs <= 0 ? QString() : waitConfirm
             ? QString("WAIT FOR WAKE: no motor command is sent until the treadmill is awake (up to %1 s); then press ENTER to start, or Q to cancel.\n").arg(waitWakeMs / 1000)
             : QString("WAIT FOR WAKE, AUTO-START: nothing is sent to the motor until the treadmill is awake (up to %1 s); then the belt STARTS BY ITSELF after %2 s unless you press Q.\n").arg(waitWakeMs / 1000).arg(kWakeGraceMs / 1000))
+        << (!runningMode ? QString() : QString(
+            "RUNNING MODE, up to %1 km/h. The console must be in running mode and the belt clear of everyone unless you will run at that speed.\n"
+            "The raw speed scale in running mode is unproven: the run stops if the treadmill's FTMS speed disagrees with its own speed or is not seen.\n"
+            "%2").arg(trial.speed / 10.0).arg(stagedRunning ? QString("This is a staged validation trial: it approaches the top speed through 6.0 km/h and returns.\n")
+                                                              : QString("Validated so far: %1 km/h.\n").arg(validatedRunningKmh())))
         << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no pause and no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
         << "Type MOTOR to approve this exact trial: " << Qt::flush;
     if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
@@ -212,6 +283,10 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     bool feedbackAfterStop = false, hasFinalReport = false, ready = false, identityObserved = false;
     qint64 startedAt = -1, runningAt = -1, stoppedAt = -1, latestStatusAt = -1;
     bool sleepNoticed = false, startPrompted = false, startConfirmed = false;
+    // Running mode: the treadmill's FTMS speed is the independent check on the FitShow raw speed scale.
+    double ftmsKmh = 0;
+    qint64 ftmsAt = -1, ftmsMissingSince = -1;
+    int speedMismatch = 0, agreeAtTop = 0, lastSpeedTenths = 0, speedAtStop = 0;
     qint64 graceUntil = -1, lastWaitNoticeAt = 0;
     int stage = 0;
     int targetMatchCount = 0;
@@ -241,7 +316,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     };
     auto stop = [&](const QString &reason) {
         if (stopping || closing) return;
-        stopping = true; stoppedAt = clock.elapsed();
+        stopping = true; stoppedAt = clock.elapsed(); speedAtStop = lastSpeedTenths;
         record("stop_requested", {{"reason", reason}});
         if (started && !closing) control.stop(1, 3);
         else close();
@@ -297,8 +372,12 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 if (clock.elapsed() < graceUntil) return;
             }
             if (normalCount >= 3 && limits.complete()) {
-                if (limits.minSpeed != 10 || limits.maxSpeed != 60 || limits.unit != 0 || limits.minIncline != 0 || limits.maxIncline != 8) {
-                    failed = true; record("fault", {{"reason", "Live limits differ from the reviewed walking-mode trial"}}); close(); return;
+                const int expectedMaxSpeed = runningMode ? 120 : 60, expectedUnit = runningMode ? 0x20 : 0;
+                if (limits.minSpeed != 10 || limits.maxSpeed != expectedMaxSpeed || limits.unit != expectedUnit || limits.minIncline != 0 || limits.maxIncline != 8) {
+                    failed = true;
+                    record("fault", {{"reason", runningMode ? "Live limits are not the running-mode report (10-120, unit tag 0x20); put the console in running mode"
+                                                            : "Live limits differ from the reviewed walking-mode trial (if the console is in running mode, use --running-mode)"}});
+                    close(); return;
                 }
                 if (trial.pause && !limits.pause) { failed = true; record("fault", {{"reason", "Pause is not advertised"}}); close(); return; }
                 if (!control.arm(1)) { failed = true; close(); return; }
@@ -332,6 +411,29 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             if (status.inclineCode < 0 || status.inclineCode > trial.incline || status.speedTenths > trial.speed || status.state == 1 ||
                 ((status.state == 10 || status.state == 4) && pauseAt < 0)) {
                 failed = true; stop("Unexpected motor feedback"); return;
+            }
+            lastSpeedTenths = status.speedTenths;
+            if (runningMode && status.state == 3 && status.speedTenths > 60) {
+                // Independent of the helper: above 6 km/h the treadmill's FTMS speed must be visible and agree with FitShow's.
+                const qint64 nowMs = clock.elapsed();
+                const double fitshowKmh = status.speedTenths / 10.0;
+                if (ftmsAt < 0 || nowMs - ftmsAt > 3000) {
+                    if (ftmsMissingSince < 0) ftmsMissingSince = nowMs;
+                    if (nowMs - ftmsMissingSince >= 2000) { failed = true; stop("FTMS speed cannot be observed; the raw speed scale is unverified"); return; }
+                } else {
+                    ftmsMissingSince = -1;
+                    if (std::fabs(ftmsKmh - fitshowKmh) > 0.6) {
+                        agreeAtTop = 0;
+                        if (++speedMismatch >= 4) {
+                            failed = true;
+                            stop(QString("FTMS speed %1 km/h disagrees with FitShow speed %2 km/h").arg(ftmsKmh).arg(fitshowKmh));
+                            return;
+                        }
+                    } else {
+                        speedMismatch = 0;
+                        if (status.speedTenths >= trial.speed) ++agreeAtTop;
+                    }
+                }
             }
             if (status.state == 3 && status.speedTenths == 10 && runningAt < 0) {
                 runningAt = clock.elapsed(); record("reported_running", {{"physical_movement_verified", false}});
@@ -395,6 +497,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                        (parts[1] == "00002acd-0000-1000-8000-00805f9b34fb" || parts[1] == "00002ada-0000-1000-8000-00805f9b34fb")) {
                 record("ftms_notification", {{"characteristic_uuid", QString::fromLatin1(parts[1])},
                                               {"frame_hex", QString::fromLatin1(parts[2])}, {"physical_attainment_verified", false}});
+                double kmh = 0;
+                if (parts[1] == "00002acd-0000-1000-8000-00805f9b34fb" && ftmsSpeedKmh(QByteArray::fromHex(parts[2]), kmh)) { ftmsKmh = kmh; ftmsAt = clock.elapsed(); }
             } else if (parts.size() == 2 && parts[0] == "RX") {
                 const auto bytes = QByteArray::fromHex(parts[1]);
                 record("notification", {{"frame_hex", QString::fromLatin1(parts[1])}});
@@ -528,7 +632,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 } else stop("Prepared observation holds complete");
             }
         }
-        if (stopping && now - stoppedAt >= 10000) {
+        // Deceleration takes longer from higher speed (about 5 s from 3 km/h): 10 s at least, 4 s plus 2.5 s per km/h above that.
+        if (stopping && now - stoppedAt >= qMax<qint64>(10000, 4000 + qint64(speedAtStop) * 250)) {
             failed = true; record("fault", {{"reason", "Stop observation deadline; three NORMAL reports were not received"}}); close();
         }
         if (!closing) control.pump(now);
@@ -542,6 +647,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             if (trial.workout) arguments << "--target-sequence" << targetSequence;
             if (waitWakeMs > 0) arguments << "--wait-wake" << QString::number(waitWakeMs / 1000);
             if (parser.isSet("observe-ftms")) arguments << "--observe-ftms";
+            if (runningMode) arguments << "--profile" << "running";
             process.start(helper, arguments);
         } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,
@@ -556,6 +662,13 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     });
     app.exec();
     const bool sequenceObserved = started && stopWritten && feedbackAfterStop && hasFinalReport && !failed;
+    if (stagedRunning) {
+        // Unlock a speed only if the whole stage completed and FTMS agreed with FitShow for at least 5 s at the top speed.
+        const bool validated = sequenceObserved && !failed && agreeAtTop >= 10;
+        const bool recorded = validated && recordRunningValidation(trial.speed / 10.0, log.fileName());
+        record("running_stage_result", {{"stage_kmh", trial.speed / 10.0}, {"ftms_agreed_samples_at_top", agreeAtTop},
+                                        {"validated", validated}, {"validation_recorded", recorded}, {"validated_kmh_now", validatedRunningKmh()}});
+    }
     record("trial_result", {{"sequence_observed", sequenceObserved}, {"stop_write_succeeded", stopWritten},
                             {"normal_status_after_stop", feedbackAfterStop}, {"physical_stop_verified", false},
                             {"operator_arrival_marks_recorded", operatorArrivalAt[1] >= 0 && operatorArrivalAt[2] >= 0},
@@ -573,6 +686,9 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     plan.speed = 10;
     plan.incline = 0;
     const bool linuxBackend = parser.value("backend") == "linux";
+    const bool runningMode = parser.isSet("running-mode");
+    if (runningMode && !linuxBackend) return fail("--running-mode is only available on the Linux backend");
+    const int maxSpeedCode = runningMode ? 120 : 60;
     // The Linux helper allows 120 minutes; the Windows bridge's gates were sized for 70 and stay there.
     const int maxMinutes = linuxBackend ? 120 : 70, maxDeadlineSeconds = linuxBackend ? 9000 : 4500;
     const qint64 totalMs = workout.durationMs();
@@ -587,10 +703,12 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
                 return fail("Workout contains a non-finite W1 target: " + stage.name);
             const int speedCode = int(std::lround(target.speedKmh * 10.0));
             const int inclineCode = int(std::lround(target.gradePercent / gradePerLevel));
-            if (speedCode < 10 || speedCode > 60 || inclineCode < 0 || inclineCode > 8 ||
+            if (speedCode > 60 && !runningMode)
+                return fail("Workout needs speeds above 6.0 km/h, which only exist in the console's running mode: add --running-mode (Linux backend): " + stage.name);
+            if (speedCode < 10 || speedCode > maxSpeedCode || inclineCode < 0 || inclineCode > 8 ||
                 std::abs(target.speedKmh - speedCode / 10.0) > 0.051 ||
                 std::abs(target.gradePercent - inclineCode * gradePerLevel) > gradePerLevel / 2.0 + 1e-8)
-                return fail("Workout target is outside W1's confirmed 1.0–6.0 km/h and assumed 0–8 incline mapping: " + stage.name);
+                return fail(QString("Workout target is outside W1's %1 and assumed 0–8 incline mapping: ").arg(runningMode ? "1.0–12.0 km/h" : "confirmed 1.0–6.0 km/h") + stage.name);
             const int hold = int((span + 999) / 1000);
             if (!plan.steps.isEmpty() && plan.steps.last().speed == speedCode && plan.steps.last().incline == inclineCode) {
                 plan.steps.last().holdSeconds += hold;
@@ -609,6 +727,10 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     plan.deadline = int(totalMs / 1000) + 120 + 3 * int(plan.steps.size());
     if (plan.deadline > maxDeadlineSeconds) return fail(QString("Workout plus safety margin exceeds the %1 s control deadline").arg(maxDeadlineSeconds));
     plan.stepHold = plan.steps.first().holdSeconds;
+    if (runningMode && plan.speed > 60 && plan.speed > int(std::lround(validatedRunningKmh() * 10)))
+        return fail(QString("This workout reaches %1 km/h but running speeds are validated only up to %2 km/h on this treadmill. "
+                            "Run the staged trials in order first (treadmill control-test --backend linux --device ... --expected-name ... --running-mode --trial run-7, run-8, run-10, run-12), "
+                            "with the console in running mode and you at the controls.").arg(plan.speed / 10.0).arg(validatedRunningKmh()));
     if (parser.value("backend") != "windows" && parser.value("backend") != "linux")
         return fail("Real W1 workout playback requires --backend windows or --backend linux");
     if (parser.value("device").toUpper() != "DD:87:70:39:74:20" || parser.value("expected-name") != "FS-0F7A32")
@@ -622,7 +744,7 @@ int motorTrial(QCoreApplication &app, const QCommandLineParser &parser) {
 
 int motorBatch(QCoreApplication &app, const QCommandLineParser &parser) {
     auto fail = [](const QString &message) { QTextStream(stderr) << message << '\n'; return 2; };
-    for (const QString option : {"trial", "list-trials", "confirm-motor", "simulate", "fast", "profile", "timeout", "confirm-diagnostics", "workouts-dir", "inject", "inject-at", "wait-wake", "wait-wake-confirm"})
+    for (const QString option : {"trial", "list-trials", "confirm-motor", "simulate", "fast", "profile", "timeout", "confirm-diagnostics", "workouts-dir", "inject", "inject-at", "wait-wake", "wait-wake-confirm", "running-mode"})
         if (parser.isSet(option)) return fail("Unsupported batch option: " + option);
     const QString selection = parser.value("batch");
     if (selection != "remaining" && selection != "speeds" && selection != "inclines" && selection != "all")

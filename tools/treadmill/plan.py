@@ -59,7 +59,8 @@ def flat_steps(nodes):
 
 def summarize(dump):
     steps = list(flat_steps(dump["steps"]))
-    return {"name": dump["name"], "minutes": dump["total_seconds"] / 60.0, "vertical": dump["vertical_meters_estimate"],
+    return {"name": dump["name"], "description": dump.get("description", ""), "sport": dump["sport"],
+            "minutes": dump["total_seconds"] / 60.0, "vertical": dump["vertical_meters_estimate"],
             "hard": any(step["intensity"] == "interval" for step in steps),
             "peak_speed": max(step["speed"] for step in steps), "peak_level": max(step["level"] for step in steps)}
 
@@ -132,6 +133,8 @@ def check(plan, trainings, label="plan"):
             if info is None:
                 bad(f"{where} {day}: unknown training '{session['training']}'")
                 continue
+            if "UNPROVEN LENGTH" in info["description"]:
+                bad(f"{where} {day}: '{session['training']}' has an unproven length; keep it out of plans until that length has run")
             if info["hard"]:
                 hard_count += 1
                 hard_days.append(index * 7 + DAYS.index(day))
@@ -180,10 +183,10 @@ def show(plan, trainings, only_week=None):
 
 
 def catalog(trainings):
-    lines = ["| Training | Minutes | Vertical (est.) | Top speed | Top level | Effort |", "|---|---|---|---|---|---|"]
+    lines = ["| Training | Sport | Minutes | Vertical (est.) | Top speed | Top level | Effort |", "|---|---|---|---|---|---|---|"]
     for training_id in trainings.ids():
         info = trainings.get(training_id)
-        lines.append(f"| `{training_id}` | {info['minutes']:.0f} | ~{info['vertical']:.0f} m | {info['peak_speed']:.1f} km/h | "
+        lines.append(f"| `{training_id}` | {info['sport']} | {info['minutes']:.0f} | ~{info['vertical']:.0f} m | {info['peak_speed']:.1f} km/h | "
                      f"{info['peak_level']} | {'hard' if info['hard'] else 'easy/steady'} |")
     return "\n".join(lines)
 

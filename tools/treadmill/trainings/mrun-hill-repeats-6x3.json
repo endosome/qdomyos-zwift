@@ -1,0 +1,56 @@
+{
+  "id": "mrun-hill-repeats-6x3",
+  "name": "Mountain run hill repeats 6x3",
+  "description": "Six steep three-minute uphill efforts with easy recoveries: the core session for uphill mountain running. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 6,
+      "steps": [
+        {
+          "name": "Hill repeat",
+          "minutes": 3,
+          "speed": 9.0,
+          "level": 6,
+          "intensity": "interval",
+          "notes": "RPE 8. Drive the knees and arms, stay tall."
+        },
+        {
+          "name": "Recover",
+          "minutes": 2,
+          "speed": 5.0,
+          "level": 1,
+          "intensity": "recovery",
+          "notes": "Walk or very easy jog."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 6.0,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

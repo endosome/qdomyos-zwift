@@ -1,0 +1,55 @@
+{
+  "id": "skimo-long-day-100",
+  "name": "Skimo long day 100",
+  "description": "A long ski-touring simulation: four long climbs with short transitions. UNPROVEN LENGTH: the longest run on this treadmill so far is 62 minutes; check the motor housing by hand.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 6,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 4,
+      "steps": [
+        {
+          "name": "Long pitch",
+          "minutes": 19,
+          "speed": 4.4,
+          "level": 7,
+          "intensity": "active",
+          "notes": "RPE 4-5. Same effort every pitch."
+        },
+        {
+          "name": "Transition",
+          "minutes": 3,
+          "speed": 2.6,
+          "level": 1,
+          "intensity": "recovery",
+          "notes": "Drink, eat, shake out."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 6,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

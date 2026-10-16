@@ -1,0 +1,213 @@
+{
+  "id": "plan-trail-runner-8w",
+  "name": "Trail and mountain running, 8 weeks (running mode)",
+  "goal": "For runners: build uphill running strength and pacing on the treadmill with real running speeds, hill repeats, tempo and vertical intervals, then taper.",
+  "audience": "Healthy runners who already run regularly. Needs the console in running mode and the staged running-mode validation (run-7 to run-12) done first; the CLI refuses speeds that are not validated. The treadmill has no downhill, so add outdoor running for descents.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: easy running and rolling terrain",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-recovery-35",
+          "note": "Easy walk to start the week."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "trail-run-progression-45",
+          "note": "Ease in; the last steps are brisk, not hard."
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor run or rest."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: first hill repeats",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "trail-run-progression-45"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mrun-hill-repeats-6x3",
+          "note": "RPE 8 on the climbs; recover fully on the 2 minutes."
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor run or rest."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Base: uphill tempo",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mrun-uphill-tempo-50",
+          "note": "Even effort: the last 10 minutes should feel like the first."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "trail-run-progression-45"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor run or rest."
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Thu",
+          "training": "trail-run-progression-45"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-base-60",
+          "note": "Steady hiking as cross-training."
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Build: hill repeats and rolling",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mrun-hill-repeats-6x3"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "trail-run-progression-45"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Build: vertical intervals and tempo",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mrun-vertical-intervals-55",
+          "note": "RPE 8-9 on the steep efforts; stop a rep early if form fails."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mrun-uphill-tempo-50"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "Peak",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mrun-hill-repeats-6x3"
+        },
+        {
+          "day": "Wed",
+          "off": "Mobility or an easy outdoor run."
+        },
+        {
+          "day": "Thu",
+          "training": "mrun-vertical-intervals-55"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-run-rolling-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "trail-run-progression-45",
+          "note": "Easy and smooth."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "off": "Your race or long run."
+        }
+      ],
+      "note": "Cut the volume; keep a little speed."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows version="1" id="uphill-walk-60" name="Uphill walking — 60 minutes" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Warm-up" instruction="Choose a comfortable effort; reduce intensity or stop when needed." duration="00:05:00" speedfrom="2.0" speedto="2.6" inclination="0" forcespeed="1"/>
+  <row name="Progressive ascent" duration="00:05:00" speedfrom="2.6" speedto="3.0" inclinationfrom="0" inclinationto="3" forcespeed="1"/>
+  <row name="Climb ramp 1" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="Climb 1" duration="00:03:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp 1" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery 1" duration="00:02:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Re-ascent 1" duration="00:02:00" speedfrom="2.5" speedto="3.0" inclinationfrom="1" inclinationto="3" forcespeed="1"/>
+  <row name="Climb ramp 2" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="Climb 2" duration="00:03:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp 2" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery 2" duration="00:02:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Re-ascent 2" duration="00:02:00" speedfrom="2.5" speedto="3.0" inclinationfrom="1" inclinationto="3" forcespeed="1"/>
+  <row name="Climb ramp 3" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="Climb 3" duration="00:03:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp 3" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery 3" duration="00:02:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Re-ascent 3" duration="00:02:00" speedfrom="2.5" speedto="3.0" inclinationfrom="1" inclinationto="3" forcespeed="1"/>
+  <row name="Climb ramp 4" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="Climb 4" duration="00:03:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp 4" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery 4" duration="00:02:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Re-ascent 4" duration="00:02:00" speedfrom="2.5" speedto="3.0" inclinationfrom="1" inclinationto="3" forcespeed="1"/>
+  <row name="Climb ramp 5" duration="00:01:00" speed="3.0" inclinationfrom="3" inclinationto="5" forcespeed="1"/>
+  <row name="Climb 5" duration="00:03:00" speed="3.0" inclination="5" forcespeed="1"/>
+  <row name="Recovery ramp 5" duration="00:01:00" speedfrom="3.0" speedto="2.5" inclinationfrom="5" inclinationto="1" forcespeed="1"/>
+  <row name="Active recovery 5" duration="00:02:00" speed="2.5" inclination="1" forcespeed="1"/>
+  <row name="Re-ascent 5" duration="00:02:00" speedfrom="2.5" speedto="3.0" inclinationfrom="1" inclinationto="3" forcespeed="1"/>
+  <row name="Easier walking" duration="00:02:00" speedfrom="3.0" speedto="2.6" inclinationfrom="3" inclinationto="1" forcespeed="1"/>
+  <row name="Cooldown descent" duration="00:01:00" speedfrom="2.6" speedto="2.4" inclinationfrom="1" inclinationto="0" forcespeed="1"/>
+  <row name="Cooldown walking" duration="00:02:00" speedfrom="2.4" speedto="1.5" inclination="0" forcespeed="1"/>
+</rows>

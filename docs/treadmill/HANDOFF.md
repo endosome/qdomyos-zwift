@@ -1311,3 +1311,13 @@ request and the wait before it separately.
 4. AVRCP volume: DONE (does not silence the console's beeps).
 5. Running-mode stages (console in running mode, operator reads the display): still to do. Needs the operator's answer about how running mode is selected.
 6. A 90-minute run before relying on anything over 65 minutes: still to do (`hike-long-day-100` or `skimo-long-day-100`).
+
+### Unattended wait-for-wake start, verified with one caveat (2026-10-16, 19:35)
+
+`workout run interval-demo --wait-wake 15` (no confirm) from a sleeping console: waiting_for_wake with no motor frame, wake detected, grace started at 391.56 s,
+start requested and the first motor frame at 396.63-396.64 s (5.07 s later, design 5 s), countdown (state 2) first seen 0.53 s after our frame,
+RUNNING at 400.19 s; all 5 targets reported, planned stop, three NORMAL replies, cleanup Success, no faults, no wake_lost.
+Caveat: the operator also clicked Play on the console around the start. The console stayed in NORMAL until after our frame, so the start is
+attributable to the command, but a near-simultaneous click cannot be excluded; an airtight proof would repeat it without touching Play.
+Play/Pause on an awake console can also pause a running belt, so it should not be pressed during a run.
+Remaining optional checks: running-mode stages (operator switches the console to running mode and reads the display) and a 90-minute run.

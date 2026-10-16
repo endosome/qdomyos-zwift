@@ -108,13 +108,16 @@ km/h, but that has never been checked against this treadmill in running mode. So
 
 - Everything above 6.0 km/h needs `--running-mode` (the CLI adds `--observe-ftms` itself) and the console in running mode.
   The walking profile refuses the running limit report and the running profile refuses the walking one.
-- **FTMS is the independent speed check.** While above 6 km/h the run is stopped, by both the CLI and the helper, if the
-  speed the treadmill reports over FTMS disagrees with its own FitShow speed (more than 0.6 km/h for 4 reports) or cannot
-  be observed for 2 s.
+- **FTMS is a consistency guard, not a measurement.** It comes from the same module as the FitShow data (in 5,152 logged
+  samples it equals raw/10 exactly), so it cannot prove the scale is right. While above 6 km/h the run is still stopped, by
+  both the CLI and the helper, if FTMS speed disagrees with the FitShow speed (more than 0.6 km/h for 4 reports) or cannot
+  be observed for 2 s: that catches gross faults.
 - **Staged unlock.** Four trials approach their top speed through 6.0 km/h, hold it for 15 s and come back:
   `treadmill control-test --backend linux --device DD:87:70:39:74:20 --expected-name FS-0F7A32 --running-mode --trial run-7`
   (then `run-8`, `run-10`, `run-12`, in that order, with you at the controls and the belt clear). A stage unlocks its speed
-  only when it completes and FTMS agreed with FitShow for at least 5 s at the top speed; the result is recorded in
+  only when it completes, FTMS stayed consistent for at least 5 s at the top speed, **and you report that the console
+  display showed the stage speed**: after the belt has stopped the CLI asks what the display read during the 15 s hold, and
+  the answer must be within 0.1 km/h of the stage speed. The result is recorded in
   `~/.local/state/treadmill/running-validated.json`. Workouts above the recorded speed are refused. Deleting or editing
   that file is your decision to override it.
 - A stop from high speed gets a longer window for the belt to decelerate and report NORMAL three times.

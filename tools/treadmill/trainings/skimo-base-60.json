@@ -1,0 +1,42 @@
+{
+  "id": "skimo-base-60",
+  "name": "Skimo base 60",
+  "description": "Aerobic base for ski touring: one long steady climb at a vertical rate you could hold for hours. RPE 4-5, full sentences.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "name": "Steady climb",
+      "minutes": 44,
+      "speed": 4.2,
+      "level": 7,
+      "intensity": "active",
+      "notes": "RPE 4-5. Smooth cadence, short even steps, relaxed arms."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

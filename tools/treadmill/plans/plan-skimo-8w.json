@@ -1,0 +1,222 @@
+{
+  "id": "plan-skimo-8w",
+  "name": "Ski touring preparation, 8 weeks",
+  "goal": "Build the aerobic base and climbing rate for ski touring: sustained uphill effort at your skinning pace, grade changes, then race-pace climbs, with a taper.",
+  "audience": "Healthy adults who already walk or hike about 2 hours a week. The treadmill supplies steady climbing; skiing technique, downhill and snow conditions need outdoor time.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: learn the routine and the effort",
+      "sessions": [
+        {
+          "day": "Mon",
+          "off": "Rest or mobility."
+        },
+        {
+          "day": "Tue",
+          "training": "hike-recovery-35",
+          "note": "Check the safety key and the plan before you start."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "skimo-base-60",
+          "note": "Hold RPE 4-5 the whole way."
+        },
+        {
+          "day": "Fri",
+          "off": "Rest."
+        },
+        {
+          "day": "Sat",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor walk or rest."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: longer climbing",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-base-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-long-climb-65",
+          "note": "Use the transitions to drink and eat, as on a tour."
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor walk or rest."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Base: first terrain changes",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-base-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "skimo-kickturn-terrain-55",
+          "note": "The steep pitches are RPE 7; ease up if you cannot recover on the traverse."
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-long-climb-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35",
+          "note": "Keep it very easy."
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week: absorb the work",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Mobility or an easy outdoor walk."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-base-60"
+        }
+      ],
+      "note": "Less volume on purpose. Sleep and eat well; the gain happens now."
+    },
+    {
+      "week": 5,
+      "focus": "Build: threshold climbing",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-threshold-4x8",
+          "note": "Start the first climb conservatively; the fourth should match the first."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "skimo-base-60"
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-long-climb-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Build: vertical-rate control",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-vam-ladder-60",
+          "note": "Note the rung where you stop being able to talk: that is your threshold."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "skimo-kickturn-terrain-55"
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-long-climb-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "Peak: race-pace climbs",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-vertical-race-prep-50"
+        },
+        {
+          "day": "Wed",
+          "off": "Mobility or an easy outdoor walk."
+        },
+        {
+          "day": "Thu",
+          "training": "skimo-threshold-4x8"
+        },
+        {
+          "day": "Sat",
+          "training": "skimo-long-climb-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "skimo-base-60",
+          "note": "Easy and smooth; stop early if you feel tired."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "off": "Your tour or event. Warm up on the first climb."
+        }
+      ],
+      "note": "Cut the volume; keep the legs moving."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "id": "hike-recovery-35",
+  "name": "Hike recovery 35",
+  "description": "An easy, gentle walk for active recovery between harder days. Keep it easy: RPE 2-3.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 3,
+        "speed_from": 2.4,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy start."
+      }
+    },
+    {
+      "name": "Easy walk",
+      "minutes": 29,
+      "speed": 3.2,
+      "level": 1,
+      "intensity": "recovery",
+      "notes": "RPE 2-3. Conversation pace."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 3,
+        "speed_from": 2.8,
+        "speed_to": 2.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Slow down gradually."
+      }
+    }
+  ]
+}

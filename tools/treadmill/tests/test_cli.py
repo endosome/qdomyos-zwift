@@ -43,8 +43,14 @@ class CliTests(unittest.TestCase):
     def test_catalog_and_full_example(self):
         result = self.command('workout', 'list')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual({row['id']: row['duration_seconds'] for row in json.loads(result.stdout)},
-                         {'uphill-walk-20': 1200, 'uphill-walk-60': 3600, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310})
+        catalog = json.loads(result.stdout)
+        core = {'uphill-walk-20': 1200, 'uphill-walk-60': 3600, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310}
+        self.assertEqual({row['id']: row['duration_seconds'] for row in catalog if row['id'] in core}, core)
+        # Everything else in the catalog is a FIT training (see trainings/) and must be a valid, W1-sized plan.
+        for row in catalog:
+            if row['id'] not in core:
+                self.assertTrue(row['path'].endswith('.fit'), row)
+                self.assertTrue(20 * 60 <= row['duration_seconds'] <= 65 * 60, row)
         result = self.command('workout', 'run', 'uphill-walk-20', '--simulate', '--fast', '--log', str(self.log))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         events = self.events()

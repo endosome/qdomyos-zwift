@@ -1,0 +1,55 @@
+{
+  "id": "hike-steep-intervals-50",
+  "name": "Hike steep intervals 50",
+  "description": "Short steep efforts to build strength for sharp climbs and stairs-like terrain, with easy walking between.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 6,
+      "steps": [
+        {
+          "name": "Steep push",
+          "minutes": 3,
+          "speed": 3.4,
+          "level": 7,
+          "intensity": "interval",
+          "notes": "RPE 6-7. Strong, controlled steps."
+        },
+        {
+          "name": "Easy walk",
+          "minutes": 2,
+          "speed": 3.0,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "RPE 3."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 12,
+        "speed_from": 3.2,
+        "speed_to": 2.0,
+        "level_from": 3,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

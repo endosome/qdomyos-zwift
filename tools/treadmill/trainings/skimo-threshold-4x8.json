@@ -1,0 +1,55 @@
+{
+  "id": "skimo-threshold-4x8",
+  "name": "Skimo threshold 4x8",
+  "description": "Four hard climbs at the highest vertical rate the W1 allows for this length: raises the pace you can sustain on the climb.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 4,
+      "steps": [
+        {
+          "name": "Threshold climb",
+          "minutes": 8,
+          "speed": 5.0,
+          "level": 8,
+          "intensity": "interval",
+          "notes": "RPE 7-8: comfortably hard, only a few words at a time."
+        },
+        {
+          "name": "Recovery",
+          "minutes": 3,
+          "speed": 3.0,
+          "level": 3,
+          "intensity": "recovery",
+          "notes": "Walk easy; let the heart rate come down."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 6,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

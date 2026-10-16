@@ -1,0 +1,114 @@
+{
+  "id": "skimo-vam-ladder-60",
+  "name": "Skimo vertical-rate ladder 60",
+  "description": "Steady 11 % grade while speed steps up then down: practice finding and holding your climbing rate, then finish steady.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "name": "Ladder 1",
+      "minutes": 4,
+      "speed": 4.2,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 5."
+    },
+    {
+      "name": "Ladder 2",
+      "minutes": 4,
+      "speed": 4.6,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 5-6."
+    },
+    {
+      "name": "Ladder 3",
+      "minutes": 4,
+      "speed": 5.0,
+      "level": 8,
+      "intensity": "interval",
+      "notes": "RPE 6-7."
+    },
+    {
+      "name": "Ladder 4",
+      "minutes": 4,
+      "speed": 5.4,
+      "level": 8,
+      "intensity": "interval",
+      "notes": "RPE 7."
+    },
+    {
+      "name": "Ladder 5",
+      "minutes": 4,
+      "speed": 5.8,
+      "level": 8,
+      "intensity": "interval",
+      "notes": "RPE 8: the top rung. Stay tall."
+    },
+    {
+      "name": "Down 1",
+      "minutes": 3,
+      "speed": 5.4,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 7."
+    },
+    {
+      "name": "Down 2",
+      "minutes": 3,
+      "speed": 5.0,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 6-7."
+    },
+    {
+      "name": "Down 3",
+      "minutes": 3,
+      "speed": 4.6,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 6."
+    },
+    {
+      "name": "Down 4",
+      "minutes": 3,
+      "speed": 4.2,
+      "level": 8,
+      "intensity": "active",
+      "notes": "RPE 5."
+    },
+    {
+      "name": "Steady finish",
+      "minutes": 10,
+      "speed": 4.4,
+      "level": 7,
+      "intensity": "active",
+      "notes": "Hold the pace you could keep on the last climb of a tour."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

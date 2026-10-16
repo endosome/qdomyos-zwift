@@ -1,0 +1,55 @@
+{
+  "id": "skimo-long-climb-65",
+  "name": "Skimo long climb 65",
+  "description": "Three long pitches with short transitions, like a real ascent: sustained climbing with brief stops to drink, eat and change layers.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 3,
+      "steps": [
+        {
+          "name": "Pitch",
+          "minutes": 14,
+          "speed": 4.4,
+          "level": 7,
+          "intensity": "active",
+          "notes": "RPE 5. Hold the same effort every pitch."
+        },
+        {
+          "name": "Transition",
+          "minutes": 2,
+          "speed": 2.6,
+          "level": 1,
+          "intensity": "recovery",
+          "notes": "Drink, eat, shake out the legs."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 9,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

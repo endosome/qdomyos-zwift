@@ -1,0 +1,95 @@
+{
+  "id": "trail-rolling-terrain-60",
+  "name": "Trail rolling terrain 60",
+  "description": "A fixed loop of rolling trail: climbs, fast flats and a steep wall, repeated twice. No downhill is possible on this machine, so downhill and eccentric work need outdoor sessions.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 2,
+      "steps": [
+        {
+          "name": "Rolling climb",
+          "minutes": 4,
+          "speed": 5.0,
+          "level": 3,
+          "intensity": "active",
+          "notes": "RPE 5."
+        },
+        {
+          "name": "Runnable flat",
+          "minutes": 3,
+          "speed": 5.4,
+          "level": 1,
+          "intensity": "active",
+          "notes": "RPE 5: fast walk."
+        },
+        {
+          "name": "Steep section",
+          "minutes": 3,
+          "speed": 4.6,
+          "level": 6,
+          "intensity": "active",
+          "notes": "RPE 6."
+        },
+        {
+          "name": "Rolling",
+          "minutes": 4,
+          "speed": 5.2,
+          "level": 2,
+          "intensity": "active",
+          "notes": "RPE 5."
+        },
+        {
+          "name": "Wall",
+          "minutes": 2,
+          "speed": 4.4,
+          "level": 7,
+          "intensity": "active",
+          "notes": "RPE 7: short and steep."
+        },
+        {
+          "name": "Fast flat",
+          "minutes": 3,
+          "speed": 5.6,
+          "level": 1,
+          "intensity": "active",
+          "notes": "RPE 5-6."
+        },
+        {
+          "name": "Sustained climb",
+          "minutes": 3,
+          "speed": 4.8,
+          "level": 5,
+          "intensity": "active",
+          "notes": "RPE 6."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

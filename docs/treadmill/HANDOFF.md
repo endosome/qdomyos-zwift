@@ -1344,3 +1344,14 @@ during the hold (6.0 -> 7.0 -> 6.0 -> 1.0 -> 0.0) and answered 7.0, so raw 70 = 
 record was written (`~/.local/state/treadmill/running-validated.json`: 7 km/h). A first attempt (20:11) was a clean run but the operator did not catch the display, so it correctly
 unlocked nothing. Next stage: run-8, then run-10 and run-12, each only after the previous passed, each with the display check. Logs (local):
 `~/treadmill-logs/run-7-stage-20261016-201403.jsonl` (validated) and `...-2011*.jsonl` (not validated).
+
+### Running-mode stages run-8, run-10 and run-12 validated; running speeds unlocked to 12.0 km/h (2026-10-16, 20:18-20:24)
+
+All four stages passed with the handrail up (limit report 10-120 / tag 0), each with a clean run (6.0 -> top speed 15 s -> 6.0 -> 1.0 km/h, planned stop, three NORMAL replies, cleanup
+Success, FTMS consistent for 48 samples at the top) and the operator's display reading: run-8 read 8.0, run-10 read 10.0, run-12 read 12.0 (run-7 read 7.0 earlier). Raw speed N = N/10 km/h
+is therefore confirmed against the console display in running mode at 7, 8, 10 and 12 km/h. Caveats, kept in the validation record: for run-10 the operator saw the display read 10.0 on reaching
+the top step but did not watch the rest of the hold; run-8 and run-12 were watched. `~/.local/state/treadmill/running-validated.json` now says 12 km/h, so every running training is accepted by
+`workout run --running-mode`; without the flag they are still refused. Three launches (run-8 once, run-12 once, plus an earlier run-7 retry pattern) were refused by the intermittent BlueZ connect error ("Unknown
+Error" three times) before any motor frame; a retry a few seconds later connected every time. Lesson: the installed workout catalog is expanded when qmake runs, so after adding trainings run `qmake ... PREFIX=...`
+and `make install` again, otherwise `workout run <id>` says unknown workout.
+Checklist: 5 (running-mode stages) DONE. Still optional: a 90-minute run, and the first full running training on the treadmill (suggest `run-easy-aerobic-40`).

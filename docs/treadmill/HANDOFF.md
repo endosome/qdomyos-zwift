@@ -1125,3 +1125,19 @@ limits 10-60/0 and incline 0-8 received, repeated NORMAL status, CCCD cleanup Su
 Standby: the W1 sleeps after about 10 minutes of inactivity and nothing sent over BLE has
 kept it awake (see the sleep investigation above). Whether an active run holds it awake is
 unverified beyond the 8.5-minute run. Wake it at the console, then start the run promptly.
+
+### Acceptance test passed on the Linux backend (2026-10-16)
+
+The full 20-minute `uphill-walk-20` completed for the first time, through the native Linux
+helper (`~/.local/bin/treadmill workout run uphill-walk-20`). All 47 targets were reported in
+order, with no faults and no STOPPING status before the host's STOP. STOP was sent at the
+planned end (1273 s), followed by three NORMAL reports and notification cleanup Success.
+`physical_stop_verified` stays false by design. During the run the operator confirmed
+physical incline changes (0 during warm-up, 1 at the start of the ascent) and the W1 stayed awake
+past the 10-minute idle mark while running. Log: `~/treadmill-logs/uphill-walk-20-20261016-125634.jsonl`
+(local only). Earlier the same day on Linux: `start-stop` and the 2-minute `interval-demo` passed.
+
+Helper fixes found by these runs: the run deadline now counts from READY with a 45 s backstop
+after the trial deadline, and a refused first BlueZ connect is retried up to three times before
+any command is sent. A 60-minute plan, `workouts/uphill-walk-60.xml` (99 targets, same speed and
+incline ceilings), was added; its first run is next.

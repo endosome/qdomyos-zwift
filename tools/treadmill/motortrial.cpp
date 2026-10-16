@@ -190,7 +190,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         data.insert("utc", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs));
         const auto bytes = QJsonDocument(data).toJson(QJsonDocument::Compact) + '\n';
         QTextStream(stdout) << bytes << Qt::flush;
-        if (log.size() + bytes.size() > 8 * 1024 * 1024 || log.write(bytes) != bytes.size() || !log.flush()) {
+        if (log.size() + bytes.size() > 64 * 1024 * 1024 || log.write(bytes) != bytes.size() || !log.flush()) {
             failed = true;
             QTextStream(stderr) << "Motor recording failed; Windows helper is being asked to stop.\n";
             if (close) close();
@@ -363,7 +363,12 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     QObject::connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), &app,
                      [&](int code, QProcess::ExitStatus status) { if (code != 0 || status != QProcess::NormalExit) failed = true; app.quit(); });
     QObject::connect(&process, &QProcess::errorOccurred, &app, [&](QProcess::ProcessError error) {
-        failed = true; if (error == QProcess::FailedToStart) app.quit();
+        failed = true;
+        if (error == QProcess::FailedToStart) {
+            record("fault", {{"reason", "PowerShell failed to start; check WSL interop (powershell.exe from WSL)"}});
+            QTextStream(stderr) << "powershell.exe failed to start. If it reports 'Exec format error', WSL interop was unregistered; see README.\n";
+            app.quit();
+        }
     });
     QSocketNotifier signalNotifier(input.signalPipe[0], QSocketNotifier::Read);
     QObject::connect(&signalNotifier, &QSocketNotifier::activated, &app, [&](int) {
@@ -476,8 +481,8 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     plan.speed = 10;
     plan.incline = 0;
     const qint64 totalMs = workout.durationMs();
-    if (totalMs <= 0 || totalMs > 28 * 60 * 1000)
-        return fail("W1 hardware workouts plus the stop margin are limited to 30 minutes");
+    if (totalMs <= 0 || totalMs > 70 * 60 * 1000)
+        return fail("W1 hardware workouts plus the stop margin are limited to 70 minutes");
     constexpr double gradePerLevel = 11.0 / 8.0;
     for (const auto &stage : workout.stages) {
         for (qint64 offset = 0; offset < stage.durationMs;) {
@@ -500,12 +505,12 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
                 plan.incline = qMax(plan.incline, inclineCode);
             }
             offset += span;
-            if (plan.steps.size() > 256) return fail("Workout needs more than 256 distinct W1 targets");
+            if (plan.steps.size() > 512) return fail("Workout needs more than 512 distinct W1 targets");
         }
     }
     if (plan.steps.isEmpty()) return fail("Workout has no W1-compatible targets");
     plan.deadline = int(totalMs / 1000) + 120;
-    if (plan.deadline > 1800) return fail("Workout plus safety margin exceeds the 30-minute control deadline");
+    if (plan.deadline > 4500) return fail("Workout plus safety margin exceeds the 75-minute control deadline");
     plan.stepHold = plan.steps.first().holdSeconds;
     if (parser.value("backend") != "windows") return fail("Real W1 workout playback currently requires the Windows Bluetooth bridge (--backend windows); native Linux transport remains available for diagnostics.");
     if (parser.value("device").toUpper() != "DD:87:70:39:74:20" || parser.value("expected-name") != "FS-0F7A32")

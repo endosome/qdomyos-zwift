@@ -91,10 +91,10 @@ namespace TreadmillDiagnostics {
             var parts = trial.Split('-');
             int code;
             if (trial == "workout") {
-                if (targetSequence.Length == 0 || targetSequence.Length > 4096 || timeoutSeconds < 1 || timeoutSeconds > 1800)
+                if (targetSequence.Length == 0 || targetSequence.Length > 4096 || timeoutSeconds < 1 || timeoutSeconds > 4500)
                     throw new ArgumentException("Workout target sequence/deadline is outside the reviewed limit");
                 var pairs = targetSequence.Split(',');
-                if (pairs.Length > 256) throw new ArgumentException("Workout has too many target changes");
+                if (pairs.Length > 512) throw new ArgumentException("Workout has too many target changes");
                 var frames = new List<string>();
                 int previousSpeed = -1, previousIncline = -1;
                 foreach (var pair in pairs) {
@@ -437,7 +437,7 @@ namespace TreadmillDiagnostics {
         }
         static Report Session(string address, string addressType, string expectedName, int seconds, bool bridge, bool motor,
                               string trial = "start-stop", bool observeFtms = false, bool statusHeartRateZero = false, bool statusDataSport = false, bool measureSleepTimer = false, string targetSequence = "") {
-            if (seconds < 1 || seconds > (motor ? (trial == "workout" ? 1800 : 240) : (measureSleepTimer ? 900 : 600))) throw new ArgumentException("Session duration exceeds its bounded scope");
+            if (seconds < 1 || seconds > (motor ? (trial == "workout" ? 4500 : 240) : (measureSleepTimer ? 900 : 600))) throw new ArgumentException("Session duration exceeds its bounded scope");
             if (motor && (statusHeartRateZero || statusDataSport || measureSleepTimer)) throw new ArgumentException("Zero heart-rate status is nonmotor only");
             ulong rawAddress = ParseAddress(address);
             var report = new Report { status_heart_rate_zero = statusHeartRateZero, status_data_sport = statusDataSport, measure_sleep_timer = measureSleepTimer, command = motor ? "control-test" : "probe", address = Address(rawAddress), address_type = addressType,
@@ -465,7 +465,7 @@ namespace TreadmillDiagnostics {
             Action<string> stream = (line) => {
                 if (!motor) return;
                 lock (guard) {
-                    if (output.Count >= 256) { overflow = true; cancellation.Cancel(); return; }
+                    if (output.Count >= 4096) { overflow = true; cancellation.Cancel(); return; }
                     output.Enqueue(line);
                 }
             };
@@ -560,7 +560,9 @@ namespace TreadmillDiagnostics {
                         string hex = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
                         lock (guard) {
                             if (!collecting) return;
-                            if (report.frames.Count >= 4096 || capturedCharacters + hex.Length > 6 * 1024 * 1024) { overflow = true; return; }
+                            // Motor runs stream every frame to the CLI log; the final report keeps a recent window.
+                            if (motor) { while (report.frames.Count >= 2048) report.frames.RemoveAt(0); }
+                            else if (report.frames.Count >= 4096 || capturedCharacters + hex.Length > 6 * 1024 * 1024) { overflow = true; return; }
                             capturedCharacters += hex.Length;
                             report.frames.Add(new Frame { direction = "rx", frame_hex = hex, monotonic_ms = clock.ElapsedMilliseconds,
                                 utc = DateTime.UtcNow.ToString("o"), characteristic_uuid = notify.Uuid.ToString() });
@@ -597,7 +599,8 @@ namespace TreadmillDiagnostics {
                                 string hex = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
                                 lock (guard) {
                                     if (!collecting) return;
-                                    if (report.frames.Count >= 4096 || capturedCharacters + hex.Length > 6 * 1024 * 1024) { overflow = true; return; }
+                                    if (motor) { while (report.frames.Count >= 2048) report.frames.RemoveAt(0); }
+                                    else if (report.frames.Count >= 4096 || capturedCharacters + hex.Length > 6 * 1024 * 1024) { overflow = true; return; }
                                     capturedCharacters += hex.Length;
                                     report.frames.Add(new Frame { direction = "rx", frame_hex = hex, characteristic_uuid = ftmsCharacteristic.Uuid.ToString(),
                                         monotonic_ms = clock.ElapsedMilliseconds, utc = DateTime.UtcNow.ToString("o") });

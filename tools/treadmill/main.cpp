@@ -6,6 +6,9 @@
 #include <QBluetoothAddress>
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <QTextStream>
 
 int main(int argc, char *argv[]) {
@@ -35,7 +38,22 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
     parser.addOption(QCommandLineOption("measure-sleep-timer", "Windows nonmotor observer: start asleep, wake physically, measure first NORMAL to next sleep."));
     addWorkoutOptions(parser);
-    parser.process(app);
+    // `treadmill workout run <plan>` defaults to the RunPad W1 over the Windows
+    // bridge with a timestamped log; the typed MOTOR confirmation still applies.
+    QStringList commandLine = app.arguments();
+    if (commandLine.size() >= 4 && commandLine[1] == "workout" && commandLine[2] == "run" &&
+        !commandLine.contains("--simulate") && !commandLine.contains("--backend")) {
+        commandLine << "--backend" << "windows" << "--device" << "DD:87:70:39:74:20"
+                    << "--expected-name" << "FS-0F7A32" << "--address-type" << "public";
+        if (!commandLine.contains("--dry-run") && !commandLine.contains("--log")) {
+            const QString logDirectory = QDir::homePath() + "/treadmill-logs";
+            QDir().mkpath(logDirectory);
+            commandLine << "--confirm-motor" << "--log"
+                        << logDirectory + '/' + QFileInfo(commandLine[3]).completeBaseName() + '-' +
+                               QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss") + ".jsonl";
+        }
+    }
+    parser.process(commandLine);
     const auto arguments = parser.positionalArguments();
     const bool hardwareWorkout = arguments.size() == 3 && arguments[0] == "workout" && arguments[1] == "run" && !parser.isSet("simulate");
     const QString backend = parser.value("backend");

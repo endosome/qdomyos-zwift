@@ -67,6 +67,7 @@ jobs:
           /tmp/treadmill-driver-tests/qz-fitshow-tests --gtest_output=xml:/tmp/treadmill-driver-tests/results.xml
           python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_linux_helper.py /tmp/treadmill-linux-helper/treadmill-linux-helper
+          python3 tools/treadmill/tests/test_make_plan.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_summarize_run.py

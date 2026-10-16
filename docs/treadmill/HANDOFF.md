@@ -41,6 +41,20 @@ host's shared binfmt table, which deletes WSLInterop. Masking it with
 `/dev/null:/etc/systemd/system/systemd-binfmt.service:ro` was tested and works.
 The user chose to move to a Linux machine instead.
 
+**Repository notes (2026-10-16):**
+- `develop` was created from `master`; it did not exist before.
+- Push to `endosome/qdomyos-zwift` through the SSH alias `github-endosome`
+  (key `~/.ssh/id_ed25519_endosome`). The default `github.com` key
+  authenticates as `antoni`, which has no write access. `origin` is now
+  `git@github-endosome:endosome/qdomyos-zwift.git`. On a new machine, set up the
+  same alias in `~/.ssh/config`, or use another key with write access.
+- `push.followTags=true` in the git config, so the first push also sent
+  upstream's existing tags (`build-999`, `version-2.19.0`, …) to the fork.
+  They're harmless.
+- The full 20-minute `uphill-walk-20` run has still never completed. It is the
+  acceptance test.
+- `tools/treadmill/__pycache__/` is untracked on purpose.
+
 **Next on the Linux machine:** hardware workout playback is currently
 **Windows bridge only**. Native Linux Qt/BlueZ supports scan, info and status
 diagnostics but has no workout transport. The work is to connect

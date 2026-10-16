@@ -1,0 +1,55 @@
+{
+  "id": "mr-hill-repeats-8x2",
+  "name": "Mountain run hill repeats 8x2",
+  "description": "Eight short, very steep, very fast climbs. 6.0 km/h at 11 % is a hard power-hike; running form is not possible on this machine.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 8,
+      "steps": [
+        {
+          "name": "Steep hill",
+          "minutes": 2,
+          "speed": 6.0,
+          "level": 8,
+          "intensity": "interval",
+          "notes": "RPE 8. Short quick steps, drive the arms."
+        },
+        {
+          "name": "Recover",
+          "minutes": 2,
+          "speed": 3.0,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "Walk down to RPE 3."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

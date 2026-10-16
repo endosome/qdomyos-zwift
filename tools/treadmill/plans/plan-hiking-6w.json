@@ -1,0 +1,153 @@
+{
+  "id": "plan-hiking-6w",
+  "name": "Hiking fitness, 6 weeks",
+  "goal": "Build the time on your feet and the climbing endurance for long hiking days, including back-to-back days with a steady pack-weight climb.",
+  "audience": "Healthy adults who want to be comfortable on 4-6 hour mountain hikes. The treadmill sessions are 35-65 minutes; add an outdoor long day when you can.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: easy volume",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor walk or rest."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: add climbing",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-rolling-hills-60"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-steep-pack-65",
+          "note": "Optional: carry a light pack, within the 120 kg total limit."
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor walk or rest."
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Build: back-to-back days",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-rolling-hills-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-steep-pack-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-base-60",
+          "note": "Tired legs on purpose, as on day two of a trip."
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-rolling-hills-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Build: strength and volume",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-steep-intervals-50",
+          "note": "RPE 6-7 on the pushes; walk the easy minutes properly easy."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-rolling-hills-60"
+        },
+        {
+          "day": "Sat",
+          "training": "hike-steep-pack-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-base-60"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-rolling-hills-60"
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "off": "Your hike or trip."
+        }
+      ],
+      "note": "Keep the legs moving, cut the volume."
+    }
+  ]
+}

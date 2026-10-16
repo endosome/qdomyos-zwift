@@ -1,0 +1,55 @@
+{
+  "id": "mr-vk-progression-60",
+  "name": "Mountain run vertical-km progression 60",
+  "description": "A staircase from moderate to steep and fast, then a hold at the top: vertical-kilometre style pacing at power-hike speed.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "ramp": {
+        "name": "Progression",
+        "minutes": 36,
+        "speed_from": 4.8,
+        "speed_to": 5.8,
+        "level_from": 5,
+        "level_to": 8,
+        "step_minutes": 2,
+        "intensity": "active",
+        "notes": "Effort rises slowly: RPE 5 to 8 across the staircase."
+      }
+    },
+    {
+      "name": "Top hold",
+      "minutes": 4,
+      "speed": 5.8,
+      "level": 8,
+      "intensity": "interval",
+      "notes": "RPE 8-9. Hold form."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

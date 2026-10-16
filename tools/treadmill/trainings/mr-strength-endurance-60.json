@@ -1,0 +1,42 @@
+{
+  "id": "mr-strength-endurance-60",
+  "name": "Mountain run strength endurance 60",
+  "description": "A long steady steep climb at power-hike pace: builds the climbing endurance that uphill mountain runs and trail races rely on.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "name": "Steady steep climb",
+      "minutes": 40,
+      "speed": 5.0,
+      "level": 6,
+      "intensity": "active",
+      "notes": "RPE 5-6. Even effort; do not drift faster."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

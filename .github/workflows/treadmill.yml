@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/treadmill/**'
+      - 'src/fit-sdk/**'
       - 'src/devices/fitshowtreadmill/**'
       - 'src/devices/bluetoothdevice.*'
       - 'src/devices/treadmill.*'
@@ -13,6 +14,7 @@ on:
   pull_request:
     paths:
       - 'tools/treadmill/**'
+      - 'src/fit-sdk/**'
       - 'src/devices/fitshowtreadmill/**'
       - 'src/devices/bluetoothdevice.*'
       - 'src/devices/treadmill.*'
@@ -76,6 +78,8 @@ jobs:
           python3 -m venv /tmp/fit-venv
           /tmp/fit-venv/bin/pip install --quiet garmin-fit-sdk
           /tmp/fit-venv/bin/python tools/treadmill/tests/test_fit.py /tmp/treadmill-fit/treadmill-fit /tmp/treadmill-build/treadmill
+          TREADMILL_FIT=/tmp/treadmill-fit/treadmill-fit tools/treadmill/trainings/build.sh --check
+          /tmp/fit-venv/bin/python tools/treadmill/tests/test_trainings.py /tmp/treadmill-fit/treadmill-fit /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_summarize_run.py

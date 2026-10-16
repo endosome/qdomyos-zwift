@@ -1,0 +1,212 @@
+{
+  "id": "plan-mountain-run-8w",
+  "name": "Mountain running uphill and trail, 8 weeks",
+  "goal": "Train the uphill engine for mountain and trail running: steady steep climbing, hill repeats and power-hiking, pacing, and rolling terrain, with a taper.",
+  "audience": "Healthy runners and hikers. The W1 walks at 6.0 km/h at most, so these sessions are power-hiking; they train climbing strength and endurance, not running form or downhill, which need outdoor runs.",
+  "weeks": [
+    {
+      "week": 1,
+      "focus": "Base: steady climbing",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mr-strength-endurance-60",
+          "note": "RPE 5-6, even effort."
+        },
+        {
+          "day": "Sat",
+          "training": "trail-rolling-terrain-60"
+        },
+        {
+          "day": "Sun",
+          "off": "Easy outdoor run or walk, or rest."
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Base: first hill repeats",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-hill-repeats-8x2",
+          "note": "RPE 8 on the climbs; recover fully on the easy 2 minutes."
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mr-strength-endurance-60"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-long-rolling-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "focus": "Base: power-hike intervals",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-powerhike-5x5"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mr-strength-endurance-60"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-rolling-terrain-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "focus": "Recovery week",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "hike-base-60"
+        },
+        {
+          "day": "Thu",
+          "training": "mr-hill-repeats-8x2",
+          "note": "Easier than week 2: stop a repeat early if the form goes."
+        },
+        {
+          "day": "Sat",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sun",
+          "off": "Rest."
+        }
+      ],
+      "note": "Less volume on purpose."
+    },
+    {
+      "week": 5,
+      "focus": "Build: power and pacing",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-powerhike-5x5"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "mr-strength-endurance-60"
+        },
+        {
+          "day": "Sat",
+          "training": "mr-vk-progression-60",
+          "note": "Start the staircase easy; the last steps should be hard but controlled."
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "focus": "Build: speed at the walking ceiling",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-hill-repeats-8x2"
+        },
+        {
+          "day": "Wed",
+          "off": "Strength 30-40 min: squats, step-ups, lunges, calf raises, plank. Stop if anything hurts."
+        },
+        {
+          "day": "Thu",
+          "training": "trail-tempo-progression-55",
+          "note": "Each block a little faster; the last is the fastest the W1 walks."
+        },
+        {
+          "day": "Sat",
+          "training": "trail-rolling-terrain-60"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "focus": "Peak",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-powerhike-5x5"
+        },
+        {
+          "day": "Wed",
+          "off": "Mobility or an easy outdoor run."
+        },
+        {
+          "day": "Thu",
+          "training": "mr-vk-progression-60"
+        },
+        {
+          "day": "Sat",
+          "training": "trail-long-rolling-65"
+        },
+        {
+          "day": "Sun",
+          "training": "hike-recovery-35"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "focus": "Taper: arrive fresh",
+      "sessions": [
+        {
+          "day": "Tue",
+          "training": "mr-hill-repeats-8x2",
+          "note": "Short and sharp; do fewer repeats if tired."
+        },
+        {
+          "day": "Thu",
+          "training": "hike-recovery-35"
+        },
+        {
+          "day": "Sat",
+          "off": "Your race or long run."
+        }
+      ],
+      "note": "Cut the volume; keep a little speed."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "id": "hike-base-60",
+  "name": "Hike base 60",
+  "description": "Steady aerobic hiking at moderate grade: the backbone of hiking fitness. RPE 3-4, nose-breathing pace.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 6,
+        "speed_from": 2.4,
+        "speed_to": 3.6,
+        "level_from": 0,
+        "level_to": 3,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "name": "Steady hike",
+      "minutes": 48,
+      "speed": 3.8,
+      "level": 4,
+      "intensity": "active",
+      "notes": "RPE 3-4. Relaxed, even rhythm."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 6,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

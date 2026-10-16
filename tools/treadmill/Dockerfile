@@ -10,7 +10,7 @@ COPY src/metric.cpp src/metric.h src/qzsettings.cpp src/qzsettings.h \
     src/bluetoothdevicetype.h src/definitions.h src/qdebugfixup.h \
     src/sessionline.h src/ergtable.h src/treadmillErgTable.h \
     src/keepawakehelper.h /source/src/
-COPY src/fit-sdk/fit.hpp src/fit-sdk/fit_profile.hpp src/fit-sdk/fit_config.hpp /source/src/fit-sdk/
+COPY src/fit-sdk /source/src/fit-sdk
 COPY src/devices/bluetoothdevice.cpp src/devices/bluetoothdevice.h \
     src/devices/treadmill.cpp src/devices/treadmill.h /source/src/devices/
 COPY src/devices/fitshowtreadmill /source/src/devices/fitshowtreadmill

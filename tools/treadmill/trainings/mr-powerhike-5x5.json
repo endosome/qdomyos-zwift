@@ -1,0 +1,55 @@
+{
+  "id": "mr-powerhike-5x5",
+  "name": "Mountain run power-hike 5x5",
+  "description": "Five 5-minute fast power-hikes on a steep grade: the steep-uphill skill of mountain running. At 5.6 km/h this is the W1 walking-mode ceiling, not running.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 5,
+      "steps": [
+        {
+          "name": "Power-hike",
+          "minutes": 5,
+          "speed": 5.6,
+          "level": 6,
+          "intensity": "interval",
+          "notes": "RPE 7. Hands on thighs or poles-like arm drive, upright torso."
+        },
+        {
+          "name": "Recovery",
+          "minutes": 3,
+          "speed": 3.4,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "Walk easy."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

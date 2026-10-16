@@ -20,8 +20,11 @@ class PackageTests(unittest.TestCase):
         result = self.command('workout', 'list')
         self.assertEqual(result.returncode, 0, result.stderr)
         catalog = json.loads(result.stdout)
-        self.assertEqual({row['id']: row['duration_seconds'] for row in catalog},
-                         {'uphill-walk-20': 1200, 'uphill-walk-60': 3600, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310})
+        core = {'uphill-walk-20': 1200, 'uphill-walk-60': 3600, 'interval-demo': 120, 'runpad-w1-discovery-demo': 310}
+        self.assertEqual({row['id']: row['duration_seconds'] for row in catalog if row['id'] in core}, core)
+        for row in catalog:
+            if row['id'] not in core:
+                self.assertTrue(row['path'].endswith('.fit'), row)
         for row in catalog:
             self.assertTrue(row['path'].startswith('/usr/local/share/treadmill/workouts/'))
 

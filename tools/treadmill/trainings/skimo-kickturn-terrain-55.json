@@ -1,0 +1,55 @@
+{
+  "id": "skimo-kickturn-terrain-55",
+  "name": "Skimo switchbacks 55",
+  "description": "Steep pitches alternating with flatter traverses, like switchbacks and a changing skin track: trains grade changes and quick recoveries.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 8,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 10,
+      "steps": [
+        {
+          "name": "Steep pitch",
+          "minutes": 2,
+          "speed": 4.6,
+          "level": 8,
+          "intensity": "interval",
+          "notes": "RPE 7. Short steps, drive from the hips."
+        },
+        {
+          "name": "Traverse",
+          "minutes": 1.5,
+          "speed": 4.8,
+          "level": 4,
+          "intensity": "active",
+          "notes": "RPE 4-5. Recover while still moving."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 12,
+        "speed_from": 3.4,
+        "speed_to": 2.0,
+        "level_from": 3,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

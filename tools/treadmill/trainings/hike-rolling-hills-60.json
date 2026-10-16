@@ -1,0 +1,55 @@
+{
+  "id": "hike-rolling-hills-60",
+  "name": "Hike rolling hills 60",
+  "description": "Climb-and-ease cycles like rolling mountain terrain: builds leg endurance and the habit of recovering on the move.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "repeat": 4,
+      "steps": [
+        {
+          "name": "Climb",
+          "minutes": 6,
+          "speed": 3.8,
+          "level": 5,
+          "intensity": "active",
+          "notes": "RPE 4-5."
+        },
+        {
+          "name": "Rolling flat",
+          "minutes": 4,
+          "speed": 3.4,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "RPE 3: recover while walking."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

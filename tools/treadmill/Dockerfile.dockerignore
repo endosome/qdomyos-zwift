@@ -7,9 +7,7 @@
 !src/
 !src/*.h
 !src/fit-sdk/
-!src/fit-sdk/fit.hpp
-!src/fit-sdk/fit_profile.hpp
-!src/fit-sdk/fit_config.hpp
+!src/fit-sdk/**
 !src/metric.cpp
 !src/qzsettings.cpp
 !src/devices/

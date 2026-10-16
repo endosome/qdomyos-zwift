@@ -1,0 +1,74 @@
+{
+  "id": "trail-tempo-progression-55",
+  "name": "Trail tempo progression 55",
+  "description": "Five blocks, each a little faster than the last, at a modest grade: teaches pacing and finishing strong. Speed tops out at the 6.0 km/h walking limit.",
+  "sport": "hiking",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 2.4,
+        "speed_to": 3.4,
+        "level_from": 0,
+        "level_to": 2,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy and smooth. Nose breathing, shoulders loose."
+      }
+    },
+    {
+      "name": "Tempo 1",
+      "minutes": 7,
+      "speed": 5.0,
+      "level": 3,
+      "intensity": "interval",
+      "notes": "RPE 6."
+    },
+    {
+      "name": "Tempo 2",
+      "minutes": 7,
+      "speed": 5.3,
+      "level": 3,
+      "intensity": "interval",
+      "notes": "RPE 6-7."
+    },
+    {
+      "name": "Tempo 3",
+      "minutes": 7,
+      "speed": 5.6,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 7."
+    },
+    {
+      "name": "Tempo 4",
+      "minutes": 7,
+      "speed": 5.8,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 7-8."
+    },
+    {
+      "name": "Tempo 5",
+      "minutes": 7,
+      "speed": 6.0,
+      "level": 4,
+      "intensity": "interval",
+      "notes": "RPE 8: the fastest the W1 walks."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 10,
+        "speed_from": 3.0,
+        "speed_to": 2.0,
+        "level_from": 2,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Let the breathing settle; sip water."
+      }
+    }
+  ]
+}

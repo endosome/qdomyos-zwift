@@ -200,7 +200,8 @@ TEST(MotorGate, ConstructorRejectsUnsupportedOrMalformedPlans) {
     EXPECT_THROW(MotorGate("incline-9", "", 80), std::invalid_argument);
     EXPECT_THROW(MotorGate("nonsense", "", 12), std::invalid_argument);
     EXPECT_THROW(MotorGate("workout", "", 600), std::invalid_argument);
-    EXPECT_THROW(MotorGate("workout", "20:1", 4501), std::invalid_argument);
+    EXPECT_THROW(MotorGate("workout", "20:1", 9001), std::invalid_argument);
+    EXPECT_NO_THROW(MotorGate("workout", "20:1", 9000));
     EXPECT_THROW(MotorGate("workout", "9:0", 600), std::invalid_argument);
     EXPECT_THROW(MotorGate("workout", "61:0", 600), std::invalid_argument);
     EXPECT_THROW(MotorGate("workout", "20:9", 600), std::invalid_argument);

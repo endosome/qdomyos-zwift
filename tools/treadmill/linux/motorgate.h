@@ -20,7 +20,7 @@ class MotorGate {
         bool numeric = false;
         const int code = parts.size() == 2 ? parts[1].toInt(&numeric) : 0;
         if (trial == "workout") {
-            if (targetSequence.isEmpty() || targetSequence.size() > 4096 || timeoutSeconds < 1 || timeoutSeconds > 4500)
+            if (targetSequence.isEmpty() || targetSequence.size() > 4096 || timeoutSeconds < 1 || timeoutSeconds > 9000)
                 throw std::invalid_argument("Workout target sequence/deadline is outside the reviewed limit");
             const QStringList pairs = targetSequence.split(',');
             if (pairs.size() > 512) throw std::invalid_argument("Workout has too many target changes");

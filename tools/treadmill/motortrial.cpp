@@ -171,6 +171,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     if ((!batchConfirmed && !parser.isSet("confirm-motor")) || !parser.isSet("log")) return fail("Control trial requires --confirm-motor and a new --log; inspect --dry-run first");
     if (!isatty(STDIN_FILENO)) return fail("Motor trial requires an interactive operator confirmation");
     if (!batchConfirmed) {
+    int nominalSeconds = 0;
+    if (trial.workout) for (const auto &step : trial.steps) nominalSeconds += step.holdSeconds;
+    const int longRunMinutes = nominalSeconds / 60;
     QTextStream(stderr) << QJsonDocument(plan).toJson()
         << (trial.workout ? "This runs the prepared W1 target schedule, holds each reported step, and explicitly stops. Incline percentages use the provisional linear assumption.\n"
                            : trial.readyOnly ? "This requests READY with mode bit 0x80, observes 15 seconds, then explicitly stops.\nW1 support is unverified: countdown or running triggers immediate stop.\n"
@@ -183,6 +186,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         << (waitWakeMs <= 0 ? QString() : waitConfirm
             ? QString("WAIT FOR WAKE: no motor command is sent until the treadmill is awake (up to %1 s); then press ENTER to start, or Q to cancel.\n").arg(waitWakeMs / 1000)
             : QString("WAIT FOR WAKE, AUTO-START: nothing is sent to the motor until the treadmill is awake (up to %1 s); then the belt STARTS BY ITSELF after %2 s unless you press Q.\n").arg(waitWakeMs / 1000).arg(kWakeGraceMs / 1000))
+        << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no pause and no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
         << "Type MOTOR to approve this exact trial: " << Qt::flush;
     if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
     }
@@ -567,9 +571,12 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     plan.workoutName = workout.name;
     plan.speed = 10;
     plan.incline = 0;
+    const bool linuxBackend = parser.value("backend") == "linux";
+    // The Linux helper allows 120 minutes; the Windows bridge's gates were sized for 70 and stay there.
+    const int maxMinutes = linuxBackend ? 120 : 70, maxDeadlineSeconds = linuxBackend ? 9000 : 4500;
     const qint64 totalMs = workout.durationMs();
-    if (totalMs <= 0 || totalMs > 70 * 60 * 1000)
-        return fail("W1 hardware workouts plus the stop margin are limited to 70 minutes");
+    if (totalMs <= 0 || totalMs > qint64(maxMinutes) * 60 * 1000)
+        return fail(QString("W1 hardware workouts on the %1 backend are limited to %2 minutes").arg(linuxBackend ? "Linux" : "Windows").arg(maxMinutes));
     constexpr double gradePerLevel = 11.0 / 8.0;
     for (const auto &stage : workout.stages) {
         for (qint64 offset = 0; offset < stage.durationMs;) {
@@ -599,7 +606,7 @@ int runWindowsWorkout(QCoreApplication &app, const QCommandLineParser &parser, c
     // Each target costs about 1.5 s of waiting for three matching status reports (measured: 1.45 s mean over a
     // 60-minute run), so the margin grows with the step count: 3 s per step on top of the fixed 120 s.
     plan.deadline = int(totalMs / 1000) + 120 + 3 * int(plan.steps.size());
-    if (plan.deadline > 4500) return fail("Workout plus safety margin exceeds the 75-minute control deadline");
+    if (plan.deadline > maxDeadlineSeconds) return fail(QString("Workout plus safety margin exceeds the %1 s control deadline").arg(maxDeadlineSeconds));
     plan.stepHold = plan.steps.first().holdSeconds;
     if (parser.value("backend") != "windows" && parser.value("backend") != "linux")
         return fail("Real W1 workout playback requires --backend windows or --backend linux");

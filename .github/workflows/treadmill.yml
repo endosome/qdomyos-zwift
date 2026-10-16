@@ -55,6 +55,10 @@ jobs:
           cd /tmp/treadmill-driver-tests
           qmake "$GITHUB_WORKSPACE/tools/treadmill/driver/tests.pro" DRIVER_LIB=/tmp/treadmill-driver
           make -j2
+          mkdir -p /tmp/treadmill-linux-helper
+          cd /tmp/treadmill-linux-helper
+          qmake "$GITHUB_WORKSPACE/tools/treadmill/linux/linux-helper.pro"
+          make -j2
       - name: Run offline tests without a Bluetooth bus
         env:
           DBUS_SYSTEM_BUS_ADDRESS: unix:path=/tmp/treadmill-no-system-bus
@@ -62,6 +66,7 @@ jobs:
           /tmp/treadmill-tests/treadmill-tests --gtest_output=xml:/tmp/treadmill-tests/results.xml
           /tmp/treadmill-driver-tests/qz-fitshow-tests --gtest_output=xml:/tmp/treadmill-driver-tests/results.xml
           python3 tools/treadmill/tests/test_cli.py /tmp/treadmill-build/treadmill
+          python3 tools/treadmill/tests/test_linux_helper.py /tmp/treadmill-linux-helper/treadmill-linux-helper
           python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_summarize_run.py

@@ -38,13 +38,15 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
     parser.addOption(QCommandLineOption("measure-sleep-timer", "Windows nonmotor observer: start asleep, wake physically, measure first NORMAL to next sleep."));
     addWorkoutOptions(parser);
-    // `treadmill workout run <plan>` defaults to the RunPad W1 over the Windows
-    // bridge with a timestamped log; the typed MOTOR confirmation still applies.
+    // `treadmill workout run <plan>` defaults to the RunPad W1 with a timestamped log; the typed
+    // MOTOR confirmation still applies. Under WSL it uses the Windows bridge, elsewhere BlueZ.
     QStringList commandLine = app.arguments();
     if (commandLine.size() >= 4 && commandLine[1] == "workout" && commandLine[2] == "run" &&
         !commandLine.contains("--simulate") && !commandLine.contains("--backend")) {
-        commandLine << "--backend" << "windows" << "--device" << "DD:87:70:39:74:20"
-                    << "--expected-name" << "FS-0F7A32" << "--address-type" << "public";
+        const bool underWsl = qEnvironmentVariableIsSet("WSL_DISTRO_NAME");
+        commandLine << "--backend" << (underWsl ? "windows" : "linux") << "--device" << "DD:87:70:39:74:20"
+                    << "--expected-name" << "FS-0F7A32";
+        if (underWsl) commandLine << "--address-type" << "public";
         if (!commandLine.contains("--dry-run") && !commandLine.contains("--log")) {
             const QString logDirectory = QDir::homePath() + "/treadmill-logs";
             QDir().mkpath(logDirectory);
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
     if ((parser.isSet("backend") || parser.isSet("address-type")) && parser.isSet("simulate")) {
         QTextStream(stderr) << "Backend options cannot be used with simulation.\n"; return 2;
     }
-    if (parser.isSet("expected-name") && (backend != "windows" || parser.isSet("simulate") || !parser.isSet("device") ||
+    if (parser.isSet("expected-name") && ((backend != "windows" && !hardwareWorkout) || parser.isSet("simulate") || !parser.isSet("device") ||
         (!hardwareWorkout && (arguments.size() != 1 || arguments.first() != "status")))) {
         QTextStream(stderr) << "--expected-name requires Windows status or hardware workout with --device.\n"; return 2;
     }

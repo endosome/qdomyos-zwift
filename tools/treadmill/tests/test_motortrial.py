@@ -27,8 +27,13 @@ class MotorTrialTests(unittest.TestCase):
         helper = self.executable('fake-powershell', '''import json, os, sys, time
 from pathlib import Path
 mode = os.environ['MOTOR_MODE']
-trial = sys.argv[sys.argv.index('-Trial') + 1]
-expected_name = sys.argv[sys.argv.index('-ExpectedName') + 1]
+def argument(windows, linux):
+    for name in (windows, linux):
+        if name in sys.argv:
+            return sys.argv[sys.argv.index(name) + 1]
+trial = argument('-Trial', '--trial')
+expected_name = argument('-ExpectedName', '--expected-name')
+Path(os.environ['MOTOR_CALLS'] + '.argv').write_text(json.dumps(sys.argv[1:]))
 if mode == 'batch-fault':
     mode = 'bounds' if trial == 'speed-60' else 'normal'
 observe_ftms = '-ObserveFtms' in sys.argv
@@ -102,7 +107,7 @@ for line in sys.stdin:
     elif payload == bytes.fromhex('5306'):
         moving, paused = False, True
         rx(bytes.fromhex('5306'))
-send(json.dumps(dict(command='control-test', backend='windows-winrt', status='complete',
+send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKEND', 'windows-winrt'), status='complete',
                      notification_cleanup_status='Success', motor_execution_enabled=True,
                      ftms_observation_status='complete' if observe_ftms else 'not requested')))
 ''')
@@ -180,7 +185,7 @@ send(json.dumps(dict(command='control-test', backend='windows-winrt', status='co
         self.assertTrue(events[-1]['sequence_observed'])
         self.assertFalse(events[-1]['physical_stop_verified'])
 
-    def workout(self, mode='normal'):
+    def workout(self, mode='normal', backend='windows'):
         self.environment['MOTOR_MODE'] = mode
         workout = self.directory / 'short-w1.xml'
         workout.write_text('''<rows version="1" id="short-w1" name="Short W1 schedule" speedunit="km/h" inclineunit="percent" device="treadmill">
@@ -188,7 +193,7 @@ send(json.dumps(dict(command='control-test', backend='windows-winrt', status='co
   <row name="Speed step" duration="00:00:01" forcespeed="1" speed="2" inclination="0" />
   <row name="Incline step" duration="00:00:01" forcespeed="1" speed="2" inclination="1.375" />
 </rows>''')
-        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', 'windows',
+        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', backend,
                      '--device', 'DD:87:70:39:74:20', '--expected-name', 'FS-0F7A32',
                      '--confirm-motor', '--log', str(self.log)]
         master, slave = pty.openpty()
@@ -420,6 +425,71 @@ send(json.dumps(dict(command='control-test', backend='windows-winrt', status='co
                 process.wait()
             os.close(master)
             os.close(slave)
+
+    def linux(self, backend_report='linux-bluez'):
+        helper = self.executable('fake-linux-helper', Path(self.environment['TREADMILL_POWERSHELL']).read_text().split('\n', 1)[1])
+        self.environment.update(TREADMILL_LINUX_HELPER=str(helper), MOTOR_BACKEND=backend_report)
+        self.arguments = [BINARY, 'control-test', '--backend', 'linux', '--device', ADDRESS, '--expected-name', 'FS-TEST']
+
+    def test_linux_backend_runs_the_same_bounded_trial_through_its_helper(self):
+        self.linux()
+        code, _, errors = self.trial()
+        self.assertEqual(code, 0, errors)
+        motor = [value for value in json.loads(self.calls.read_text()) if value.startswith('0253')]
+        self.assertEqual(motor, ['02530100000000000000005203', '0253020a005b03', '0253035003'])
+        self.assertEqual(json.loads(Path(str(self.calls) + '.argv').read_text()),
+                         ['--device', ADDRESS, '--expected-name', 'FS-TEST', '--confirm-motor',
+                          '--trial', 'start-stop', '--timeout', '12'])
+        events = self.events()
+        self.assertEqual(next(row for row in events if row['event'] == 'trial_plan')['backend'], 'linux-bluez')
+        self.assertTrue(events[-1]['sequence_observed'])
+        self.assertFalse(events[-1]['physical_stop_verified'])
+
+    def test_linux_backend_refuses_a_report_from_another_backend(self):
+        self.linux(backend_report='windows-winrt')
+        code, _, _ = self.trial()
+        self.assertNotEqual(code, 0)
+        self.assertFalse(self.events()[-1]['sequence_observed'])
+
+    def test_linux_backend_without_helper_refuses_before_any_log_or_write(self):
+        local = self.directory / 'treadmill'
+        local.write_bytes(Path(BINARY).read_bytes())
+        local.chmod(0o755)
+        self.environment['TREADMILL_LINUX_HELPER'] = str(self.directory / 'missing-helper')
+        self.arguments = [str(local), 'control-test', '--backend', 'linux', '--device', ADDRESS, '--expected-name', 'FS-TEST']
+        code, _, errors = self.trial()
+        self.assertEqual(code, 2)
+        self.assertIn(b'Linux Bluetooth helper is missing', errors)
+        self.assertFalse(self.log.exists())
+        self.assertFalse(self.calls.exists())
+
+    def test_linux_backend_has_no_pause_ready_or_operator_timed_trials(self):
+        self.linux()
+        for trial in ('pause', 'ready-idle', 'incline-timing-4', 'incline-measure-8'):
+            with self.subTest(trial=trial):
+                code, _, errors = self.trial(trial=trial)
+                self.assertEqual(code, 2)
+                self.assertIn(b'not available on the Linux backend', errors)
+                self.assertFalse(self.calls.exists())
+
+    def test_linux_workout_runs_ordered_targets_and_stops(self):
+        self.linux()
+        code, _, errors = self.workout(backend='linux')
+        self.assertEqual(code, 0, errors)
+        motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
+        self.assertEqual(motor, ['02530100000000000000005203', '0253020a005b03',
+                                 '02530214004503', '02530214014403', '0253035003'])
+        argv = json.loads(Path(str(self.calls) + '.argv').read_text())
+        self.assertEqual(argv[argv.index('--trial') + 1], 'workout')
+        self.assertEqual(argv[argv.index('--target-sequence') + 1], '10:0,20:0,20:1')
+
+    def test_linux_workout_safety_fault_stops_before_later_targets(self):
+        self.linux()
+        code, _, _ = self.workout(mode='workout-fault', backend='linux')
+        self.assertEqual(code, 1)
+        motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
+        self.assertNotIn('02530214014403', motor)
+        self.assertEqual(motor[-1], '0253035003')
 
 
 if __name__ == '__main__':

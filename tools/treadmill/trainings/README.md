@@ -1,6 +1,6 @@
 # Trainings and plans for ski touring, hiking and mountain running
 
-This directory holds the **training library** for the RunPad W1: 26 trainings, each a JSON
+This directory holds the **training library** for the RunPad W1: 33 trainings, each a JSON
 spec (the source) that `treadmill-fit` compiles into a **Garmin FIT workout** in
 `../workouts/`. Three multi-week **plans** in `../plans/` combine them. The CLI plays the
 `.fit` files directly:
@@ -17,8 +17,10 @@ Read this before you rely on any of it.
 
 - **Walking mode is 1.0-6.0 km/h.** In it, "mountain running uphill" and "trail" sessions are **power-hiking**: fast,
   steep, upright walking, which is also how steep mountain races are climbed (the `mr-` and `trail-` trainings).
-- **Running mode (up to 12 km/h) exists but is locked until validated.** The console has a separate running mode, and the
-  `mrun-` and `trail-run-` trainings use it. No motor trial has yet shown that the raw speed scale in running mode
+- **Running mode (up to 12 km/h) is selected by raising the console's handrail, and is locked until validated.** Confirmed on
+  this treadmill: with the handrail up the handrail buttons take the speed to 12.0 km/h and the console reports a 12.0 km/h
+  maximum; with it down the console reports 6.0 km/h and that is a limit our software respects. The `mrun-` and
+  `trail-run-` trainings use running mode. No motor trial has yet shown that the raw speed scale in running mode
   matches the console, so the CLI unlocks it in stages (see "Running mode" below). Running form and downhill running
   still cannot be trained: the belt only goes up.
 - **Incline tops out near 11 %** under the provisional level mapping (level 0 = 0 %, level 8 = 11 %, 1.375 %
@@ -59,6 +61,13 @@ Read this before you rely on any of it.
 | `mrun-hill-repeats-6x3` | running | 48 | ~258 m | 9.0 km/h | 6 | hard |
 | `mrun-uphill-tempo-50` | running | 50 | ~243 m | 8.0 km/h | 4 | hard |
 | `mrun-vertical-intervals-55` | running | 55 | ~310 m | 8.0 km/h | 8 | hard |
+| `run-easy-aerobic-40` | running | 40 | ~67 m | 8.5 km/h | 1 | easy/steady |
+| `run-fartlek-incline-50` | running | 50 | ~172 m | 10.0 km/h | 5 | hard |
+| `run-hill-sprints-40` | running | 40 | ~72 m | 9.0 km/h | 6 | hard |
+| `run-rolling-varied-60` | running | 60 | ~202 m | 10.5 km/h | 5 | easy/steady |
+| `run-speed-pyramid-55` | running | 55 | ~84 m | 12.0 km/h | 2 | hard |
+| `run-tempo-incline-ladder-55` | running | 55 | ~186 m | 10.0 km/h | 4 | hard |
+| `run-vo2-hills-50` | running | 50 | ~192 m | 10.0 km/h | 4 | hard |
 | `skimo-base-60` | hiking | 60 | ~307 m | 4.2 km/h | 7 | easy/steady |
 | `skimo-kickturn-terrain-55` | hiking | 55 | ~253 m | 4.8 km/h | 8 | hard |
 | `skimo-long-climb-65` | hiking | 65 | ~312 m | 4.4 km/h | 7 | easy/steady |
@@ -84,6 +93,7 @@ sessions on consecutive days or more than two in a week.
 | Mountain running uphill, walking mode (`mr-`) | power-hike 5x5, hill repeats 8x2, vertical-km progression, strength endurance |
 | Trail, walking mode (`trail-`) | rolling-terrain loop, tempo progression, long rolling day |
 | Running mode (`mrun-`, `trail-run-`) | hill repeats 6x3, uphill tempo, vertical intervals, rolling trail loop, progression run, long trail run |
+| Higher-speed running with varying incline (`run-`) | easy aerobic, rolling varied incline, fartlek with incline, hill sprints, speed pyramid to 12 km/h, tempo with incline ladder, VO2 hills |
 | Long sessions, unproven (`*-long-day-100`, `trail-run-long-90`) | 90-100 minute sessions: kept out of the plans until that length has run |
 
 ## The plans
@@ -94,6 +104,8 @@ sessions on consecutive days or more than two in a week.
 | `plan-hiking-6w` | 6 | base - back-to-back long days - recovery - build - taper; 155-235 min |
 | `plan-mountain-run-8w` | 8 | base (3) - recovery - build (2) - peak - taper; 145-215 min (walking mode) |
 | `plan-trail-runner-8w` | 8 | the same shape with real running speeds; 80-198 min (needs running mode, validated) |
+| `plan-run-speed-hills-6w` | 6 | higher-speed running with changing incline (fartlek, hill sprints, speed pyramid to 12 km/h, tempo ladder); 80-205 min (running mode) |
+| `plan-trail-race-build-10w` | 10 | a longer race build with two recovery weeks and a taper, using the whole running set; 80-198 min (running mode) |
 
 `plan.py check` enforces the guard-rails on every plan: at least two rest days, at most two hard sessions a week
 and never on consecutive days (including across the Sunday-Monday boundary), weekly minutes at most 20 % above
@@ -102,11 +114,12 @@ outdoor and strength sessions as plain text; those are suggestions, not prescrip
 
 ## Running mode (Linux backend, opt-in)
 
-Raw speeds above 60 (6.0 km/h) exist only when the console is in its **running mode**; the W1 then reports limits of
-10-120 with unit tag `0x20`. The protocol document says speeds are in 0.1 km/h units, which would make raw 100 = 10.0
+Raw speeds above 60 (6.0 km/h) exist only when the console is in its **running mode**, which the handrail position selects
+(raised = running); the W1 then reports limits of
+10-120 with unit tag 0 (read from the console with its handrail raised, 2026-10-16; an older, unexplained 10-120 / tag `0x20` report is refused). The protocol document says speeds are in 0.1 km/h units, which would make raw 100 = 10.0
 km/h, but that has never been checked against this treadmill in running mode. So:
 
-- Everything above 6.0 km/h needs `--running-mode` (the CLI adds `--observe-ftms` itself) and the console in running mode.
+- Everything above 6.0 km/h needs `--running-mode` (the CLI adds `--observe-ftms` itself) and the handrail raised.
   The walking profile refuses the running limit report and the running profile refuses the walking one.
 - **FTMS is a consistency guard, not a measurement.** It comes from the same module as the FitShow data (in 5,152 logged
   samples it equals raw/10 exactly), so it cannot prove the scale is right. While above 6 km/h the run is still stopped, by

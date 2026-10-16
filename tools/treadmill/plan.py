@@ -82,6 +82,16 @@ def week_load(week, trainings):
     return minutes, vertical
 
 
+def week_peak_speed(week, trainings):
+    """Highest speed (km/h) any training in the week reaches; above 6.0 it needs running mode and a validated stage."""
+    peak = 0.0
+    for session in week.get("sessions", []):
+        info = trainings.get(session["training"]) if "training" in session else None
+        if info:
+            peak = max(peak, info["peak_speed"])
+    return peak
+
+
 def check(plan, trainings, label="plan"):
     errors = []
     def bad(message):
@@ -163,11 +173,18 @@ def show(plan, trainings, only_week=None):
     print(plan.get("goal", ""))
     if plan.get("audience"):
         print("For: " + plan["audience"])
+    plan_peak = max(week_peak_speed(week, trainings) for week in plan["weeks"])
+    mixed = any(trainings.get(s["training"])["sport"] == "running" for w in plan["weeks"] for s in w["sessions"] if "training" in s)
+    if plan_peak > 6.0:
+        print(f"Running mode: the console's handrail must be raised; this plan reaches {plan_peak:.1f} km/h, so running speeds must be validated "
+              f"up to at least that (the run-7 to run-12 stage trials).")
     for week in plan["weeks"]:
         if only_week and week["week"] != only_week:
             continue
         minutes, vertical = week_load(week, trainings)
-        print(f"\nWeek {week['week']}: {week['focus']}  ({minutes:.0f} min on the treadmill, about {vertical:.0f} m vertical, estimate)")
+        top = week_peak_speed(week, trainings)
+        needs = f", needs running speeds validated to {top:.1f} km/h" if top > 6.0 else ""
+        print(f"\nWeek {week['week']}: {week['focus']}  ({minutes:.0f} min on the treadmill, about {vertical:.0f} m vertical, estimate{needs})")
         if week.get("note"):
             print("  " + week["note"])
         for session in week["sessions"]:
@@ -176,7 +193,8 @@ def show(plan, trainings, only_week=None):
                 continue
             info = trainings.get(session["training"])
             tag = "HARD" if info["hard"] else "easy/steady"
-            print(f"  {session['day']}  {info['name']} - {info['minutes']:.0f} min, ~{info['vertical']:.0f} m, {tag}")
+            handrail = (", handrail UP (running mode)" if info["sport"] == "running" else ", handrail DOWN (walking mode)") if mixed else ""
+            print(f"  {session['day']}  {info['name']} - {info['minutes']:.0f} min, ~{info['vertical']:.0f} m, {tag}{handrail}")
             if session.get("note"):
                 print(f"       {session['note']}")
             flags = "--wait-wake 10 --wait-wake-confirm" + (" --running-mode" if info["sport"] == "running" else "")

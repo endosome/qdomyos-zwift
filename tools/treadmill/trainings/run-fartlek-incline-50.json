@@ -1,0 +1,64 @@
+{
+  "id": "run-fartlek-incline-50",
+  "name": "Run fartlek with incline 50",
+  "description": "Six rounds of fast, climb and float, with the grade changing each time: speed play with hills. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 6,
+      "steps": [
+        {
+          "name": "Fast",
+          "minutes": 3,
+          "speed": 10.0,
+          "level": 1,
+          "intensity": "interval",
+          "notes": "RPE 7. Quick, relaxed turnover."
+        },
+        {
+          "name": "Climb",
+          "minutes": 2,
+          "speed": 7.0,
+          "level": 5,
+          "intensity": "interval",
+          "notes": "RPE 7: power up the grade."
+        },
+        {
+          "name": "Float",
+          "minutes": 1,
+          "speed": 8.5,
+          "level": 2,
+          "intensity": "recovery",
+          "notes": "RPE 4: ease, keep moving."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 4,
+        "speed_from": 6.5,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "run-easy-aerobic-40",
+  "name": "Run easy aerobic 40",
+  "description": "An easy aerobic run on a gentle grade: the base of the running plans, and the recovery run between hard days. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 5,
+        "speed_from": 5.0,
+        "speed_to": 7.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "name": "Easy run",
+      "minutes": 30,
+      "speed": 8.5,
+      "level": 1,
+      "intensity": "active",
+      "notes": "RPE 3-4. Conversational; nose breathing if you can."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 6.5,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

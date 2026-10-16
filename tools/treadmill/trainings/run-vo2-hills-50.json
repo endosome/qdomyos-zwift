@@ -1,0 +1,56 @@
+{
+  "id": "run-vo2-hills-50",
+  "name": "Run VO2 hills 50",
+  "description": "Five hard four-minute climbing efforts at running speed with easy jogs between: the hardest aerobic session in the library. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "trail",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 5,
+      "steps": [
+        {
+          "name": "VO2 hill",
+          "minutes": 4,
+          "speed": 10.0,
+          "level": 4,
+          "intensity": "interval",
+          "notes": "RPE 8-9. Strong and steady; do not start too fast."
+        },
+        {
+          "name": "Easy jog",
+          "minutes": 3,
+          "speed": 6.5,
+          "level": 0,
+          "intensity": "recovery",
+          "notes": "RPE 3: let the breathing come down."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 6.5,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

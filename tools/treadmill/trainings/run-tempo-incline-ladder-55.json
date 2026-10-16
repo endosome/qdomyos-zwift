@@ -1,0 +1,56 @@
+{
+  "id": "run-tempo-incline-ladder-55",
+  "name": "Run tempo with incline ladder 55",
+  "description": "A tempo run that alternates a flatter faster block with a steeper slower one, five times: sustained effort with changing grade. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "repeat": 5,
+      "steps": [
+        {
+          "name": "Tempo flat",
+          "minutes": 5,
+          "speed": 10.0,
+          "level": 1,
+          "intensity": "interval",
+          "notes": "RPE 7: comfortably hard."
+        },
+        {
+          "name": "Tempo climb",
+          "minutes": 3,
+          "speed": 8.5,
+          "level": 4,
+          "intensity": "interval",
+          "notes": "RPE 7: same effort, steeper."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 5,
+        "speed_from": 6.5,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

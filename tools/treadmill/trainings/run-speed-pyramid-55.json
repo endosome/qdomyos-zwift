@@ -1,0 +1,139 @@
+{
+  "id": "run-speed-pyramid-55",
+  "name": "Run speed pyramid 55",
+  "description": "Speed climbs in steps from 9 to 12 km/h and back, with the grade easing as the pace rises. The 12 km/h block is the machine maximum. Needs the console in running mode and --running-mode.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 12,
+        "speed_from": 5.0,
+        "speed_to": 8.0,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog or brisk walk, relaxed shoulders."
+      }
+    },
+    {
+      "name": "Step 1",
+      "minutes": 2,
+      "speed": 9.0,
+      "level": 2,
+      "intensity": "interval",
+      "notes": "RPE 6."
+    },
+    {
+      "name": "Easy 1",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Step 2",
+      "minutes": 3,
+      "speed": 10.0,
+      "level": 2,
+      "intensity": "interval",
+      "notes": "RPE 7."
+    },
+    {
+      "name": "Easy 2",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Step 3",
+      "minutes": 4,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8."
+    },
+    {
+      "name": "Easy 3",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Peak",
+      "minutes": 5,
+      "speed": 12.0,
+      "level": 0,
+      "intensity": "interval",
+      "notes": "RPE 9: the top of the pyramid. Hold form."
+    },
+    {
+      "name": "Easy 4",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Down 1",
+      "minutes": 4,
+      "speed": 11.0,
+      "level": 1,
+      "intensity": "interval",
+      "notes": "RPE 8."
+    },
+    {
+      "name": "Easy 5",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Down 2",
+      "minutes": 3,
+      "speed": 10.0,
+      "level": 2,
+      "intensity": "interval",
+      "notes": "RPE 7."
+    },
+    {
+      "name": "Easy 6",
+      "minutes": 1,
+      "speed": 6.5,
+      "level": 0,
+      "intensity": "recovery",
+      "notes": "Jog easy."
+    },
+    {
+      "name": "Down 3",
+      "minutes": 2,
+      "speed": 9.0,
+      "level": 2,
+      "intensity": "interval",
+      "notes": "RPE 6."
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 14,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 1,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Walk it off; let the breathing settle."
+      }
+    }
+  ]
+}

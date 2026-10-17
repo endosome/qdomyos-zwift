@@ -81,6 +81,7 @@ Read this before you rely on any of it.
 | `trail-run-progression-45` | running | 45 | ~122 m | 10.0 km/h | 2 | easy/steady |
 | `trail-run-rolling-60` | running | 60 | ~273 m | 9.5 km/h | 7 | easy/steady |
 | `trail-tempo-progression-55` | hiking | 55 | ~175 m | 6.0 km/h | 4 | hard |
+| `vo2-30-30-light-30` | running | 28 | ~28 m | 10.5 km/h | 1 | hard |
 | `vo2-30-30-moderate-38` | running | 38 | ~44 m | 11.5 km/h | 1 | hard |
 | `vo2-30-30-trained-38` | running | 38 | ~122 m | 12.0 km/h | 5 | hard |
 | `vo2-3x6-threshold-moderate-47` | running | 47 | ~52 m | 10.0 km/h | 1 | hard |

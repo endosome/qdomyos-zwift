@@ -1,0 +1,56 @@
+{
+  "id": "vo2-30-30-light-30",
+  "name": "VO2 30-30 light 30",
+  "description": "Ten 30 s brisk / 30 s easy alternations at 10.5 km/h and 6.5 km/h (level 1): a gentle first taste of VO2 work. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "sport": "running",
+  "sub_sport": "treadmill",
+  "steps": [
+    {
+      "ramp": {
+        "name": "Warm-up",
+        "minutes": 10,
+        "speed_from": 5.0,
+        "speed_to": 8.5,
+        "level_from": 0,
+        "level_to": 1,
+        "step_minutes": 1,
+        "intensity": "warmup",
+        "notes": "Easy jog, building gently."
+      }
+    },
+    {
+      "repeat": 10,
+      "steps": [
+        {
+          "name": "Brisk 30 s",
+          "minutes": 0.5,
+          "speed": 10.5,
+          "level": 1,
+          "intensity": "interval",
+          "notes": "RPE 7-8, relaxed and tall."
+        },
+        {
+          "name": "Easy 30 s",
+          "minutes": 0.5,
+          "speed": 6.5,
+          "level": 1,
+          "intensity": "recovery",
+          "notes": "Jog easy, breathe."
+        }
+      ]
+    },
+    {
+      "ramp": {
+        "name": "Cooldown",
+        "minutes": 8,
+        "speed_from": 7.0,
+        "speed_to": 3.0,
+        "level_from": 0,
+        "level_to": 0,
+        "step_minutes": 1,
+        "intensity": "cooldown",
+        "notes": "Jog then walk until the breathing is calm."
+      }
+    }
+  ]
+}

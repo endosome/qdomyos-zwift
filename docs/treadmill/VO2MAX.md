@@ -21,6 +21,7 @@ Moderate set (pace about 10-11.5 km/h at level 1) and trained set (12.0 km/h, in
 | 4 x 4 min | `vo2-4x4-moderate-48` | `vo2-4x4-trained-48` |
 | 5 x 3 min | `vo2-5x3-moderate-47` | `vo2-5x3-trained-47` |
 | 6 x 2 min | `vo2-6x2-moderate-44` | `vo2-6x2-trained-44` |
+| 10 x 30 s / 30 s, light (10.5 km/h) | `vo2-30-30-light-30` | |
 | 16 x 30 s / 30 s | `vo2-30-30-moderate-38` | `vo2-30-30-trained-38` |
 | steep climbs | `vo2-hill-4x4-moderate-48` | `vo2-hill-5x3-trained-47` |
 | pyramid / ladder | `vo2-pyramid-moderate-44`, `vo2-ladder-moderate-47` | `vo2-ladder-trained-50` |

@@ -18,7 +18,7 @@ Garmin FIT workouts built from JSON specs; plans are JSON manifests; runs can be
 - **Safety:** gate profiles (walking: raw speed up to 60, tag 0; running: up to 120, tag 0, workouts only), stale-status watchdog 1.5 s, one STOP, three NORMAL replies before start and after stop, emergency STOP on EOF or fault, helper output-overflow guard, deadline `+3 s per step`, 120-minute cap (Linux).
 - **Wake handling:** `--wait-wake N` (auto-start 5 s after the wake unless Q) and `--wait-wake --wait-wake-confirm` (start on ENTER only).
 - **Running mode:** `--running-mode`, staged validation trials `run-7/8/10/12`, registry `~/.local/state/treadmill/running-validated.json`.
-- **FIT:** `treadmill-fit build|dump|check|activity` (official SDK in `src/fit-sdk`), `trainings/*.json` (53 specs) and `workouts/*.fit`, `plan.py`, `make_plan.py`, `summarize_run.py`, plans in `tools/treadmill/plans/` (10 plans), audio probe script.
+- **FIT:** `treadmill-fit build|dump|check|activity` (official SDK in `src/fit-sdk`), `trainings/*.json` (54 specs) and `workouts/*.fit`, `plan.py`, `make_plan.py`, `summarize_run.py`, plans in `tools/treadmill/plans/` (10 plans), audio probe script.
 - **Tests and CI:** C++ gtests (gate), Python suites under `tools/treadmill/tests/` (fake-peer trials run through `run_parallel.py`, about 3 minutes), Docker clean-package build, `.github/workflows/treadmill.yml` (green on `develop`).
 
 ## Hardware and identity
@@ -53,6 +53,7 @@ Never treat a name or address as proof of identity without rechecking at connect
 | Wait-for-wake, confirm variant and unattended variant | verified (unattended once, with a near-simultaneous Play click) |
 | Running stages 7, 8, 10, 12 km/h | validated; running speeds unlocked to 12.0 |
 | `run-easy-aerobic-40` (running mode, up to 8.5 km/h) | 40 min 24 s, 11/11 targets, clean |
+| `vo2-30-30-light-30` (running mode, 10 x 30 s at 10.5 km/h) | all 10 reps, 31/38 targets; belt began stopping by itself 3 s into the cooldown (cause unconfirmed), clean stop |
 | AVRCP volume | does not silence the console beeps |
 
 ## Not proven / open
@@ -62,7 +63,7 @@ Never treat a name or address as proof of identity without rechecking at connect
 - Sessions longer than about 62 minutes (the 90-100 minute trainings are marked UNPROVEN LENGTH and kept out of plans); the console's own auto-stop is untested.
 - Thermal behavior is unobservable (no temperature field exists in the protocol).
 - Keep-awake: BLE polling, READY, AVRCP/A2DP connect and FTMS did not help. Open leads: identify the bundled remote (IR, 433 MHz or BLE; `btmon` while pressing it), an audio-stream test, a held FTMS Request Control session, a mechanical button pusher.
-- Most of the 53 trainings (including every VO2 training and the 12 km/h mountain/trail ones) have never run on the hardware; the new VO2 trainings' paces are starting points.
+- Most of the 54 trainings (including every VO2 training except `vo2-30-30-light-30`, and the 12 km/h mountain/trail ones) have never run on the hardware; the new VO2 trainings' paces are starting points.
 
 ## Working rules
 

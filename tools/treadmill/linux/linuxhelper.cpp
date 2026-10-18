@@ -9,6 +9,7 @@
 #include "motorgate.h"
 #include <QBluetoothAddress>
 #include <QBluetoothDeviceDiscoveryAgent>
+#include <QLoggingCategory>
 #include <QBluetoothUuid>
 #include <QCommandLineParser>
 #include <QCoreApplication>
@@ -472,6 +473,8 @@ class Helper : public QObject {
 } // namespace
 
 int main(int argc, char *argv[]) {
+    // Without CAP_NET_ADMIN BlueZ cannot tell public from random addresses and Qt warns on every scan; the device is addressed exactly, so the warning is noise.
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth.bluez.warning=false"));
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("treadmill-linux-helper"));
     QCommandLineParser parser;

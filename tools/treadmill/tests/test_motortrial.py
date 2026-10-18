@@ -745,6 +745,91 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertNotIn('02530214014403', motor)
         self.assertEqual(motor[-1], '0253035003')
 
+    def manual_workout(self, strategy, commands, wait_stage=1):
+        """Run a 3-step Linux workout with --manual-control, sending JSON command lines once step `wait_stage` is reported."""
+        self.linux()
+        workout = self.directory / 'manual-w1.xml'
+        workout.write_text('''<rows version="1" id="manual-w1" name="Manual W1" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Baseline" duration="00:00:01" forcespeed="1" speed="1" inclination="0" />
+  <row name="First" duration="00:00:12" forcespeed="1" speed="2" inclination="0" />
+  <row name="Second" duration="00:00:12" forcespeed="1" speed="3" inclination="0" />
+</rows>''')
+        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', 'linux', '--device', 'DD:87:70:39:74:20',
+                     '--expected-name', 'FS-0F7A32', '--confirm-motor', '--log', str(self.log), '--manual-control']
+        if strategy: arguments += ['--manual-strategy', strategy]
+        master, slave = pty.openpty()
+        process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        try:
+            os.write(master, b'MOTOR\n')
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline:
+                if self.log.exists() and any(row['event'] == 'reported_target' and row['stage'] == wait_stage for row in self.events()):
+                    break
+                time.sleep(0.05)
+            for command in commands:
+                os.write(master, (command if isinstance(command, bytes) else json.dumps(command).encode()) + b'\n')
+                time.sleep(0.4)
+            output, errors = process.communicate(timeout=60)
+            return process.returncode, output, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def motor_targets(self):
+        return [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('025302')]
+
+    def results(self):
+        return [(row.get('seq'), row['result'], row.get('speed_code'), row.get('incline_code'))
+                for row in self.events() if row['event'] == 'manual_command_result']
+
+    def test_manual_takeover_is_the_default_and_the_plan_stops_setting_targets(self):
+        code, _, errors = self.manual_workout(None, [{'seq': 1, 'cmd': 'speed_up'}, {'seq': 2, 'cmd': 'speed_up'},
+                                                      {'seq': 3, 'cmd': 'incline_up'}, {'seq': 4, 'cmd': 'bogus'}, b'not json'])
+        self.assertEqual(code, 0, errors)
+        self.assertEqual(self.results(), [(1, 'applied', 21, 0), (2, 'applied', 22, 0), (3, 'applied', 22, 1),
+                                          (4, 'refused', 22, 1), (None, 'refused', None, None)])
+        # Baseline (10:0), First (20:0), the three manual targets; the plan's Second step (30:0) is never sent.
+        self.assertEqual([frame[6:10] for frame in self.motor_targets()], ['0a00', '1400', '1500', '1600', '1601'])
+        argv = json.loads(Path(str(self.calls) + '.argv').read_text())
+        self.assertEqual(argv[argv.index('--manual-max-speed') + 1], '60')
+        self.assertEqual(next(row for row in self.events() if row['event'] == 'trial_plan')['manual_strategy'], 'takeover')
+        received = [row for row in self.events() if row['event'] == 'manual_command_received']
+        self.assertEqual([row.get('seq') for row in received], [1, 2, 3, 4, None])
+
+    def test_manual_offset_shifts_this_and_later_steps(self):
+        code, _, errors = self.manual_workout('offset', [{'seq': 1, 'cmd': 'speed_up'}, {'seq': 2, 'cmd': 'speed_up'}])
+        self.assertEqual(code, 0, errors)
+        self.assertEqual([frame[6:10] for frame in self.motor_targets()], ['0a00', '1400', '1500', '1600', '2000'])
+
+    def test_manual_hold_lasts_until_the_next_plan_step(self):
+        code, _, errors = self.manual_workout('hold', [{'seq': 1, 'cmd': 'speed_up'}, {'seq': 2, 'cmd': 'incline_up'}])
+        self.assertEqual(code, 0, errors)
+        self.assertEqual([frame[6:10] for frame in self.motor_targets()], ['0a00', '1400', '1500', '1501', '1e00'])
+
+    def test_manual_limits_refuse_instead_of_clamping_and_stop_ends_the_run(self):
+        code, _, errors = self.manual_workout('hold', [{'seq': 1, 'cmd': 'incline_down'}, {'seq': 2, 'cmd': 'stop'}])
+        self.assertEqual(code, 1)
+        self.assertEqual(self.results()[0], (1, 'refused', 20, 0))
+        self.assertEqual(self.motor_targets()[-1][6:10], '1400')
+        self.assertEqual([f for f in json.loads(self.calls.read_text()) if f.startswith('0253')][-1], '0253035003')
+
+    def test_manual_control_needs_a_linux_hardware_workout(self):
+        self.linux()
+        for extra in (['--manual-control'], ['--manual-strategy', 'offset']):
+            refused = subprocess.run([BINARY, 'control-test', '--backend', 'linux', '--device', ADDRESS, '--expected-name', 'FS-TEST',
+                                      '--trial', 'start-stop', '--dry-run', *extra], capture_output=True, text=True, env=self.environment)
+            self.assertEqual(refused.returncode, 2)
+        bad = subprocess.run([BINARY, 'workout', 'run', 'uphill-walk-20', '--dry-run', '--manual-control', '--manual-strategy', 'sideways'],
+                             capture_output=True, text=True, env=self.environment)
+        self.assertEqual(bad.returncode, 2)
+        self.assertIn('offset, hold or takeover', bad.stderr)
+        ok = subprocess.run([BINARY, 'workout', 'run', 'uphill-walk-20', '--dry-run', '--manual-control'], capture_output=True, text=True, env=self.environment)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertEqual((json.loads(ok.stdout)['manual_strategy'], json.loads(ok.stdout)['manual_max_speed_code']), ('takeover', 60))
+
     # --- wait-for-wake (Linux backend) -------------------------------------------------
     def waiting(self, extra, wake_after=4, resleep=None, key=False, first=b'MOTOR\n', actions=None, timeout=90):
         """Run start-stop with --wait-wake against a fake peer that sleeps for the first polls."""

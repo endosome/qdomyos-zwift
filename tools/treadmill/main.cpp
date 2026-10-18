@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("confirm-batch", "Approve the printed sequential batch with stop between trials."));
     parser.addOption(QCommandLineOption("wait-wake", "Linux hardware runs: wait up to this many minutes (0.05-30) for the console to wake, sending nothing to the motor, then run the normal preflight. Without --wait-wake-confirm the belt starts by itself 5 s after the wake.", "minutes"));
     parser.addOption(QCommandLineOption("wait-wake-confirm", "With --wait-wake: after the wake, start only when ENTER is pressed."));
+    parser.addOption(QCommandLineOption("manual-control", "Linux hardware workouts: accept speed/incline commands on stdin as JSON lines (see API.md) and widen the helper gate to the mode's limits."));
+    parser.addOption(QCommandLineOption("manual-strategy", "With --manual-control: offset (shift this and all later steps), hold (until the next step) or takeover (default: the plan stops setting targets, only its end time applies).", "strategy"));
     parser.addOption(QCommandLineOption("running-mode", "Linux hardware runs: allow speeds above 6.0 km/h (the console must be in running mode). Needs FTMS observation, unlocks in stages (see the run-N trials) and stops if FTMS speed disagrees with FitShow speed."));
     parser.addOption(QCommandLineOption("observe-ftms", "Also capture FTMS data/status notifications without FTMS motor writes."));
     parser.addOption(QCommandLineOption("status-heart-rate-zero", "Experimental Windows status query with the documented zero heart-rate byte."));
@@ -99,6 +101,9 @@ int main(int argc, char *argv[]) {
     if (parser.isSet("running-mode") && (backend != "linux" || parser.isSet("simulate") ||
         !(hardwareWorkout || (arguments.size() == 1 && arguments.first() == "control-test")))) {
         QTextStream(stderr) << "--running-mode applies to Linux-backend control trials and hardware workouts only.\n"; return 2;
+    }
+    if ((parser.isSet("manual-control") || parser.isSet("manual-strategy")) && (backend != "linux" || parser.isSet("simulate") || !hardwareWorkout)) {
+        QTextStream(stderr) << "--manual-control applies to Linux-backend hardware workouts only.\n"; return 2;
     }
     if (arguments.size() == 1 && arguments.first() == "control-batch") return motorBatch(app, parser);
     if (parser.isSet("batch") || parser.isSet("confirm-batch")) {

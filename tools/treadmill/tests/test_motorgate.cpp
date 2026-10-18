@@ -183,6 +183,45 @@ TEST(MotorGate, WorkoutCeilingsComeFromThePlan) {
     EXPECT_TRUE(gate.needsStop(201));
 }
 
+TEST(MotorGate, ManualModeApprovesAnyTargetInsideTheLimitsOnly) {
+    MotorGate gate("workout", "20:1,30:2", 600, Profile::Walking, 45);
+    preflight(gate);
+    EXPECT_THROW(gate.approve(target(30, 2), 0), std::invalid_argument); // before the start
+    gate.approve(kStart, 0);
+    EXPECT_NO_THROW(gate.approve(target(31, 2), 0));  // not in the plan
+    EXPECT_NO_THROW(gate.approve(target(31, 2), 0));  // repeatable
+    EXPECT_NO_THROW(gate.approve(target(45, 8), 0));
+    EXPECT_THROW(gate.approve(target(46, 8), 0), std::invalid_argument); // above the manual speed limit
+    EXPECT_THROW(gate.approve(target(9, 0), 0), std::invalid_argument);
+    EXPECT_THROW(gate.approve(target(20, 9), 0), std::invalid_argument);
+    gate.observe(status(3, 45, 8), 100);              // the manual limits are also the feedback ceilings
+    EXPECT_FALSE(gate.needsStop(101));
+    gate.observe(status(3, 46, 8), 200);
+    EXPECT_TRUE(gate.needsStop(201));
+}
+
+TEST(MotorGate, ManualModeIsRefusedAfterStopAndOutsideWorkoutsAndProfileLimits) {
+    MotorGate gate("workout", "20:1", 600, Profile::Walking, 60);
+    preflight(gate);
+    gate.approve(kStart, 0);
+    gate.approve(kStop, 0);
+    EXPECT_THROW(gate.approve(target(30, 1), 0), std::invalid_argument);
+    EXPECT_THROW(MotorGate("speed-30", "", 60, Profile::Walking, 30), std::invalid_argument);
+    EXPECT_THROW(MotorGate("workout", "20:1", 600, Profile::Walking, 61), std::invalid_argument); // walking tops out at 60
+    EXPECT_NO_THROW(MotorGate("workout", "20:1", 600, Profile::Running, 120));
+}
+
+TEST(MotorGate, ManualModeHasAWriteBudget) {
+    MotorGate gate("workout", "20:1", 600, Profile::Walking, 60);
+    preflight(gate);
+    gate.approve(kStart, 0);
+    int approved = 0;
+    for (; approved < 5000; ++approved) {
+        try { gate.approve(target(20 + approved % 2, 1), 0); } catch (const std::invalid_argument &) { break; }
+    }
+    EXPECT_EQ(approved, 2000);
+}
+
 TEST(MotorGate, WorkoutUsesItsOwnDeadline) {
     MotorGate gate("workout", "20:1", 600);
     preflight(gate);

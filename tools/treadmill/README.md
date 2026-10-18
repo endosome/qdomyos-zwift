@@ -34,6 +34,9 @@ CLI sends STOP and waits for the treadmill to report that it's stopped. Every ru
 writes a JSON Lines log to `~/treadmill-logs/<plan>-<timestamp>.jsonl`
 (`--log <file>` overrides it). `summarize_run.py <log>` prints a summary.
 
+To change speed or incline during a run, add `--manual-control` (Linux backend): it reads JSON command lines on stdin so a
+TUI can drive it. The protocol, the three strategies and the limits are in [API.md](API.md#manual-control-for-a-tui-wrapper).
+
 To end a run early, press `Q` or `S` or Ctrl-C. These send STOP. The
 treadmill's own stop button always works too. **There is no pause.** The W1
 ignores the FitShow pause command.

@@ -27,8 +27,12 @@ enum class Profile { Walking, Running };
 
 class MotorGate {
   public:
-    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds, Profile profile = Profile::Walking)
+    // manualMaxSpeed > 0 (workouts only) is for operator-driven speed/incline changes: instead of the pre-declared sequence,
+    // any target with speed 10..manualMaxSpeed and incline 0..8 is approved, at most kMaxManualTargets writes in all.
+    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds, Profile profile = Profile::Walking, int manualMaxSpeed = 0)
         : profile_(profile) {
+        if (manualMaxSpeed != 0 && (trial != "workout" || manualMaxSpeed < 10 || manualMaxSpeed > maxSpeedCode()))
+            throw std::invalid_argument("Manual control supports workouts, with a speed limit inside the profile's");
         if (profile == Profile::Running && trial != "workout") throw std::invalid_argument("The running profile supports workouts only");
         targets_ = {targetFrame(10, 0)};
         const QStringList parts = trial.split('-');
@@ -55,6 +59,7 @@ class MotorGate {
                 if (incline > inclineCeiling_) inclineCeiling_ = incline;
             }
             deadlineMs_ = timeoutSeconds * 1000;
+            if (manualMaxSpeed > 0) { manual_ = true; speedCeiling_ = manualMaxSpeed; inclineCeiling_ = 8; }
         } else if (numeric && parts[0] == "speed" &&
                    (code == 12 || code == 15 || code == 20 || code == 30 || code == 40 || code == 50 || code == 60)) {
             speedCeiling_ = code; deadlineMs_ = 60000;
@@ -136,6 +141,15 @@ class MotorGate {
             startedAt_ = now; // Count the attempt even if the write's completion is uncertain.
             return bytes;
         }
+        if (manual_ && bytes.size() == 7 && quint8(bytes[1]) == 0x53 && quint8(bytes[2]) == 2) {
+            const int speed = quint8(bytes[3]), incline = quint8(bytes[4]);
+            if (speed < 10 || speed > speedCeiling_ || incline > 8 || manualTargets_ >= kMaxManualTargets)
+                throw std::invalid_argument("Manual target is outside the speed/incline limits or the write budget");
+            if (!started() || stopAttempted_ || needsStop(now))
+                throw std::invalid_argument("Target is unavailable after stop, stale status or trial deadline");
+            ++manualTargets_;
+            return bytes;
+        }
         if (targetIndex_ < targets_.size() && value == targets_[targetIndex_]) {
             if (!started() || stopAttempted_ || needsStop(now))
                 throw std::invalid_argument("Target is unavailable after stop, stale status or trial deadline");
@@ -185,6 +199,9 @@ class MotorGate {
     int speedCeiling_ = 10, inclineCeiling_ = 0, deadlineMs_ = 12000;
     std::vector<QString> targets_;
     size_t targetIndex_ = 0;
+    static constexpr int kMaxManualTargets = 2000;
+    bool manual_ = false;
+    int manualTargets_ = 0;
 };
 
 } // namespace Treadmill

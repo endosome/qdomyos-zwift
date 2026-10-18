@@ -42,6 +42,12 @@ class LinuxHelperTests(unittest.TestCase):
                 self.refused(*BASE, '--trial', 'workout', '--timeout', '600', '--target-sequence', sequence,
                              message='Workout targets must be distinct')
 
+    def test_manual_speed_limit_needs_a_workout_and_stays_inside_the_profile(self):
+        for trial, limit in (('start-stop', '30'), ('workout', '61'), ('workout', '9')):
+            with self.subTest(trial=trial, limit=limit):
+                self.refused(*BASE, '--trial', trial, '--target-sequence', '20:1', '--timeout', '60',
+                             '--manual-max-speed', limit, message='Manual control supports workouts')
+
     def test_deadline_is_bounded(self):
         self.refused(*BASE, '--timeout', '0', message='Session duration')
         self.refused(*BASE, '--timeout', '241', message='Session duration')

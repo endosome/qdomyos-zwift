@@ -483,6 +483,7 @@ int main(int argc, char *argv[]) {
     parser.addOption({"expected-name", "Exact operator-confirmed device name.", "name"});
     parser.addOption({"trial", "Control trial ID: start-stop, speed-N, incline-N or workout.", "id", "start-stop"});
     parser.addOption({"target-sequence", "Workout target pairs speed:incline,...", "pairs"});
+    parser.addOption({"manual-max-speed", "Workouts: approve any target up to this raw speed code (operator speed/incline changes).", "code", "0"});
     parser.addOption({"timeout", "Motor deadline in seconds.", "seconds", "120"});
     parser.addOption({"confirm-motor", "The CLI host obtained typed MOTOR approval."});
     parser.addOption({"wait-wake", "Extra seconds the host may wait for the console to wake before the start.", "seconds", "0"});
@@ -507,7 +508,7 @@ int main(int argc, char *argv[]) {
     if (profile == Treadmill::Profile::Running && !parser.isSet("observe-ftms")) return fail("The running profile requires --observe-ftms: FTMS is the consistency guard for the speed (it comes from the same module, so it is not a measurement)");
     std::unique_ptr<Helper> helper;
     try {
-        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile)));
+        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile, parser.value("manual-max-speed").toInt())));
     } catch (const std::exception &error) { return fail(QString::fromUtf8(error.what())); }
     QTimer::singleShot(0, &app, [&]() { helper->start(); });
     return app.exec();

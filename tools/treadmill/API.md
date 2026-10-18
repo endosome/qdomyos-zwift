@@ -93,3 +93,39 @@ missing feedback cannot certify stopping, even if a fake device stops in a test.
 the repository GPL terms and corresponding source when distributing it.
 Public API/versioning and library extraction follow hardware validation;
 do not add a general SDK layer solely for the current CLI.
+
+## Manual control (for a TUI wrapper)
+
+`treadmill workout run <id> --backend linux --manual-control [--manual-strategy offset|hold|takeover] ...` lets an operator
+interface raise or lower speed and incline during a hardware workout. Linux backend only.
+
+**Transport.** The CLI is the child process; the wrapper talks to it over stdin and stdout.
+- stdout: one compact JSON object per line, flushed per line, the same records the CLI writes to its `--log` file.
+  The wrapper **must keep reading stdout**: if the CLI cannot write, the helper stops the belt (fail-safe).
+- stdin: one command per line. Because both the stdout stream and the log file carry every record, a command and its
+  outcome can be compared on either side when diagnosing the link.
+- The CLI still insists on a terminal on stdin and on the `MOTOR` confirmation line, so the wrapper has to give the child a
+  pty and pass the operator's confirmation through. This was deliberately not relaxed. The pty is set to raw, no-echo mode.
+- Before the run: send `MOTOR`, then an empty line (ENTER) to start after `--wait-wake` (or `q` to cancel).
+- Closing stdin stops the belt ("Operator input closed").
+
+**Commands** (one JSON object per line): `{"seq": 7, "cmd": "speed_up"}` with `cmd` one of `speed_up`, `speed_down` (0.1 km/h),
+`incline_up`, `incline_down` (one W1 level), `reset` (back to the plan's target for the current step), `stop`. A bare `q` line also stops.
+`seq` is echoed back; use a new number for each command.
+
+**Records.** `manual_command_received {seq, cmd}` is written for every line (with `raw` when it was not valid JSON).
+Then `manual_command_result {seq, cmd, result: "applied"|"refused", reason?, speed_code, incline_code}`; the codes are the
+target now in force (speed in 0.1 km/h, incline level 0-8). A refused command changes nothing: a step beyond the limits
+(speed 1.0 up to 6.0 km/h, or the validated running speed with `--running-mode`; incline 0-8) is refused, not clamped.
+An applied command is followed by the usual `write_requested`, `command`, `raw_status` and `reported_target` records.
+
+**Strategies** (`--manual-strategy`, default `takeover`):
+- `takeover`: after the first adjustment the plan no longer sets targets. Its timeline still runs, so the workout ends at its scheduled time.
+- `offset`: each adjustment shifts the current and all later plan steps (limits apply per step).
+- `hold`: an adjustment lasts until the plan's next step, which then applies as written.
+
+In every strategy the plan's step timing is not restarted by an adjustment.
+
+**Safety.** The helper is started with `--manual-max-speed <code>`. With it, the helper's gate approves any target with
+speed 10..limit and incline 0..8 (at most 2000 writes) instead of only the plan's sequence, and the same limits become the
+feedback ceilings. Start, stop, stale-status, deadline and bounds checks are unchanged.

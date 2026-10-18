@@ -167,6 +167,15 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     if (runningMode && !trial.workout) return fail("Running mode supports workouts and the run-N stage trials only");
     if (linuxBackend && (trial.pause || trial.readyOnly || trial.operatorMarks))
         return fail("Pause, READY and operator-timed trials are not available on the Linux backend");
+    // Manual control: the operator (a TUI) may raise or lower speed and incline during a workout. The helper gate then approves
+    // any target inside these limits instead of only the plan's pre-declared sequence.
+    const bool manual = parser.isSet("manual-control");
+    const QString manualStrategy = parser.isSet("manual-strategy") ? parser.value("manual-strategy") : QStringLiteral("takeover");
+    if (parser.isSet("manual-strategy") && !manual) return fail("--manual-strategy needs --manual-control");
+    if (manual && !(linuxBackend && trial.workout)) return fail("--manual-control applies to Linux-backend hardware workouts only");
+    if (manual && manualStrategy != "offset" && manualStrategy != "hold" && manualStrategy != "takeover")
+        return fail("--manual-strategy must be offset, hold or takeover");
+    const int manualMaxSpeed = !manual ? 0 : runningMode ? qMin(120, int(std::lround(validatedRunningKmh() * 10))) : 60;
     const QBluetoothAddress address(parser.value("device"));
     const QString name = parser.value("expected-name");
     if (address.isNull() || name.trimmed().isEmpty()) return fail("Control trial requires --device and exact --expected-name");
@@ -223,6 +232,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                            {"return_hold_seconds", trial.returnHold}, {"windows_motor_deadline_seconds", trial.deadline},
                            {"operator_marks_required", trial.operatorMarks}, {"arrival_hold_seconds", trial.arrivalHoldSeconds}, {"ready_only", trial.readyOnly}, {"sleep_ready_allowed", trial.sleepReadyAllowed}, {"expected_ready_status", trial.readyOnly ? QJsonValue(9) : QJsonValue(QJsonValue::Null)}, {"physical_arrival_source", "operator observation only"},
                            {"wait_wake_seconds", waitWakeMs / 1000.0}, {"wait_wake_confirm", waitConfirm},
+                           {"manual_control", manual}, {"manual_strategy", manual ? QJsonValue(manualStrategy) : QJsonValue()},
+                           {"manual_max_speed_code", manual ? QJsonValue(manualMaxSpeed) : QJsonValue()},
                            {"profile", runningMode ? "running" : "walking"}, {"running_validated_kmh", runningMode ? validatedRunningKmh() : QJsonValue()},
                            {"initial_deck_baseline_confirmation_required", trial.operatorMarks},
                            {"ftms_observation_requested", parser.isSet("observe-ftms")},
@@ -294,6 +305,21 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     int stage = 0;
     int targetMatchCount = 0;
     bool workoutInitialTargetSent = false;
+    // Manual control. Strategies: offset = adjustments shift the current and all later plan steps; hold = an adjustment lasts
+    // until the next plan step; takeover = after the first adjustment the plan no longer sets targets (it still times the run's end).
+    int offsetSpeed = 0, offsetIncline = 0, manualSpeed = 10, manualIncline = 0, heldStage = -1, lastSentSpeed = 10, lastSentIncline = 0;
+    bool takenOver = false;
+    qint64 planStageStart = -1;
+    quint64 manualCommandId = 100;
+    QByteArray inputLine;
+    // The target the run is meant to be at while it is in plan step s.
+    auto effective = [&](int s, int &speed, int &incline) {
+        const auto &step = trial.steps[qBound(0, s, int(trial.steps.size()) - 1)];
+        speed = step.speed; incline = step.incline;
+        if (!manual) return;
+        if (manualStrategy == "offset") { speed = qBound(10, speed + offsetSpeed, manualMaxSpeed); incline = qBound(0, incline + offsetIncline, 8); }
+        else if (takenOver || heldStage == s) { speed = manualSpeed; incline = manualIncline; }
+    };
     qint64 stageReportedAt = -1, stageRequestedAt = -1, pauseAt = -1;
     qint64 operatorBeginAt[3] = {-1, -1, -1}, operatorArrivalAt[3] = {-1, -1, -1};
     QTimer closeDeadline;
@@ -411,7 +437,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             }
         }
         if (!stopping && status.hasMotorData) {
-            if (status.inclineCode < 0 || status.inclineCode > trial.incline || status.speedTenths > trial.speed || status.state == 1 ||
+            if (status.inclineCode < 0 || status.inclineCode > (manual ? 8 : trial.incline) || status.speedTenths > (manual ? manualMaxSpeed : trial.speed) || status.state == 1 ||
                 ((status.state == 10 || status.state == 4) && pauseAt < 0)) {
                 failed = true; stop("Unexpected motor feedback"); return;
             }
@@ -446,11 +472,14 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                     workoutInitialTargetSent = true;
                     record("target_requested", {{"stage", 0}, {"speed_code", initial.speed},
                                                   {"incline_code", initial.incline}, {"stage_name", initial.name}});
+                    lastSentSpeed = initial.speed; lastSentIncline = initial.incline;
                     if (!closing) control.target(1, 2, initial.speed, initial.incline);
                 } else if (trial.workout) workoutInitialTargetSent = true;
             }
-            const int expectedSpeed = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 10 : trial.steps[qBound(0, stage, trial.steps.size() - 1)].speed) : (stage == 1 ? trial.speed : 10);
-            const int expectedIncline = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 0 : trial.steps[qBound(0, stage, trial.steps.size() - 1)].incline) : (stage == 1 ? trial.incline : 0);
+            int effectiveSpeed = 10, effectiveIncline = 0;
+            if (trial.workout) effective(stage, effectiveSpeed, effectiveIncline);
+            const int expectedSpeed = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 10 : effectiveSpeed) : (stage == 1 ? trial.speed : 10);
+            const int expectedIncline = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 0 : effectiveIncline) : (stage == 1 ? trial.incline : 0);
             if (pauseAt < 0 && (status.state != 3 || status.speedTenths != expectedSpeed || status.inclineCode != expectedIncline)) {
                 stageReportedAt = -1;
                 targetMatchCount = 0;
@@ -459,6 +488,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 ++targetMatchCount;
                 if (!trial.workout || targetMatchCount >= 3) {
                     stageReportedAt = clock.elapsed();
+                    if (planStageStart < 0) planStageStart = stageReportedAt; // the plan's own clock for this step; manual changes do not restart it
                     record("reported_target", {{"stage", stage}, {"speed_code", expectedSpeed}, {"incline_code", expectedIncline},
                                                {"physical_attainment_verified", false},
                                                {"stage_name", trial.workout ? trial.steps[stage].name : QString()}});
@@ -560,10 +590,71 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         char bytes[32]; const auto ignored = read(input.signalPipe[0], bytes, sizeof(bytes)); (void)ignored;
         failed = true; stop("Termination signal");
     });
+    // Manual control input, one line at a time. A line is: empty (ENTER: start), q/s (stop), or a JSON command
+    // {"seq": N, "cmd": "speed_up|speed_down|incline_up|incline_down|reset|stop"}. Every command gets a received and a result record.
+    auto manualLine = [&](const QByteArray &raw) {
+        const QByteArray line = raw.trimmed();
+        if (line.isEmpty()) {
+            if (startPrompted && !startConfirmed && !started) { startConfirmed = true; record("start_confirmed", {}); }
+            return;
+        }
+        if (line == "q" || line == "Q" || line == "s" || line == "S") { failed = true; stop("Operator stop"); return; }
+        QJsonParseError error;
+        const auto command = QJsonDocument::fromJson(line, &error).object();
+        if (error.error != QJsonParseError::NoError || !command.contains("cmd")) {
+            record("manual_command_received", {{"raw", QString::fromUtf8(line.left(200))}});
+            record("manual_command_result", {{"result", "refused"}, {"reason", "not a JSON command"}});
+            return;
+        }
+        const QString cmd = command.value("cmd").toString();
+        const QJsonValue seq = command.value("seq");
+        record("manual_command_received", {{"seq", seq}, {"cmd", cmd}});
+        int speed = 0, incline = 0;
+        effective(stage, speed, incline);
+        const int wasSpeed = speed, wasIncline = incline;
+        QString refusal;
+        if (cmd == "stop") { failed = true; stop("Operator stop (command)"); record("manual_command_result", {{"seq", seq}, {"cmd", cmd}, {"result", "applied"}}); return; }
+        if (!(started && runningAt >= 0 && workoutInitialTargetSent) || stopping || closing) refusal = "the belt is not running under the plan";
+        else if (cmd == "speed_up") ++speed;
+        else if (cmd == "speed_down") --speed;
+        else if (cmd == "incline_up") ++incline;
+        else if (cmd == "incline_down") --incline;
+        else if (cmd != "reset") refusal = "unknown command";
+        if (refusal.isEmpty() && cmd != "reset" && (speed < 10 || speed > manualMaxSpeed || incline < 0 || incline > 8))
+            refusal = "at the limit (speed 1.0-" + QString::number(manualMaxSpeed / 10.0) + " km/h, incline levels 0-8)";
+        if (!refusal.isEmpty()) {
+            record("manual_command_result", {{"seq", seq}, {"cmd", cmd}, {"result", "refused"}, {"reason", refusal},
+                                             {"speed_code", wasSpeed}, {"incline_code", wasIncline}});
+            return;
+        }
+        if (cmd == "reset") {
+            offsetSpeed = offsetIncline = 0; takenOver = false; heldStage = -1;
+            effective(stage, speed, incline);
+        } else if (manualStrategy == "offset") {
+            offsetSpeed += speed - wasSpeed; offsetIncline += incline - wasIncline;
+        } else {
+            manualSpeed = speed; manualIncline = incline;
+            if (manualStrategy == "hold") heldStage = stage; else takenOver = true;
+        }
+        const qint64 now = clock.elapsed();
+        stageRequestedAt = now; stageReportedAt = -1; targetMatchCount = 0;
+        lastSentSpeed = speed; lastSentIncline = incline;
+        record("manual_command_result", {{"seq", seq}, {"cmd", cmd}, {"result", "applied"}, {"strategy", manualStrategy},
+                                         {"speed_code", speed}, {"incline_code", incline}, {"stage", stage}});
+        control.target(1, manualCommandId++, speed, incline);
+    };
     QSocketNotifier terminal(STDIN_FILENO, QSocketNotifier::Read);
     QObject::connect(&terminal, &QSocketNotifier::activated, &app, [&](int) {
         char bytes[32]; const auto count = read(STDIN_FILENO, bytes, sizeof(bytes));
         if (count <= 0) { terminal.setEnabled(false); failed = true; stop("Operator input closed"); return; }
+        if (manual) {
+            for (ssize_t i = 0; i < count; ++i) {
+                if (bytes[i] == '\n' || bytes[i] == '\r') { const auto line = inputLine; inputLine.clear(); manualLine(line); }
+                else if (inputLine.size() < 4096) inputLine.append(bytes[i]);
+                else { inputLine.clear(); record("manual_command_result", {{"result", "refused"}, {"reason", "line longer than 4096 bytes"}}); }
+            }
+            return;
+        }
         for (ssize_t i = 0; i < count; ++i) {
             const char key = bytes[i];
             if ((key == '\n' || key == '\r') && startPrompted && !startConfirmed && !started) {
@@ -606,22 +697,28 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             failed = true; stop("No physical incline arrival mark within 60 seconds");
         }
         if (pauseAt >= 0 && !stopping && now - pauseAt >= trial.stepHold * 1000) stop("Pause observation complete");
-        if (stageReportedAt >= 0 && !stopping && pauseAt < 0) {
+        const bool planTimed = manual && trial.workout && planStageStart >= 0;
+        if ((stageReportedAt >= 0 || planTimed) && !stopping && pauseAt < 0) {
             const int hold = trial.workout ? trial.steps[stage].holdSeconds :
                 (stage == 0 ? (trial.readyOnly ? trial.stepHold : (trial.id == "start-stop" ? 5 : 3)) : (stage == 1 ? trial.stepHold : trial.returnHold));
             const bool holdComplete = trial.operatorMarks && stage > 0
                 ? operatorArrivalAt[stage] >= 0 && now - operatorArrivalAt[stage] >= trial.arrivalHoldSeconds * 1000
-                : now - stageReportedAt >= hold * 1000;
+                : now - (planTimed ? planStageStart : stageReportedAt) >= hold * 1000;
             if (holdComplete) {
                 if (trial.pause) {
                     pauseAt = now;
                     record("pause_requested", {{"physical_pause_verified", false}});
                     if (!closing) control.pause(1, 5);
                 } else if (trial.workout && stage + 1 < trial.steps.size()) {
-                    ++stage; stageReportedAt = -1; targetMatchCount = 0; stageRequestedAt = now;
-                    const int speed = trial.steps[stage].speed, incline = trial.steps[stage].incline;
+                    ++stage; stageReportedAt = -1; planStageStart = -1; targetMatchCount = 0; stageRequestedAt = now;
+                    int speed, incline;
+                    effective(stage, speed, incline);
                     record("target_requested", {{"stage", stage}, {"speed_code", speed}, {"incline_code", incline}, {"stage_name", trial.steps[stage].name}});
-                    if (!closing) control.target(1, stage + 1, speed, incline);
+                    // A takeover or hold can already be at this target; resending an identical target is not needed.
+                    if (!closing && !(manual && speed == lastSentSpeed && incline == lastSentIncline)) {
+                        lastSentSpeed = speed; lastSentIncline = incline;
+                        control.target(1, stage + 1, speed, incline);
+                    }
                 } else if (trial.returnHold > 0 && stage < 2) {
                     ++stage; stageReportedAt = -1; stageRequestedAt = now;
                     const int speed = stage == 1 ? trial.speed : 10, incline = stage == 1 ? trial.incline : 0;
@@ -651,6 +748,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             if (waitWakeMs > 0) arguments << "--wait-wake" << QString::number(waitWakeMs / 1000);
             if (parser.isSet("observe-ftms")) arguments << "--observe-ftms";
             if (runningMode) arguments << "--profile" << "running";
+            if (manual) arguments << "--manual-max-speed" << QString::number(manualMaxSpeed);
             process.start(helper, arguments);
         } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,

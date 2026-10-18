@@ -54,6 +54,7 @@ Never treat a name or address as proof of identity without rechecking at connect
 | Running stages 7, 8, 10, 12 km/h | validated; running speeds unlocked to 12.0 |
 | `run-easy-aerobic-40` (running mode, up to 8.5 km/h) | 40 min 24 s, 11/11 targets, clean |
 | `vo2-30-30-light-30` (running mode, 10 x 30 s at 10.5 km/h) | all 10 reps, 31/38 targets; belt began stopping by itself 3 s into the cooldown (cause unconfirmed), clean stop |
+| `hike-recovery-35` started in both modes (handrail down; handrail up with `--running-mode`) | belt started and reached the first target (2.4 km/h) in each; both were stopped by the operator after about 15 s, so neither is a full run |
 | AVRCP volume | does not silence the console beeps |
 
 ## Not proven / open
@@ -63,6 +64,8 @@ Never treat a name or address as proof of identity without rechecking at connect
 - Sessions longer than about 62 minutes (the 90-100 minute trainings are marked UNPROVEN LENGTH and kept out of plans); the console's own auto-stop is untested.
 - Thermal behavior is unobservable (no temperature field exists in the protocol).
 - Keep-awake: BLE polling, READY, AVRCP/A2DP connect and FTMS did not help. Open leads: identify the bundled remote (IR, 433 MHz or BLE; `btmon` while pressing it), an audio-stream test, a held FTMS Request Control session, a mechanical button pusher.
+- A Bluetooth status write stalled during the start countdown on 2026-10-18; the watchdog stopped the belt ("Missing status or start deadline"). A retry worked; seen once, cause unknown.
+- Walking trainings also run with the handrail up: pass `--running-mode` (the profile is fixed before connecting, so the CLI does not auto-detect the handrail). With the handrail up and no flag, the CLI faults before the belt moves.
 - Most of the 54 trainings (including every VO2 training except `vo2-30-30-light-30`, and the 12 km/h mountain/trail ones) have never run on the hardware; the new VO2 trainings' paces are starting points.
 
 ## Working rules

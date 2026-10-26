@@ -92,7 +92,9 @@ for line in sys.stdin:
             ready = False
         if observe_ftms and os.environ.get('MOTOR_FTMS', 'ok') != 'silent':
             shown = (speed if moving else 0) * (0.5 if os.environ.get('MOTOR_FTMS') == 'mismatch' else 1)
-            send('FTMS\t00002acd-0000-1000-8000-00805f9b34fb\t' + ('8c05' + int(shown * 10).to_bytes(2, 'little').hex() + '00' * 15))
+            odometer = globals().get('odometer', 0) + (3 if moving else 0)  # the fake treadmill's own distance counter
+            globals()['odometer'] = odometer
+            send('FTMS\t00002acd-0000-1000-8000-00805f9b34fb\t' + ('8c05' + int(shown * 10).to_bytes(2, 'little').hex() + odometer.to_bytes(3, 'little').hex() + '00' * 12))
         rx(bytes([0x51, 4, 1, 0]) + bytes(9) if time.monotonic() < normal_at else
            (bytes([0x51, 10, 0, incline]) + bytes(9) if paused else
            (bytes([0x51, 3, speed, incline]) + bytes(9) if moving else
@@ -475,6 +477,10 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertEqual(code, 0, errors)
         events = self.events()
         self.assertTrue(any(row['event'] == 'ftms_notification' for row in events))
+        reported = [row for row in events if row['event'] == 'distance_reported']
+        self.assertEqual(len(reported), 1)
+        self.assertGreater(reported[0]['distance_m'], 0)
+        self.assertIn(b'Distance (reported by the treadmill)', errors)
         self.assertIn('--observe-ftms', json.loads(Path(str(self.calls) + '.argv').read_text()))
         refused = subprocess.run([BINARY, 'status', '--backend', 'linux', '--observe-ftms'], capture_output=True, env=self.environment)
         self.assertEqual(refused.returncode, 2)

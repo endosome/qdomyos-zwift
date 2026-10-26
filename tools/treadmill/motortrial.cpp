@@ -120,6 +120,18 @@ static bool ftmsSpeedKmh(const QByteArray &bytes, double &kmh) {
     return true;
 }
 
+// FTMS Treadmill Data (2ACD): total distance (metres, 3 bytes) follows the speed fields when flags bit 2 is set.
+static bool ftmsDistanceMeters(const QByteArray &bytes, qint64 &meters) {
+    if (bytes.size() < 2) return false;
+    const int flags = int(quint8(bytes[0])) | (int(quint8(bytes[1])) << 8);
+    int offset = 2;
+    if (!(flags & 1)) offset += 2;      // instantaneous speed
+    if (flags & 2) offset += 2;         // average speed
+    if (!(flags & 4) || bytes.size() < offset + 3) return false;
+    meters = int(quint8(bytes[offset])) | (int(quint8(bytes[offset + 1])) << 8) | (int(quint8(bytes[offset + 2])) << 16);
+    return true;
+}
+
 // The Linux transport is a separate helper process that speaks the same line protocol as the Windows helper.
 static QString linuxHelperPath(QString &error) {
     QStringList candidates;
@@ -300,6 +312,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     // Running mode: FTMS speed is a consistency guard only (same module as FitShow; not a measurement).
     double ftmsKmh = 0;
     qint64 ftmsAt = -1, ftmsMissingSince = -1;
+    // Distance the treadmill itself reports over FTMS, counted from the first reading after the belt reported RUNNING.
+    // The counter restarts at zero after a stop, so only the largest value is kept.
+    qint64 ftmsDistanceStart = -1, ftmsDistanceM = -1;
     int speedMismatch = 0, agreeAtTop = 0, lastSpeedTenths = 0, speedAtStop = 0;
     qint64 graceUntil = -1, lastWaitNoticeAt = 0;
     int stage = 0;
@@ -532,6 +547,11 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                                               {"frame_hex", QString::fromLatin1(parts[2])}, {"physical_attainment_verified", false}});
                 double kmh = 0;
                 if (parts[1] == "00002acd-0000-1000-8000-00805f9b34fb" && ftmsSpeedKmh(QByteArray::fromHex(parts[2]), kmh)) { ftmsKmh = kmh; ftmsAt = clock.elapsed(); }
+                qint64 meters = 0;
+                if (parts[1] == "00002acd-0000-1000-8000-00805f9b34fb" && runningAt >= 0 && ftmsDistanceMeters(QByteArray::fromHex(parts[2]), meters)) {
+                    if (ftmsDistanceStart < 0) ftmsDistanceStart = meters;
+                    ftmsDistanceM = qMax(ftmsDistanceM, meters - ftmsDistanceStart);
+                }
             } else if (parts.size() == 2 && parts[0] == "RX") {
                 const auto bytes = QByteArray::fromHex(parts[1]);
                 record("notification", {{"frame_hex", QString::fromLatin1(parts[1])}});
@@ -785,6 +805,10 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         record("running_stage_result", {{"stage_kmh", trial.speed / 10.0}, {"ftms_agreed_samples_at_top", agreeAtTop},
                                         {"display_answer", displayAnswer}, {"display_matched", displayMatched},
                                         {"validated", validated}, {"validation_recorded", recorded}, {"validated_kmh_now", validatedRunningKmh()}});
+    }
+    if (ftmsDistanceM >= 0) {
+        record("distance_reported", {{"distance_m", double(ftmsDistanceM)}, {"source", "treadmill FTMS total distance"}});
+        QTextStream(stderr) << "Distance (reported by the treadmill): " << QString::number(ftmsDistanceM / 1000.0, 'f', 2) << " km (" << ftmsDistanceM << " m)\n" << Qt::flush;
     }
     record("trial_result", {{"sequence_observed", sequenceObserved}, {"stop_write_succeeded", stopWritten},
                             {"normal_status_after_stop", feedbackAfterStop}, {"physical_stop_verified", false},

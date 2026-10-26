@@ -196,6 +196,24 @@ class FitTests(unittest.TestCase):
         self.assertEqual(messages['activity_mesgs'][0]['num_sessions'], 1)
         self.assertEqual(messages['lap_mesgs'][0]['total_ascent'], session['total_ascent'])
 
+    def test_activity_uses_the_treadmills_reported_distance_when_the_log_has_it(self):
+        segments = [(60, 30, 0)]
+        log = self.synthetic_log(segments)
+        rows = [json.loads(line) for line in log.read_text().splitlines()]
+        # FTMS Treadmill Data with flags 0x058c: speed, total distance (3 bytes), ... The counter reads 40 m at the
+        # first running sample and ends at 140 m, so the run covered 100 m while the speed integral says about 50 m.
+        for ms, meters in ((5500, 40), (35000, 90), (64000, 140), (65000, 0)):
+            frame = '8c05' + '1e00' + meters.to_bytes(3, 'little').hex() + '00' * 10
+            rows.append({'event': 'ftms_notification', 'characteristic_uuid': '00002acd-0000-1000-8000-00805f9b34fb',
+                         'frame_hex': frame, 'monotonic_ms': ms})
+        log.write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+        out = self.directory / 'reported.fit'
+        result = run(FIT_TOOL, 'activity', str(log), str(out), '--sport', 'running')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('0.10 km (reported by the treadmill)', result.stdout)
+        plain = self.synthetic_log(segments)
+        self.assertIn('(estimated from speed)', run(FIT_TOOL, 'activity', str(plain), str(self.directory / 'plain.fit')).stdout)
+
     def test_activity_export_refuses_bad_input(self):
         out = self.directory / 'run.fit'
         empty = self.directory / 'empty.jsonl'

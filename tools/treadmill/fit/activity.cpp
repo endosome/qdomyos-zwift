@@ -16,6 +16,19 @@ namespace Fit {
 namespace {
 constexpr qint64 kFitEpochOffset = 631065600; // seconds from 1970-01-01 to 1989-12-31
 struct Status { qint64 ms; int state; int speedTenths; int level; };
+struct Odometer { qint64 ms; qint64 meters; };
+
+// FTMS Treadmill Data (2ACD): total distance (metres, 3 bytes) follows the speed fields when flags bit 2 is set.
+bool ftmsTotalDistance(const QByteArray &bytes, qint64 &meters) {
+    if (bytes.size() < 2) return false;
+    const int flags = int(quint8(bytes[0])) | (int(quint8(bytes[1])) << 8);
+    int offset = 2;
+    if (!(flags & 1)) offset += 2;      // instantaneous speed
+    if (flags & 2) offset += 2;         // average speed
+    if (!(flags & 4) || bytes.size() < offset + 3) return false;
+    meters = int(quint8(bytes[offset])) | (int(quint8(bytes[offset + 1])) << 8) | (int(quint8(bytes[offset + 2])) << 16);
+    return true;
+}
 }
 
 QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport, ActivitySummary &summary, QString &error) {
@@ -44,14 +57,31 @@ QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport,
     const qint64 startUnix = (anchorUnixMs + (startMs - anchorMs)) / 1000;
     const int seconds = int((endMs - startMs + 999) / 1000);
 
+    // The treadmill's own distance counter (FTMS), when the log has one covering the run; otherwise distance is
+    // integrated from the reported speed. The counter restarts at zero after a stop, so it never goes backwards here.
+    QVector<Odometer> odometer;
+    for (const QJsonObject &row : rows) {
+        if (row.value("event").toString() != "ftms_notification" ||
+            row.value("characteristic_uuid").toString() != "00002acd-0000-1000-8000-00805f9b34fb") continue;
+        const qint64 ms = qint64(row.value("monotonic_ms").toDouble(-1));
+        qint64 meters = 0;
+        if (ms >= startMs && ms <= endMs && ftmsTotalDistance(QByteArray::fromHex(row.value("frame_hex").toString().toLatin1()), meters))
+            odometer.append({ms, meters});
+    }
+    const bool reported = odometer.size() >= 2;
+
     std::vector<fit::RecordMesg> records;
-    double distance = 0, altitude = 0, maxSpeed = 0, speedSum = 0;
-    int cursor = first;
+    double distance = 0, estimatedDistance = 0, altitude = 0, maxSpeed = 0, speedSum = 0;
+    int cursor = first, odometerCursor = 0;
     for (int k = 0; k <= seconds; ++k) {
         while (cursor + 1 < statuses.size() && statuses[cursor + 1].ms <= startMs + qint64(k) * 1000) ++cursor;
         const Status &now = statuses[cursor];
         const double speedMps = now.speedTenths / 10.0 / 3.6, grade = now.level * kGradePerLevel;
-        if (k > 0) { distance += speedMps; altitude += speedMps * grade / 100.0; }
+        if (k > 0) { estimatedDistance += speedMps; altitude += speedMps * grade / 100.0; }
+        if (reported) {
+            while (odometerCursor + 1 < odometer.size() && odometer[odometerCursor + 1].ms <= startMs + qint64(k) * 1000) ++odometerCursor;
+            distance = std::max(distance, double(odometer[odometerCursor].meters - odometer[0].meters));
+        } else distance = estimatedDistance;
         maxSpeed = std::max(maxSpeed, speedMps);
         speedSum += speedMps;
         fit::RecordMesg record;
@@ -64,7 +94,7 @@ QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport,
         record.SetGrade(FIT_FLOAT32(grade));
         records.push_back(record);
     }
-    summary.seconds = seconds; summary.distanceMeters = distance; summary.ascentMeters = altitude;
+    summary.seconds = seconds; summary.distanceMeters = distance; summary.distanceReported = reported; summary.ascentMeters = altitude;
     summary.maxSpeedKmh = maxSpeed * 3.6; summary.records = int(records.size());
     const double avgSpeed = speedSum / records.size();
     const FIT_DATE_TIME start = FIT_DATE_TIME(startUnix - kFitEpochOffset), end = FIT_DATE_TIME(startUnix + seconds - kFitEpochOffset);

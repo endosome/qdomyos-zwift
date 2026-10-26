@@ -57,6 +57,42 @@ def decode_treadmill_data(frame_hex):
     return speed, inclination
 
 
+def decode_total_distance(frame_hex):
+    """Return the FTMS Treadmill Data total distance in metres, when present."""
+    try:
+        data = bytes.fromhex(frame_hex)
+    except (TypeError, ValueError):
+        return None
+    if len(data) < 2:
+        return None
+    flags = data[0] | (data[1] << 8)
+    offset = 2 if flags & 0x0001 else 4  # Instantaneous speed is absent when More Data is set.
+    if flags & 0x0002:
+        offset += 2  # Average speed.
+    if not flags & 0x0004 or len(data) < offset + 3:
+        return None
+    return data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16)
+
+
+def reported_distance_m(rows):
+    """Distance the treadmill reported over FTMS since the first sample after RUNNING (the counter restarts after a stop)."""
+    running = next((row["monotonic_ms"] for row in rows if row.get("event") == "raw_status" and row.get("status_code") == 3), None)
+    if running is None:
+        return None
+    start = best = None
+    for row in rows:
+        if row.get("event") != "ftms_notification" or row.get("characteristic_uuid") != "00002acd-0000-1000-8000-00805f9b34fb":
+            continue
+        if row.get("monotonic_ms", 0) < running:
+            continue
+        meters = decode_total_distance(row.get("frame_hex", ""))
+        if meters is None:
+            continue
+        start = meters if start is None else start
+        best = meters - start if best is None else max(best, meters - start)
+    return best
+
+
 def read_json_lines(path):
     rows = []
     with path.open(encoding="utf-8") as source:
@@ -201,6 +237,9 @@ def run_statistics(rows):
     stats["stopping_before_stop_request_s"] = [round(row["monotonic_ms"] / 1000.0, 1) for row in statuses
                                                if row.get("status_code") == 4 and (cut is None or row["monotonic_ms"] < cut)][:3]
     stats["faults"] = [row.get("reason") for row in rows if row.get("event") == "fault"]
+    distance = reported_distance_m(rows)
+    if distance is not None:
+        stats["distance_m"] = distance
     return stats
 
 
@@ -219,6 +258,8 @@ def print_statistics(rows):
         print(f"  per-step overhead: mean {mean:.2f} s, min {low:.2f} s, max {high:.2f} s, total {stats['step_overhead_total_s']:.0f} s")
     if "max_status_gap_s" in stats:
         print(f"  longest gap between status reports: {stats['max_status_gap_s']:.2f} s")
+    if "distance_m" in stats:
+        print(f"  distance (reported by the treadmill): {stats['distance_m'] / 1000:.2f} km ({stats['distance_m']} m)")
     print(f"  faults: {stats['faults'] or 'none'}")
     if stats["stopping_before_stop_request_s"]:
         print("  STOPPING reported before any host stop at "

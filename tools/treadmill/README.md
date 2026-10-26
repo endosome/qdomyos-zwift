@@ -33,6 +33,9 @@ running. Each target is held after the treadmill reports it. At the end the
 CLI sends STOP and waits for the treadmill to report that it's stopped. Every run
 writes a JSON Lines log to `~/treadmill-logs/<plan>-<timestamp>.jsonl`
 (`--log <file>` overrides it). `summarize_run.py <log>` prints a summary.
+At the end of a run with FTMS observation (always on in running mode) the CLI prints the distance the treadmill itself
+counted, and writes it to the log as a `distance_reported` record. `summarize_run.py` shows it too, and
+`treadmill-fit activity` uses it for the FIT file's distance (falling back to an estimate from speed when the log has none).
 
 To change speed or incline during a run, add `--manual-control` (Linux backend): it reads JSON command lines on stdin so a
 TUI can drive it. The protocol, the three strategies and the limits are in [API.md](API.md#manual-control-for-a-tui-wrapper).

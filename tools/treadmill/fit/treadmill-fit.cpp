@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         QFile out(args[2]);
         if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate) || out.write(bytes) != bytes.size()) return fail(args[2] + ": " + out.errorString(), 1);
         QTextStream(stdout) << args[2] << ": " << qRound(summary.seconds / 60.0) << " min, " << QString::number(summary.distanceMeters / 1000, 'f', 2)
-                            << " km, max " << QString::number(summary.maxSpeedKmh, 'f', 1) << " km/h, ascent " << qRound(summary.ascentMeters)
+                            << (summary.distanceReported ? " km (reported by the treadmill), max " : " km (estimated from speed), max ") << QString::number(summary.maxSpeedKmh, 'f', 1) << " km/h, ascent " << qRound(summary.ascentMeters)
                             << " m (estimate from the working grade table), " << summary.records << " records\n";
         return 0;
     }

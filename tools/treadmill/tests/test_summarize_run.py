@@ -18,6 +18,19 @@ class SummarizeRunTests(unittest.TestCase):
         self.assertEqual(speed, 2.0)
         self.assertEqual(incline, 0.0)
 
+    def test_reports_the_distance_the_treadmill_counted_since_running_began(self):
+        self.assertEqual(summarize_run.decode_total_distance('8c05c800b30900000000000000ffffff001200'), 0x09b3)
+        self.assertIsNone(summarize_run.decode_total_distance('0100'))
+        self.assertIsNone(summarize_run.decode_total_distance('0800c800'))  # no total-distance flag
+
+        def ftms(ms, meters):
+            return {'event': 'ftms_notification', 'characteristic_uuid': '00002acd-0000-1000-8000-00805f9b34fb',
+                    'monotonic_ms': ms, 'frame_hex': '8c05c800' + meters.to_bytes(3, 'little').hex() + '00' * 10}
+        rows = [ftms(500, 7), {'event': 'raw_status', 'monotonic_ms': 1000, 'status_code': 3},
+                ftms(1500, 100), ftms(9000, 1100), ftms(12000, 0)]  # counter restarts after the stop
+        self.assertEqual(summarize_run.reported_distance_m(rows), 1000)
+        self.assertIsNone(summarize_run.reported_distance_m(rows[:2]))
+
     def test_handles_more_data_and_short_frames(self):
         self.assertEqual(summarize_run.decode_treadmill_data('0100'), (None, None))
         self.assertEqual(summarize_run.decode_treadmill_data('8c05c8'), (None, None))

@@ -9,6 +9,8 @@ Current as of 2026-10-17. Details and history: [HANDOFF.md](../../docs/treadmill
 - **Walking mode** (handrail down): 1.0-6.0 km/h, incline levels 0-8; 60-minute sessions completed.
 - **Running mode** (handrail up, `--running-mode`): up to 12.0 km/h, validated in stages at 7, 8, 10 and 12 km/h with an operator display check; a 40-minute running session (to 8.5 km/h) completed cleanly.
 - **Wake handling:** `--wait-wake` (auto-start after a short grace, or `--wait-wake-confirm` to start on ENTER). The console sleeps after about 10 minutes idle and no keep-awake method is known.
+- **Console Pause/Play** (Linux workouts): the run waits for Play, then returns gradually to the plan. Tested against the fake
+  console only, which models the 2026-10-16 observer captures (Pause = STOPPING then NORMAL). Not yet hardware-proven.
 - **Safety:** own motor gate (profile limits, stale-status watchdog 1.5 s, one STOP, emergency STOP on EOF/fault, FTMS consistency guard in running mode).
 - **Garmin FIT:** workouts built from JSON specs (`trainings/`, 53 trainings, `workouts/*.fit`), plans (`plans/`), activity export; checked with Garmin's official SDK decoder.
 

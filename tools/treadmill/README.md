@@ -41,8 +41,27 @@ To change speed or incline during a run, add `--manual-control` (Linux backend):
 TUI can drive it. The protocol, the three strategies and the limits are in [API.md](API.md#manual-control-for-a-tui-wrapper).
 
 To end a run early, press `Q` or `S` or Ctrl-C. These send STOP. The
-treadmill's own stop button always works too. **There is no pause.** The W1
-ignores the FitShow pause command.
+treadmill's own stop button always works too. The W1 ignores the FitShow pause
+command, so the CLI can't pause the belt itself. You can pause from the console instead (below).
+
+### Pause and Play on the console
+
+On the Linux backend you can pause any workout with the console's Pause button, in walking or running mode.
+
+- The belt stops and the plan's clock stops with it. Nothing is sent to the treadmill while it is paused.
+- Press Play on the console to continue. The console restarts the belt, and the CLI brings it back gradually to where
+  the plan was: up to 0.5 km/h and one incline level per step, each step held about a second after the treadmill
+  reports it. The plan then continues with whatever was left of the step you paused in.
+- Pauses may add up to 15 minutes per run. A longer pause ends the run (the CLI sends STOP). So does the console
+  falling asleep, which it does after about 10 minutes idle.
+- Q still ends the run while it is paused.
+- On the W1 a console pause looks exactly like a console stop in the protocol, so a stop from the console also waits
+  for Play. Press Q to end the run instead.
+- Manual-control commands are refused while the run is paused or returning to the plan.
+- The run summary and the FIT activity count the pause as zero speed, and the distance counter (which the treadmill
+  restarts on Play) is added up across pauses.
+
+The Windows bridge does not support this: a console pause still ends the run there.
 
 If the Bluetooth link drops, the CLI cannot deliver STOP. In that case use the
 physical stop.
@@ -174,8 +193,8 @@ echo ':WSLInterop:M::MZ::/init:PF' | sudo tee /etc/binfmt.d/WSLInterop.conf   # 
   command starts a countdown instead of waking it.
 - **Unexplained STOPPING:** on the Windows bridge the treadmill several times
   reported "decelerating" mid-run without a host STOP. A console stop looks the
-  same in the telemetry. If it happens, the CLI ends the run. Start the plan
-  again; there's no resume.
+  same in the telemetry. On the Windows bridge the CLI then ends the run. On Linux the run is treated as paused and
+  waits for Play on the console (see above).
 - **Run length:** each target adds about 1.5 s of waiting for status, so a run
   takes a little longer than the plan's nominal time (about 2.5 minutes more for
   a 60-minute plan with 99 targets). The deadline allows for it.

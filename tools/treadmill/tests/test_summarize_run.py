@@ -30,6 +30,9 @@ class SummarizeRunTests(unittest.TestCase):
                 ftms(1500, 100), ftms(9000, 1100), ftms(12000, 0)]  # counter restarts after the stop
         self.assertEqual(summarize_run.reported_distance_m(rows), 1000)
         self.assertIsNone(summarize_run.reported_distance_m(rows[:2]))
+        # A console pause restarts the counter mid-run: 100 -> 1100, then 0 -> 400 after Play is 1400 m in all.
+        paused = rows[:4] + [ftms(20000, 0), ftms(30000, 400), ftms(40000, 0)]
+        self.assertEqual(summarize_run.reported_distance_m(paused), 1400)
 
     def test_handles_more_data_and_short_frames(self):
         self.assertEqual(summarize_run.decode_treadmill_data('0100'), (None, None))

@@ -45,8 +45,8 @@ const QString kStopFrame = QStringLiteral("0253035003");
 class Helper : public QObject {
   public:
     Helper(const QBluetoothAddress &address, const QString &name, const QString &trial, int seconds, int waitWakeSeconds, bool observeFtms,
-           Treadmill::MotorGate gate)
-        : address_(address), name_(name), trial_(trial), seconds_(seconds), waitWake_(waitWakeSeconds), observeFtms_(observeFtms), gate_(std::move(gate)) {}
+           Treadmill::MotorGate gate, int pauseAllowanceSeconds = 0)
+        : address_(address), name_(name), trial_(trial), seconds_(seconds + pauseAllowanceSeconds), waitWake_(waitWakeSeconds), observeFtms_(observeFtms), gate_(std::move(gate)) {}
 
     void start() {
         clock_.start();
@@ -485,6 +485,7 @@ int main(int argc, char *argv[]) {
     parser.addOption({"target-sequence", "Workout target pairs speed:incline,...", "pairs"});
     parser.addOption({"manual-max-speed", "Workouts: approve any target up to this raw speed code (operator speed/incline changes).", "code", "0"});
     parser.addOption({"timeout", "Motor deadline in seconds.", "seconds", "120"});
+    parser.addOption({"pause-allowance", "Workouts: total seconds the console may be paused (Pause/Play on the console); 0 = a pause stops the run.", "seconds", "0"});
     parser.addOption({"confirm-motor", "The CLI host obtained typed MOTOR approval."});
     parser.addOption({"wait-wake", "Extra seconds the host may wait for the console to wake before the start.", "seconds", "0"});
     parser.addOption({"observe-ftms", "Also stream FTMS Treadmill Data and Status notifications (observation only, no FTMS writes)."});
@@ -506,9 +507,14 @@ int main(int argc, char *argv[]) {
     if (profileName != "walking" && profileName != "running") return fail("--profile must be walking or running");
     const Treadmill::Profile profile = profileName == "running" ? Treadmill::Profile::Running : Treadmill::Profile::Walking;
     if (profile == Treadmill::Profile::Running && !parser.isSet("observe-ftms")) return fail("The running profile requires --observe-ftms: FTMS is the consistency guard for the speed (it comes from the same module, so it is not a measurement)");
+    bool pauseOk = false;
+    const int pauseAllowance = parser.value("pause-allowance").toInt(&pauseOk);
+    if (!pauseOk) return fail("--pause-allowance must be a number of seconds");
     std::unique_ptr<Helper> helper;
     try {
-        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"), Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile, parser.value("manual-max-speed").toInt())));
+        helper.reset(new Helper(address, name, trial, seconds, waitWake, parser.isSet("observe-ftms"),
+                                Treadmill::MotorGate(trial, parser.value("target-sequence"), seconds, profile, parser.value("manual-max-speed").toInt(), pauseAllowance),
+                                pauseAllowance));
     } catch (const std::exception &error) { return fail(QString::fromUtf8(error.what())); }
     QTimer::singleShot(0, &app, [&]() { helper->start(); });
     return app.exec();

@@ -188,6 +188,13 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     if (manual && manualStrategy != "offset" && manualStrategy != "hold" && manualStrategy != "takeover")
         return fail("--manual-strategy must be offset, hold or takeover");
     const int manualMaxSpeed = !manual ? 0 : runningMode ? qMin(120, int(std::lround(validatedRunningKmh() * 10))) : 60;
+    // Console Pause/Play during a workout (Linux backend). On the W1 the console's Pause looks like a stop in the protocol
+    // (STOPPING 4 with falling speed, then NORMAL 0) and Play restarts the belt (countdown 2, then RUNNING 3). Instead of
+    // ending the run, the plan clock freezes, nothing is sent while the console is paused, and after Play the CLI ramps
+    // back to where the plan was in steps of 0.5 km/h and one incline level. Pauses may total kConsolePauseAllowanceSeconds.
+    constexpr int kConsolePauseAllowanceSeconds = 900, kResumeSpeedStep = 5, kResumeInclineStep = 1;
+    constexpr qint64 kResumeStepHoldMs = 1000;
+    const int pauseAllowanceSeconds = linuxBackend && trial.workout && !stagedRunning ? kConsolePauseAllowanceSeconds : 0;
     const QBluetoothAddress address(parser.value("device"));
     const QString name = parser.value("expected-name");
     if (address.isNull() || name.trimmed().isEmpty()) return fail("Control trial requires --device and exact --expected-name");
@@ -246,6 +253,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                            {"wait_wake_seconds", waitWakeMs / 1000.0}, {"wait_wake_confirm", waitConfirm},
                            {"manual_control", manual}, {"manual_strategy", manual ? QJsonValue(manualStrategy) : QJsonValue()},
                            {"manual_max_speed_code", manual ? QJsonValue(manualMaxSpeed) : QJsonValue()},
+                           {"console_pause_allowance_seconds", pauseAllowanceSeconds},
                            {"profile", runningMode ? "running" : "walking"}, {"running_validated_kmh", runningMode ? validatedRunningKmh() : QJsonValue()},
                            {"initial_deck_baseline_confirmation_required", trial.operatorMarks},
                            {"ftms_observation_requested", parser.isSet("observe-ftms")},
@@ -283,7 +291,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             "%2").arg(trial.speed / 10.0).arg(stagedRunning ? QString("This is a staged validation trial: it approaches the top speed through 6.0 km/h and returns.\n"
                                                                     "WATCH THE CONSOLE DISPLAY during the 15 s hold at the top speed: afterwards you will be asked what it showed, and the stage unlocks only if you answer within 0.1 km/h of the stage speed.\n")
                                                               : QString("Validated so far: %1 km/h.\n").arg(validatedRunningKmh())))
-        << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no pause and no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
+        << (pauseAllowanceSeconds > 0 ? QString("CONSOLE PAUSE: pressing Pause on the console pauses this run (up to %1 min in all); press Play on the console to continue: "
+                                                "the belt then returns gradually to where the plan was. Q ends the run at any time.\n").arg(pauseAllowanceSeconds / 60) : QString())
+        << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
         << "Type MOTOR to approve this exact trial: " << Qt::flush;
     if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
     }
@@ -313,8 +323,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     double ftmsKmh = 0;
     qint64 ftmsAt = -1, ftmsMissingSince = -1;
     // Distance the treadmill itself reports over FTMS, counted from the first reading after the belt reported RUNNING.
-    // The counter restarts at zero after a stop, so only the largest value is kept.
-    qint64 ftmsDistanceStart = -1, ftmsDistanceM = -1;
+    // The counter restarts at zero after a stop (and after a console pause), so a falling value starts a new segment.
+    qint64 ftmsDistanceStart = -1, ftmsDistanceM = -1, ftmsDistanceLast = -1, ftmsDistanceDone = 0;
     int speedMismatch = 0, agreeAtTop = 0, lastSpeedTenths = 0, speedAtStop = 0;
     qint64 graceUntil = -1, lastWaitNoticeAt = 0;
     int stage = 0;
@@ -325,6 +335,13 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     int offsetSpeed = 0, offsetIncline = 0, manualSpeed = 10, manualIncline = 0, heldStage = -1, lastSentSpeed = 10, lastSentIncline = 0;
     bool takenOver = false;
     qint64 planStageStart = -1;
+    // Console pause: consolePaused while the console is stopped (waiting for Play), resuming while ramping back to the plan.
+    bool consolePaused = false, resuming = false;
+    int consolePauses = 0, resumeSpeed = 10, resumeIncline = 0;
+    // consolePausedAt: when the pause began (kept if the console is paused again during the ramp); idleSince: when this pause began.
+    qint64 consolePausedAt = -1, idleSince = -1, pausedIdleMs = 0, pausedShiftMs = 0, savedSinceReported = -1, savedSincePlanStart = -1;
+    auto pausedIdle = [&](qint64 now) { return pausedIdleMs + (consolePaused ? now - idleSince : 0); };
+    auto pausedShift = [&](qint64 now) { return pausedShiftMs + (consolePaused || resuming ? now - consolePausedAt : 0); };
     quint64 manualCommandId = 100;
     QByteArray inputLine;
     // The target the run is meant to be at while it is in plan step s.
@@ -364,6 +381,19 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         record("stop_requested", {{"reason", reason}});
         if (started && !closing) control.stop(1, 3);
         else close();
+    };
+    // One step of the ramp back to the plan after Play: at most kResumeSpeedStep up and one incline level up per step;
+    // a value above the plan's goes straight to the plan's.
+    auto resumeStep = [&](int fromSpeed, int fromIncline) {
+        int speed, incline;
+        effective(stage, speed, incline);
+        resumeSpeed = fromSpeed < speed ? qMin(speed, fromSpeed + kResumeSpeedStep) : speed;
+        resumeIncline = fromIncline < incline ? qMin(incline, fromIncline + kResumeInclineStep) : incline;
+        stageReportedAt = -1; targetMatchCount = 0; stageRequestedAt = clock.elapsed();
+        lastSentSpeed = resumeSpeed; lastSentIncline = resumeIncline;
+        record("resume_target_requested", {{"stage", stage}, {"speed_code", resumeSpeed}, {"incline_code", resumeIncline},
+                                           {"plan_speed_code", speed}, {"plan_incline_code", incline}});
+        if (!closing) control.target(1, manualCommandId++, resumeSpeed, resumeIncline);
     };
     QObject::connect(&closeDeadline, &QTimer::timeout, &app, [&]() {
         failed = true;
@@ -451,6 +481,33 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 record("reported_ready", {{"status_code", 9}, {"physical_stationary_verified", false}});
             }
         }
+        if (pauseAllowanceSeconds > 0 && !stopping && runningAt >= 0 && workoutInitialTargetSent) {
+            const qint64 now = clock.elapsed();
+            if (!consolePaused && (status.state == 4 || status.state == 0 || status.state == 2)) {
+                consolePaused = true; idleSince = now;
+                ++consolePauses;
+                if (!resuming) {
+                    // Freeze the plan clock: remember how far into this step the run was.
+                    consolePausedAt = now;
+                    savedSinceReported = stageReportedAt >= 0 ? now - stageReportedAt : -1;
+                    savedSincePlanStart = planStageStart >= 0 ? now - planStageStart : -1;
+                }
+                resuming = false;
+                int speed, incline;
+                effective(stage, speed, incline);
+                record("console_pause", {{"status_code", status.state}, {"stage", stage}, {"resume_speed_code", speed}, {"resume_incline_code", incline},
+                                         {"paused_seconds_so_far", pausedIdle(now) / 1000.0}});
+                QTextStream(stderr) << "Paused on the console. Press Play on the console to continue at " << QString::number(speed / 10.0, 'f', 1) << " km/h, incline "
+                                    << incline << " (reached gradually); Q ends the run.\n" << Qt::flush;
+            }
+            if (consolePaused && status.state != 3) return; // nothing is sent while the console is paused
+            if (consolePaused && status.state == 3 && status.hasMotorData) {
+                consolePaused = false; resuming = true;
+                pausedIdleMs += now - idleSince;
+                record("console_play", {{"speed_code", status.speedTenths}, {"incline_code", status.inclineCode}, {"stage", stage}});
+                resumeStep(qMax(10, status.speedTenths), qMax(0, status.inclineCode));
+            }
+        }
         if (!stopping && status.hasMotorData) {
             if (status.inclineCode < 0 || status.inclineCode > (manual ? 8 : trial.incline) || status.speedTenths > (manual ? manualMaxSpeed : trial.speed) || status.state == 1 ||
                 ((status.state == 10 || status.state == 4) && pauseAt < 0)) {
@@ -493,6 +550,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             }
             int effectiveSpeed = 10, effectiveIncline = 0;
             if (trial.workout) effective(stage, effectiveSpeed, effectiveIncline);
+            if (resuming) { effectiveSpeed = resumeSpeed; effectiveIncline = resumeIncline; }
             const int expectedSpeed = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 10 : effectiveSpeed) : (stage == 1 ? trial.speed : 10);
             const int expectedIncline = trial.workout ? (stage == 0 && !workoutInitialTargetSent ? 0 : effectiveIncline) : (stage == 1 ? trial.incline : 0);
             if (pauseAt < 0 && (status.state != 3 || status.speedTenths != expectedSpeed || status.inclineCode != expectedIncline)) {
@@ -501,7 +559,22 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             }
             if (pauseAt < 0 && status.state == 3 && status.speedTenths == expectedSpeed && status.inclineCode == expectedIncline && stageReportedAt < 0) {
                 ++targetMatchCount;
-                if (!trial.workout || targetMatchCount >= 3) {
+                if (resuming && targetMatchCount >= 3) {
+                    const qint64 now = clock.elapsed();
+                    int speed, incline;
+                    effective(stage, speed, incline);
+                    stageReportedAt = now;
+                    if (resumeSpeed == speed && resumeIncline == incline) {
+                        // Back where the plan was: the plan clock continues from the moment of the pause.
+                        resuming = false;
+                        pausedShiftMs += now - consolePausedAt;
+                        stageReportedAt = savedSinceReported >= 0 ? now - savedSinceReported : now;
+                        planStageStart = savedSincePlanStart >= 0 ? now - savedSincePlanStart : now;
+                        record("console_resumed", {{"stage", stage}, {"speed_code", speed}, {"incline_code", incline},
+                                                   {"pause_and_ramp_seconds", (now - consolePausedAt) / 1000.0}, {"paused_seconds_total", pausedIdle(now) / 1000.0}});
+                        QTextStream(stderr) << "Back at " << QString::number(speed / 10.0, 'f', 1) << " km/h, incline " << incline << "; the plan continues.\n" << Qt::flush;
+                    }
+                } else if (!resuming && (!trial.workout || targetMatchCount >= 3)) {
                     stageReportedAt = clock.elapsed();
                     if (planStageStart < 0) planStageStart = stageReportedAt; // the plan's own clock for this step; manual changes do not restart it
                     record("reported_target", {{"stage", stage}, {"speed_code", expectedSpeed}, {"incline_code", expectedIncline},
@@ -550,7 +623,9 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
                 qint64 meters = 0;
                 if (parts[1] == "00002acd-0000-1000-8000-00805f9b34fb" && runningAt >= 0 && ftmsDistanceMeters(QByteArray::fromHex(parts[2]), meters)) {
                     if (ftmsDistanceStart < 0) ftmsDistanceStart = meters;
-                    ftmsDistanceM = qMax(ftmsDistanceM, meters - ftmsDistanceStart);
+                    if (ftmsDistanceLast >= 0 && meters < ftmsDistanceLast) { ftmsDistanceDone += ftmsDistanceLast - ftmsDistanceStart; ftmsDistanceStart = 0; }
+                    ftmsDistanceLast = meters;
+                    ftmsDistanceM = qMax(ftmsDistanceM, ftmsDistanceDone + meters - ftmsDistanceStart);
                 }
             } else if (parts.size() == 2 && parts[0] == "RX") {
                 const auto bytes = QByteArray::fromHex(parts[1]);
@@ -635,6 +710,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         QString refusal;
         if (cmd == "stop") { failed = true; stop("Operator stop (command)"); record("manual_command_result", {{"seq", seq}, {"cmd", cmd}, {"result", "applied"}}); return; }
         if (!(started && runningAt >= 0 && workoutInitialTargetSent) || stopping || closing) refusal = "the belt is not running under the plan";
+        else if (consolePaused || resuming) refusal = "the console is paused or returning to the plan";
         else if (cmd == "speed_up") ++speed;
         else if (cmd == "speed_down") --speed;
         else if (cmd == "incline_up") ++incline;
@@ -709,16 +785,20 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         const auto now = clock.elapsed();
         if (closing) return;
         if (!started && now > 30000 + waitWakeMs) { failed = true; record("fault", {{"reason", waitWakeMs > 0 ? "Treadmill did not wake within the wait limit" : "Preflight did not complete within 30 seconds"}}); close(); return; }
-        if (started && !stopping && (now - latestStatusAt > 1500 || now - startedAt >= (trial.deadline - 2) * 1000 ||
-            (stageReportedAt < 0 && pauseAt < 0 && now - stageRequestedAt > (stage == 0 ? 10000 : (trial.operatorMarks ? 60000 : 15000))))) {
+        if (started && !stopping && (now - latestStatusAt > 1500 || now - startedAt >= (trial.deadline - 2) * 1000 + qMin<qint64>(pausedShift(now), pauseAllowanceSeconds * 1000LL) ||
+            (stageReportedAt < 0 && pauseAt < 0 && !consolePaused && now - stageRequestedAt > (stage == 0 ? 10000 : (trial.operatorMarks ? 60000 : 15000))))) {
             failed = true; stop("Missing status or start deadline");
         }
+        if (consolePaused && !stopping && pausedIdle(now) > pauseAllowanceSeconds * 1000LL - 5000) {
+            failed = true; stop(QString("The console was paused longer than the %1-minute pause allowance").arg(pauseAllowanceSeconds / 60));
+        }
+        if (resuming && !stopping && stageReportedAt >= 0 && now - stageReportedAt >= kResumeStepHoldMs) resumeStep(resumeSpeed, resumeIncline);
         if (trial.operatorMarks && stage > 0 && !stopping && operatorArrivalAt[stage] < 0 && now - stageRequestedAt >= 60000) {
             failed = true; stop("No physical incline arrival mark within 60 seconds");
         }
         if (pauseAt >= 0 && !stopping && now - pauseAt >= trial.stepHold * 1000) stop("Pause observation complete");
         const bool planTimed = manual && trial.workout && planStageStart >= 0;
-        if ((stageReportedAt >= 0 || planTimed) && !stopping && pauseAt < 0) {
+        if ((stageReportedAt >= 0 || planTimed) && !stopping && pauseAt < 0 && !consolePaused && !resuming) {
             const int hold = trial.workout ? trial.steps[stage].holdSeconds :
                 (stage == 0 ? (trial.readyOnly ? trial.stepHold : (trial.id == "start-stop" ? 5 : 3)) : (stage == 1 ? trial.stepHold : trial.returnHold));
             const bool holdComplete = trial.operatorMarks && stage > 0
@@ -769,6 +849,7 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
             if (parser.isSet("observe-ftms")) arguments << "--observe-ftms";
             if (runningMode) arguments << "--profile" << "running";
             if (manual) arguments << "--manual-max-speed" << QString::number(manualMaxSpeed);
+            if (pauseAllowanceSeconds > 0) arguments << "--pause-allowance" << QString::number(pauseAllowanceSeconds);
             process.start(helper, arguments);
         } else {
         QStringList arguments {"-Mta", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper,
@@ -813,7 +894,8 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
     record("trial_result", {{"sequence_observed", sequenceObserved}, {"stop_write_succeeded", stopWritten},
                             {"normal_status_after_stop", feedbackAfterStop}, {"physical_stop_verified", false},
                             {"operator_arrival_marks_recorded", operatorArrivalAt[1] >= 0 && operatorArrivalAt[2] >= 0},
-                            {"ready_status_observed", trial.readyOnly && stageReportedAt >= 0}});
+                            {"ready_status_observed", trial.readyOnly && stageReportedAt >= 0}, {"console_pauses", consolePauses},
+                            {"console_paused_seconds", pausedIdle(clock.elapsed()) / 1000.0}});
     return sequenceObserved && !failed ? 0 : 1;
 }
 

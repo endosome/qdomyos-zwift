@@ -14,6 +14,12 @@
 // raw/10 exactly, because both come from the same module. It still catches gross faults, so in the running
 // profile a started run is stopped if FTMS speed disagrees with FitShow speed, or cannot be observed, while
 // above 6 km/h. The scale itself is validated by the operator reading the console display (see motortrial.cpp).
+//
+// Console pause (workouts, opt-in with pauseAllowanceSeconds > 0): on the W1 the console's Pause button looks like a stop
+// in the protocol (STOPPING 4 with falling speed, then NORMAL 0; Play gives countdown 2, then RUNNING 3). Once the belt has
+// run, those states without a host STOP count as a pause: the deadline grows by the allowance, the run stops when the
+// paused time exceeds it, and from then on any target inside the plan's own ceilings is approved, but only while the
+// console reports RUNNING, so nothing is ever sent to a paused console.
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
@@ -29,8 +35,11 @@ class MotorGate {
   public:
     // manualMaxSpeed > 0 (workouts only) is for operator-driven speed/incline changes: instead of the pre-declared sequence,
     // any target with speed 10..manualMaxSpeed and incline 0..8 is approved, at most kMaxManualTargets writes in all.
-    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds, Profile profile = Profile::Walking, int manualMaxSpeed = 0)
-        : profile_(profile) {
+    MotorGate(const QString &trial, const QString &targetSequence, int timeoutSeconds, Profile profile = Profile::Walking, int manualMaxSpeed = 0,
+              int pauseAllowanceSeconds = 0)
+        : profile_(profile), pauseAllowanceMs_(qint64(pauseAllowanceSeconds) * 1000) {
+        if (pauseAllowanceSeconds != 0 && (trial != "workout" || pauseAllowanceSeconds < 0 || pauseAllowanceSeconds > 1800))
+            throw std::invalid_argument("A console pause allowance applies to workouts only, 1-1800 seconds");
         if (manualMaxSpeed != 0 && (trial != "workout" || manualMaxSpeed < 10 || manualMaxSpeed > maxSpeedCode()))
             throw std::invalid_argument("Manual control supports workouts, with a speed limit inside the profile's");
         if (profile == Profile::Running && trial != "workout") throw std::invalid_argument("The running profile supports workouts only");
@@ -113,7 +122,9 @@ class MotorGate {
             if (motorData && bytes.size() < 16) return;
             if (state != 0 && state != 2 && !motorData && state != 5 && state != 6 && state != 7) return;
             statusAt_ = now;
+            lastState_ = state;
             normalReports_ = state == 0 ? normalReports_ + 1 : 0;
+            if (started() && !stopAttempted_ && pauseAllowanceMs_ > 0) trackConsolePause(state, now);
             if (started() && (state == 5 || state == 6 || state == 7 || state == 10 || state == 1)) require("Treadmill reported fault, disabled or paused state");
             if (started() && motorData && (at(3) > speedCeiling_ || at(4) > inclineCeiling_ || at(4) > 127)) require("Unexpected motor feedback");
             if (started() && profile_ == Profile::Running && state == 3 && motorData && at(3) > 60) checkSpeedAgreement(at(3) / 10.0, now);
@@ -122,8 +133,10 @@ class MotorGate {
     }
 
     bool needsStop(qint64 now) const {
-        return started() && !stopAttempted_ && (stopRequired_ || now - startedAt_ >= deadlineMs_ || now - statusAt_ > 1500);
+        return started() && !stopAttempted_ && (stopRequired_ || now - startedAt_ >= deadlineMs_ + (consolePaused_ ? pauseAllowanceMs_ : 0) ||
+                                                now - statusAt_ > 1500 || (consolePaused_ && pausedMs(now) > pauseAllowanceMs_));
     }
+    bool consolePaused() const { return consolePaused_; }
 
     // Returns the bytes to write, or throws if the frame is outside this trial's allowlist.
     QByteArray approve(const QString &hex, qint64 now) {
@@ -141,7 +154,17 @@ class MotorGate {
             startedAt_ = now; // Count the attempt even if the write's completion is uncertain.
             return bytes;
         }
-        if (manual_ && bytes.size() == 7 && quint8(bytes[1]) == 0x53 && quint8(bytes[2]) == 2) {
+        const bool isTarget = bytes.size() == 7 && quint8(bytes[1]) == 0x53 && quint8(bytes[2]) == 2;
+        if (isTarget && consolePaused_) {
+            const int speed = quint8(bytes[3]), incline = quint8(bytes[4]);
+            if (!started() || stopAttempted_ || needsStop(now) || lastState_ != 3)
+                throw std::invalid_argument("Target is unavailable while the console is paused, after stop, stale status or trial deadline");
+            if (speed < 10 || speed > speedCeiling_ || incline > inclineCeiling_ || resumeTargets_ >= kMaxManualTargets)
+                throw std::invalid_argument("Target after a console pause is outside the plan's ceilings or the write budget");
+            ++resumeTargets_;
+            return bytes;
+        }
+        if (manual_ && isTarget) {
             const int speed = quint8(bytes[3]), incline = quint8(bytes[4]);
             if (speed < 10 || speed > speedCeiling_ || incline > 8 || manualTargets_ >= kMaxManualTargets)
                 throw std::invalid_argument("Manual target is outside the speed/incline limits or the write budget");
@@ -170,6 +193,16 @@ class MotorGate {
     bool boundsMatch() const {
         return minimum_ == 10 && maximum_ == maxSpeedCode() && unit_ == unitTag() && inclineMinimum_ == 0 && inclineMaximum_ == 8;
     }
+    void trackConsolePause(int state, qint64 now) {
+        if (state == 3) {
+            runningSeen_ = true;
+            if (pauseSince_ >= 0) { pausedMs_ += now - pauseSince_; pauseSince_ = -1; }
+        } else if (runningSeen_ && (state == 0 || state == 2 || state == 4)) {
+            consolePaused_ = true;
+            if (pauseSince_ < 0) pauseSince_ = now;
+        }
+    }
+    qint64 pausedMs(qint64 now) const { return pausedMs_ + (pauseSince_ >= 0 ? now - pauseSince_ : 0); }
     void require(const QString &reason) { stopRequired_ = true; if (stopReason_.isEmpty()) stopReason_ = reason; }
     // Above 6 km/h the raw speed scale is unverified: FTMS must be observable and must agree. The two streams
     // have no guaranteed order, so missing or stale FTMS speed stops the run only if it persists for 2 s.
@@ -202,6 +235,9 @@ class MotorGate {
     static constexpr int kMaxManualTargets = 2000;
     bool manual_ = false;
     int manualTargets_ = 0;
+    qint64 pauseAllowanceMs_ = 0, pauseSince_ = -1, pausedMs_ = 0;
+    bool runningSeen_ = false, consolePaused_ = false;
+    int lastState_ = -1, resumeTargets_ = 0;
 };
 
 } // namespace Treadmill

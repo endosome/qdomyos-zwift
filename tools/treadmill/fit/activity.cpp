@@ -37,8 +37,15 @@ QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport,
     QVector<Status> statuses;
     qint64 anchorMs = -1, anchorUnixMs = -1;
     for (const QJsonObject &row : rows) {
-        if (row.value("event").toString() != "raw_status" || !row.value("has_motor_data").toBool()) continue;
-        const int state = row.value("status_code").toInt(-1), speed = row.value("speed_code").toInt(-1), level = row.value("incline_code").toInt(-1);
+        if (row.value("event").toString() != "raw_status") continue;
+        const int state = row.value("status_code").toInt(-1);
+        // NORMAL and countdown between running periods (a console pause) carry no motor data: the belt is stopped.
+        if ((state == 0 || state == 2) && !statuses.isEmpty()) {
+            statuses.append({qint64(row.value("monotonic_ms").toDouble(-1)), state, 0, statuses.last().level});
+            continue;
+        }
+        if (!row.value("has_motor_data").toBool()) continue;
+        const int speed = row.value("speed_code").toInt(-1), level = row.value("incline_code").toInt(-1);
         if ((state != 3 && state != 4) || speed < 0 || level < 0 || level > kMaxLevel) continue;
         const qint64 ms = qint64(row.value("monotonic_ms").toDouble(-1));
         if (ms < 0) continue;
@@ -52,13 +59,15 @@ QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport,
     int first = -1;
     for (int i = 0; i < statuses.size(); ++i) if (statuses[i].state == 3) { first = i; break; }
     if (first < 0) { error = "the log contains no RUNNING status from the treadmill"; return {}; }
+    while (statuses.last().state != 3 && statuses.last().state != 4) statuses.removeLast(); // NORMAL after the final stop
     const qint64 startMs = statuses[first].ms, endMs = statuses.last().ms;
     if (endMs <= startMs) { error = "the log's running period is empty"; return {}; }
     const qint64 startUnix = (anchorUnixMs + (startMs - anchorMs)) / 1000;
     const int seconds = int((endMs - startMs + 999) / 1000);
 
     // The treadmill's own distance counter (FTMS), when the log has one covering the run; otherwise distance is
-    // integrated from the reported speed. The counter restarts at zero after a stop, so it never goes backwards here.
+    // integrated from the reported speed. The counter restarts at zero after a stop and after a console pause, so a
+    // falling value starts a new segment that adds to the ones before.
     QVector<Odometer> odometer;
     for (const QJsonObject &row : rows) {
         if (row.value("event").toString() != "ftms_notification" ||
@@ -67,6 +76,11 @@ QByteArray buildActivity(const QVector<QJsonObject> &rows, const QString &sport,
         qint64 meters = 0;
         if (ms >= startMs && ms <= endMs && ftmsTotalDistance(QByteArray::fromHex(row.value("frame_hex").toString().toLatin1()), meters))
             odometer.append({ms, meters});
+    }
+    qint64 added = 0;
+    for (int i = 1; i < odometer.size(); ++i) { // make the counter cumulative across restarts
+        if (odometer[i].meters + added < odometer[i - 1].meters) added = odometer[i - 1].meters;
+        odometer[i].meters += added;
     }
     const bool reported = odometer.size() >= 2;
 

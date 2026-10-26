@@ -39,7 +39,9 @@ Never treat a name or address as proof of identity without rechecking at connect
 - Speed raw unit 0.1 km/h (confirmed on the display up to 12.0). Incline levels 0-8; the percent per level is provisional (1.375 %/level, 0-11 %), not measured.
 - **Handrail selects the mode:** down = walking (max 6.0 km/h, limit report 10-60 tag 0), up = running (max 12.0 km/h, limit report 10-120 tag 0). Switching is physical.
 - FTMS speed equals FitShow raw/10 exactly (same module), so it is a consistency guard only, not independent proof; running speeds are unlocked by an operator display check.
-- Pause does not work in the verified path; it is unavailable.
+- The FitShow pause command does not work. A console Pause shows up as STOPPING (4) with falling speed, then NORMAL (0), the same as a stop.
+  Linux workouts treat that as a pause and continue after Play (`console_pause`/`console_play`/`console_resumed`), returning gradually to the plan.
+  This is not hardware-proven yet: what Play reports (countdown? the restart speed and incline?) is still to be captured.
 - The console sleeps after about 10 minutes idle (06/02) and no remote method keeps it awake or wakes it.
 - A host that stops reading the CLI's output makes the helper stop the belt (fail-safe): drivers must write output to files, never to unread pipes.
 

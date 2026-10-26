@@ -48,6 +48,13 @@ class LinuxHelperTests(unittest.TestCase):
                 self.refused(*BASE, '--trial', trial, '--target-sequence', '20:1', '--timeout', '60',
                              '--manual-max-speed', limit, message='Manual control supports workouts')
 
+    def test_pause_allowance_needs_a_workout_and_is_bounded(self):
+        self.refused(*BASE, '--trial', 'start-stop', '--pause-allowance', '60', message='console pause allowance')
+        self.refused(*BASE, '--trial', 'workout', '--target-sequence', '20:1', '--timeout', '60', '--pause-allowance', '1801',
+                     message='console pause allowance')
+        self.refused(*BASE, '--trial', 'workout', '--target-sequence', '20:1', '--timeout', '60', '--pause-allowance', 'x',
+                     message='--pause-allowance')
+
     def test_deadline_is_bounded(self):
         self.refused(*BASE, '--timeout', '0', message='Session duration')
         self.refused(*BASE, '--timeout', '241', message='Session duration')

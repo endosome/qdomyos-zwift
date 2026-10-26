@@ -75,11 +75,13 @@ def decode_total_distance(frame_hex):
 
 
 def reported_distance_m(rows):
-    """Distance the treadmill reported over FTMS since the first sample after RUNNING (the counter restarts after a stop)."""
+    """Distance the treadmill reported over FTMS since the first sample after RUNNING. The counter restarts at zero after a
+    stop and after a console pause, so a falling value starts a new segment that adds to the ones before."""
     running = next((row["monotonic_ms"] for row in rows if row.get("event") == "raw_status" and row.get("status_code") == 3), None)
     if running is None:
         return None
-    start = best = None
+    start = best = last = None
+    done = 0
     for row in rows:
         if row.get("event") != "ftms_notification" or row.get("characteristic_uuid") != "00002acd-0000-1000-8000-00805f9b34fb":
             continue
@@ -89,7 +91,11 @@ def reported_distance_m(rows):
         if meters is None:
             continue
         start = meters if start is None else start
-        best = meters - start if best is None else max(best, meters - start)
+        if last is not None and meters < last:
+            done += last - start
+            start = 0
+        last = meters
+        best = done + meters - start if best is None else max(best, done + meters - start)
     return best
 
 
@@ -189,6 +195,14 @@ def summarize(path):
                 if normalized != last_ftms_status:
                     print(f"  {stamp} FTMS Fitness Machine Status raw {normalized or '(empty)'}")
                     last_ftms_status = normalized
+        elif event == "console_pause":
+            print(f"  {stamp} paused on the console; the plan waits (to continue at raw speed {row.get('resume_speed_code', '?')}, incline {row.get('resume_incline_code', '?')})")
+        elif event == "console_play":
+            print(f"  {stamp} Play on the console: belt restarted at raw speed {row.get('speed_code', '?')}, incline {row.get('incline_code', '?')}")
+        elif event == "resume_target_requested":
+            print(f"  {stamp} returning to the plan: raw speed {row.get('speed_code', '?')}, incline {row.get('incline_code', '?')}")
+        elif event == "console_resumed":
+            print(f"  {stamp} back on the plan after {row.get('pause_and_ramp_seconds', '?')} s of pause and return")
         elif event in ("stop_requested", "fault"):
             print(f"  {stamp} {event.replace('_', ' ')}: {row.get('reason', '?')}")
         elif event == "trial_result":
@@ -237,6 +251,9 @@ def run_statistics(rows):
     stats["stopping_before_stop_request_s"] = [round(row["monotonic_ms"] / 1000.0, 1) for row in statuses
                                                if row.get("status_code") == 4 and (cut is None or row["monotonic_ms"] < cut)][:3]
     stats["faults"] = [row.get("reason") for row in rows if row.get("event") == "fault"]
+    result = next((row for row in rows if row.get("event") == "trial_result"), {})
+    if result.get("console_pauses"):
+        stats["console_pauses"] = (result["console_pauses"], result.get("console_paused_seconds"))
     distance = reported_distance_m(rows)
     if distance is not None:
         stats["distance_m"] = distance
@@ -261,6 +278,9 @@ def print_statistics(rows):
     if "distance_m" in stats:
         print(f"  distance (reported by the treadmill): {stats['distance_m'] / 1000:.2f} km ({stats['distance_m']} m)")
     print(f"  faults: {stats['faults'] or 'none'}")
+    if "console_pauses" in stats:
+        count, seconds = stats["console_pauses"]
+        print(f"  console pauses: {count}, paused {seconds or 0:.0f} s in all (the per-step overhead includes the pauses and the returns)")
     if stats["stopping_before_stop_request_s"]:
         print("  STOPPING reported before any host stop at "
               + ", ".join(f"+{value:.0f} s" for value in stats["stopping_before_stop_request_s"])

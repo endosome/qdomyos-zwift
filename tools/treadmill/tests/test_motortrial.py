@@ -47,6 +47,16 @@ target_count = 0
 speed, incline, paused = 10, 0, False
 normal_at = 0
 polls = 0
+console_pause = [float(v) for v in os.environ['MOTOR_CONSOLE_PAUSE'].split(',')] if os.environ.get('MOTOR_CONSOLE_PAUSE') else None
+pause_begin = None
+def console_phase():
+    # None (no pause), 'stopping', 'normal', 'countdown' or 'resumed'.
+    if pause_begin is None:
+        return None
+    elapsed = time.monotonic() - pause_begin
+    if elapsed < 0:
+        return None
+    return 'stopping' if elapsed < 1 else 'normal' if elapsed < console_pause[2] else 'countdown' if elapsed < console_pause[2] + 1 else 'resumed'
 def send(line):
     print(line, flush=True)
 def rx(payload):
@@ -90,6 +100,23 @@ for line in sys.stdin:
             continue
         if ready and mode == 'ready-reverted' and time.monotonic() - ready_at > 1:
             ready = False
+        phase = console_phase() if not stopped else None
+        if phase in ('stopping', 'normal', 'countdown'):
+            moving = False
+        elif phase == 'resumed' and not globals().get('resumed'):
+            globals()['resumed'] = True
+            moving, speed, incline, odometer = True, 10, 0, 0  # Play restarts the belt at 1.0 km/h and the distance counter at zero
+        if phase in ('stopping', 'normal', 'countdown') and observe_ftms:
+            send('FTMS\t00002acd-0000-1000-8000-00805f9b34fb\t' + ('8c05' + '0000' + globals().get('odometer', 0).to_bytes(3, 'little').hex() + '00' * 12))
+        if phase == 'stopping':
+            rx(bytes([0x51, 4, 5, incline]) + bytes(9))
+            continue
+        if phase == 'normal':
+            rx(bytes.fromhex('5100'))
+            continue
+        if phase == 'countdown':
+            rx(bytes.fromhex('510201'))
+            continue
         if observe_ftms and os.environ.get('MOTOR_FTMS', 'ok') != 'silent':
             shown = (speed if moving else 0) * (0.5 if os.environ.get('MOTOR_FTMS') == 'mismatch' else 1)
             odometer = globals().get('odometer', 0) + (3 if moving else 0)  # the fake treadmill's own distance counter
@@ -112,9 +139,13 @@ for line in sys.stdin:
         if mode != 'no-ack':
             rx(bytes.fromhex('5301'))
     elif payload[:2] == bytes.fromhex('5302'):
+        if console_phase() in ('stopping', 'normal', 'countdown'):
+            Path(os.environ['MOTOR_CALLS'] + '.paused').write_text(frame)  # the host must never send a target to a paused console
         moving = True
         speed, incline = payload[2], payload[3]
         target_count += 1
+        if console_pause and pause_begin is None and target_count == int(console_pause[0]):
+            pause_begin = time.monotonic() + console_pause[1]
         rx(bytes.fromhex('5302'))
         if mode == 'safety' or (mode == 'workout-fault' and target_count == 2):
             rx(bytes.fromhex('510602'))
@@ -750,6 +781,68 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         motor = [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('0253')]
         self.assertNotIn('02530214014403', motor)
         self.assertEqual(motor[-1], '0253035003')
+
+    def paused_workout(self, backend='linux', extra=()):
+        """A Linux workout during which the fake console is paused 4 s into the climb, for 4 s, then Play restarts it at 1.0 km/h, incline 0."""
+        if backend == 'linux':
+            self.linux()
+        self.environment['MOTOR_CONSOLE_PAUSE'] = '2,4,4'
+        workout = self.directory / 'pause-w1.xml'
+        workout.write_text('''<rows version="1" id="pause-w1" name="Pause W1" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Baseline" duration="00:00:01" forcespeed="1" speed="1" inclination="0" />
+  <row name="Climb" duration="00:00:12" forcespeed="1" speed="3" inclination="2.75" />
+  <row name="Last" duration="00:00:02" forcespeed="1" speed="2" inclination="0" />
+</rows>''')
+        arguments = [BINARY, 'workout', 'run', str(workout), '--backend', backend, '--device', 'DD:87:70:39:74:20',
+                     '--expected-name', 'FS-0F7A32', '--confirm-motor', '--log', str(self.log), *extra]
+        master, slave = pty.openpty()
+        process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
+        try:
+            os.write(master, b'MOTOR\n')
+            output, errors = process.communicate(timeout=90)
+            return process.returncode, output, errors
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def test_a_console_pause_freezes_the_plan_and_play_ramps_back_gradually(self):
+        code, _, errors = self.paused_workout(extra=['--observe-ftms'])
+        self.assertEqual(code, 0, errors)
+        self.assertFalse(Path(str(self.calls) + '.paused').exists(), 'a target was sent while the console was paused')
+        events = self.events()
+        names = [row['event'] for row in events]
+        self.assertEqual(names.count('console_pause'), 1)
+        self.assertEqual(names.count('console_play'), 1)
+        self.assertEqual(names.count('console_resumed'), 1)
+        ramp = [(row['speed_code'], row['incline_code']) for row in events if row['event'] == 'resume_target_requested']
+        self.assertEqual(ramp, [(15, 1), (20, 2), (25, 2), (30, 2)])
+        self.assertIn(b'Paused on the console', errors)
+        argv = json.loads(Path(str(self.calls) + '.argv').read_text())
+        self.assertEqual(argv[argv.index('--pause-allowance') + 1], '900')
+        # The climb's 12 s are held in all: before the pause plus after the return, not counting the pause and the ramp.
+        climb = next(row for row in events if row['event'] == 'reported_target' and row['stage'] == 1)
+        pause = next(row for row in events if row['event'] == 'console_pause')
+        resumed = next(row for row in events if row['event'] == 'console_resumed')
+        last = next(row for row in events if row['event'] == 'target_requested' and row['stage'] == 2)
+        held = (pause['monotonic_ms'] - climb['monotonic_ms']) + (last['monotonic_ms'] - resumed['monotonic_ms'])
+        self.assertAlmostEqual(held / 1000.0, 12, delta=1.0)
+        self.assertEqual(events[-1]['console_pauses'], 1)
+        self.assertTrue(events[-1]['sequence_observed'])
+        # The fake's distance counter restarts at zero on Play; the reported distance adds both segments.
+        odometers = [int.from_bytes(bytes.fromhex(row['frame_hex'])[4:7], 'little') for row in events
+                     if row['event'] == 'ftms_notification' and row['frame_hex'].startswith('8c05')]
+        distance = next(row for row in events if row['event'] == 'distance_reported')['distance_m']
+        self.assertGreater(distance, max(odometers))
+
+    def test_the_windows_bridge_still_ends_the_run_on_a_console_pause(self):
+        code, _, _ = self.paused_workout(backend='windows')
+        self.assertEqual(code, 1)
+        events = self.events()
+        self.assertFalse(any(row['event'] == 'console_pause' for row in events))
+        self.assertEqual(next(row for row in events if row['event'] == 'stop_requested')['reason'], 'Unexpected motor feedback')
 
     def manual_workout(self, strategy, commands, wait_stage=1):
         """Run a 3-step Linux workout with --manual-control, sending JSON command lines once step `wait_stage` is reported."""

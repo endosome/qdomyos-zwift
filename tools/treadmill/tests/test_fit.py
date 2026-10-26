@@ -214,6 +214,39 @@ class FitTests(unittest.TestCase):
         plain = self.synthetic_log(segments)
         self.assertIn('(estimated from speed)', run(FIT_TOOL, 'activity', str(plain), str(self.directory / 'plain.fit')).stdout)
 
+    def test_a_console_pause_adds_no_distance_and_the_restarted_counter_adds_up(self):
+        # 60 s at 3.0 km/h, a 60 s console pause (STOPPING, then NORMAL without motor data), then 60 s at 3.0 km/h again.
+        log = self.synthetic_log([(60, 30, 2)], stop_state_tail=False)
+        rows = [json.loads(line) for line in log.read_text().splitlines()]
+        t = rows[-1]['monotonic_ms'] + 500
+        def row(state, speed, level, motor=True):
+            rows.append({'event': 'raw_status', 'monotonic_ms': t, 'utc': rows[0]['utc'], 'status_code': state,
+                         'has_motor_data': motor, 'speed_code': speed if motor else -1, 'incline_code': level if motor else -1})
+        for speed in (20, 10, 5):
+            row(4, speed, 2); t += 500
+        for _ in range(120):
+            row(0, 0, 0, motor=False); t += 500
+        for _ in range(120):
+            row(3, 30, 2); t += 500
+        for speed in (20, 10):
+            row(4, speed, 0); t += 500
+        for _ in range(3):
+            row(0, 0, 0, motor=False); t += 500  # NORMAL after the final stop does not lengthen the activity
+        log.write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+        result = run(FIT_TOOL, 'activity', str(log), str(self.directory / 'paused.fit'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # Speed integral: 2 x 60 s at 3.0 km/h plus the short STOPPING tails, nothing for the pause.
+        estimated = float(result.stdout.split(' km')[0].split()[-1])
+        self.assertAlmostEqual(estimated, 2 * 60 * 3.0 / 3.6 / 1000, delta=0.008)
+        # The treadmill's counter: 0 -> 50 m, restarts at zero on Play, 0 -> 50 m again: 100 m in all.
+        for ms, meters in ((5500, 0), (64000, 50), (130000, 0), (185000, 50)):
+            rows.append({'event': 'ftms_notification', 'characteristic_uuid': '00002acd-0000-1000-8000-00805f9b34fb',
+                         'frame_hex': '8c05' + '1e00' + meters.to_bytes(3, 'little').hex() + '00' * 10, 'monotonic_ms': ms})
+        log.write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+        result = run(FIT_TOOL, 'activity', str(log), str(self.directory / 'paused-reported.fit'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('0.10 km (reported by the treadmill)', result.stdout)
+
     def test_activity_export_refuses_bad_input(self):
         out = self.directory / 'run.fit'
         empty = self.directory / 'empty.jsonl'

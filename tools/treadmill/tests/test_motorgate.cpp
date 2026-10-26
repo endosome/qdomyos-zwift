@@ -420,3 +420,89 @@ TEST(MotorGateRunning, FtmsAgreementIsRequiredAboveSixKmh) {
         EXPECT_FALSE(gate.needsStop(250));
     }
 }
+
+// Console pause (workouts with an allowance): STOPPING/NORMAL/countdown without a host STOP pause the run.
+TEST(MotorGatePause, WithoutAnAllowanceAPauseChangesNothing) {
+    MotorGate gate("workout", "10:0,30:2,20:0", 600);
+    preflight(gate);
+    gate.approve(kStart, 0);
+    gate.approve(target(10, 0), 0);
+    gate.observe(status(3, 10, 0), 100);
+    gate.observe(status(4, 5, 0), 200);
+    gate.observe(normal(), 300);
+    gate.observe(status(3, 10, 0), 400);
+    EXPECT_FALSE(gate.consolePaused());
+    EXPECT_THROW(gate.approve(target(15, 1), 500), std::invalid_argument); // only the declared sequence
+    gate.observe(status(3, 10, 0), 599900);
+    EXPECT_TRUE(gate.needsStop(600000));
+}
+
+TEST(MotorGatePause, NothingIsSentWhilePausedAndTheRampStaysInsideThePlansCeilings) {
+    MotorGate gate("workout", "10:0,30:2,20:0", 600, Profile::Walking, 0, 900);
+    preflight(gate);
+    gate.approve(kStart, 0);
+    gate.approve(target(10, 0), 0);
+    gate.observe(status(2, 0, 0), 50);   // the start countdown is not a pause
+    gate.observe(status(3, 10, 0), 100);
+    gate.approve(target(30, 2), 200);
+    gate.observe(status(3, 30, 2), 300);
+    EXPECT_FALSE(gate.consolePaused());
+    gate.observe(status(4, 20, 2), 400);
+    EXPECT_TRUE(gate.consolePaused());
+    EXPECT_THROW(gate.approve(target(30, 2), 450), std::invalid_argument);
+    gate.observe(normal(), 500);
+    EXPECT_THROW(gate.approve(target(15, 1), 550), std::invalid_argument);
+    gate.observe(frame(QByteArray::fromHex("510201")), 600);
+    EXPECT_THROW(gate.approve(target(15, 1), 650), std::invalid_argument);
+    gate.observe(status(3, 10, 0), 700);
+    EXPECT_NO_THROW(gate.approve(target(15, 1), 750));
+    EXPECT_NO_THROW(gate.approve(target(30, 2), 800));
+    EXPECT_NO_THROW(gate.approve(target(20, 0), 850));
+    EXPECT_THROW(gate.approve(target(31, 2), 900), std::invalid_argument); // above the plan's speed ceiling
+    EXPECT_THROW(gate.approve(target(30, 3), 900), std::invalid_argument); // above its incline ceiling
+    EXPECT_FALSE(gate.needsStop(950));
+    EXPECT_NO_THROW(gate.approve(kStop, 1000));
+}
+
+TEST(MotorGatePause, TheAllowanceExtendsTheDeadlineAndBoundsThePausedTime) {
+    {
+        MotorGate gate("workout", "10:0,30:2", 600, Profile::Walking, 0, 900);
+        preflight(gate);
+        gate.approve(kStart, 0);
+        gate.observe(status(3, 10, 0), 100);
+        gate.observe(status(4, 5, 0), 1000);
+        gate.observe(normal(), 2000);
+        gate.observe(status(3, 10, 0), 61000); // paused about 60 s
+        gate.observe(status(3, 10, 0), 600500);
+        EXPECT_FALSE(gate.needsStop(600600));  // the deadline grew by the allowance
+        gate.observe(status(3, 10, 0), 1499900);
+        EXPECT_TRUE(gate.needsStop(1500000));
+    }
+    {
+        MotorGate gate("workout", "10:0,30:2", 600, Profile::Walking, 0, 60);
+        preflight(gate);
+        gate.approve(kStart, 0);
+        gate.observe(status(3, 10, 0), 100);
+        gate.observe(status(4, 5, 0), 1000);
+        for (qint64 t = 1500; t <= 61000; t += 500) gate.observe(normal(), t);
+        EXPECT_FALSE(gate.needsStop(61000));
+        gate.observe(normal(), 61500);
+        EXPECT_TRUE(gate.needsStop(61500)); // paused longer than the allowance
+    }
+    {   // a sleeping console during a pause still stops the run
+        MotorGate gate("workout", "10:0,30:2", 600, Profile::Walking, 0, 900);
+        preflight(gate);
+        gate.approve(kStart, 0);
+        gate.observe(status(3, 10, 0), 100);
+        gate.observe(normal(), 1000);
+        gate.observe(frame(QByteArray::fromHex("510602")), 2000);
+        EXPECT_TRUE(gate.needsStop(2000));
+    }
+}
+
+TEST(MotorGatePause, TheAllowanceIsForWorkoutsOnlyAndBounded) {
+    EXPECT_THROW(MotorGate("start-stop", "", 12, Profile::Walking, 0, 60), std::invalid_argument);
+    EXPECT_THROW(MotorGate("workout", "20:1", 600, Profile::Walking, 0, 1801), std::invalid_argument);
+    EXPECT_THROW(MotorGate("workout", "20:1", 600, Profile::Walking, 0, -1), std::invalid_argument);
+    EXPECT_NO_THROW(MotorGate("workout", "20:1", 600, Profile::Walking, 0, 1800));
+}

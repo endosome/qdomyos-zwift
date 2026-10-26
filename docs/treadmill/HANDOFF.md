@@ -66,7 +66,15 @@ Never treat a name or address as proof of identity without rechecking at connect
 - Sessions longer than about 62 minutes (the 90-100 minute trainings are marked UNPROVEN LENGTH and kept out of plans); the console's own auto-stop is untested.
 - Thermal behavior is unobservable (no temperature field exists in the protocol).
 - Keep-awake: BLE polling, READY, AVRCP/A2DP connect and FTMS did not help. Open leads: identify the bundled remote (IR, 433 MHz or BLE; `btmon` while pressing it), an audio-stream test, a held FTMS Request Control session, a mechanical button pusher.
-- A Bluetooth status write stalled during the start countdown on 2026-10-18; the watchdog stopped the belt ("Missing status or start deadline"). A retry worked; seen once, cause unknown.
+- Console Pause/Play (commit `7c963b2b9`) is tested against the fake console only. The 2026-10-26 hardware attempts never got as far as the pause; see the next item. Test plan:
+  - Session A, handrail down: `workout run hike-base-60 --wait-wake 10 --wait-wake-confirm > ~/pause-a.out 2>&1`. After minute 7 (3.8 km/h, level 4), press Pause, wait about 30 s and note whether the deck lowers, then press Play while standing on the side rails.
+  - Session B, handrail up: `run-easy-aerobic-40 --running-mode`, with the same redirect. Pause at 7.0 km/h (minute 4-5), and optionally again at 8.5 km/h.
+  - Check each log with `summarize_run.py`. Adjust the code if Play restarts at full speed, if state 1 or 10 appears, or if the deck behaves differently from the fake.
+- Bluetooth stalls stop runs ("Missing status or start deadline"; the helper reports "Linux motor watchdog requested stop"). They were seen on 2026-10-18 and three times on 2026-10-26: logs `hike-base-60-20261026-151033` (stall at +2:31), `-161022` (5.3 s during the countdown) and `-162208` (a poll write unanswered for 11.6 s during the countdown).
+  - Likely cause on 2026-10-26: the Pi itself was overloaded. Another session was running `oura redecode`, writing about 25 MB/s, with 20-48 % iowait, load 7-8 on 4 cores and 1.7 of 2 GB swap in use. The two countdown stalls fell inside that job. The +2:31 stall coincided with the per-minute `wifi-reliability.service` (Wi-Fi and Bluetooth share the Broadcom chip) and with Oura timer activity; that link is unproven.
+  - Before a run, check that the Pi is idle (`top`: low `wa`, little swap traffic). Optionally stop `wifi-reliability.timer` for the run and restart it afterwards.
+  - Safety gap: when a GATT write hangs, the helper's emergency STOP queues behind it. In `-162208` the STOP went out 12 s late. In `-161022` the STOP was sent during the countdown, yet the console still started the belt at 1.0 km/h and kept it running with no host attached. The operator's console Stop is the real safeguard.
+  - `summarize_run.py` ignores the silence after the last status, so "longest gap" understated `-162208` (it printed 0.58 s).
 - Walking trainings also run with the handrail up: pass `--running-mode` (the profile is fixed before connecting, so the CLI does not auto-detect the handrail). With the handrail up and no flag, the CLI faults before the belt moves.
 - Most of the 54 trainings (including every VO2 training except `vo2-30-30-light-30`, and the 12 km/h mountain/trail ones) have never run on the hardware; the new VO2 trainings' paces are starting points.
 
@@ -80,8 +88,10 @@ Never treat a name or address as proof of identity without rechecking at connect
 
 ## Suggested next work
 
-1. Run the remaining trainings on the hardware, one new feature per supervised run (skimo and hiking first, then the running and VO2 sets); a 90-minute run before relying on anything over 65 minutes.
-2. Calibrate: inclinometer reading per level and belt-speed revolution timing (VO2MAX.md), then replace the provisional 1.375 %/level.
-3. Identify the bundled remote and test it as a wake or keep-awake method.
-4. Load an exported FIT workout into a Garmin watch and Garmin Connect.
-5. Optional: an adaptive stop for ramp tests; a Windows CI job run on a real runner (the Windows job passes on CI today).
+1. Run the console Pause/Play hardware test (sessions A and B above) on an idle Pi.
+2. Make the emergency STOP independent of a hung write: for example, cancel or skip the pending write, or disconnect if STOP is not acknowledged within about 2 s. Find out why a STOP during the countdown does not prevent the belt start. Count the trailing silence in `summarize_run.py`.
+3. Run the remaining trainings on the hardware, one new feature per supervised run (skimo and hiking first, then the running and VO2 sets); a 90-minute run before relying on anything over 65 minutes.
+4. Calibrate: inclinometer reading per level and belt-speed revolution timing (VO2MAX.md), then replace the provisional 1.375 %/level.
+5. Identify the bundled remote and test it as a wake or keep-awake method.
+6. Load an exported FIT workout into a Garmin watch and Garmin Connect.
+7. Optional: an adaptive stop for ramp tests; a Windows CI job run on a real runner (the Windows job passes on CI today).

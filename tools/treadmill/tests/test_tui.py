@@ -56,6 +56,15 @@ class PlanClockTests(unittest.TestCase):
         self.assertEqual(state.plan_elapsed_ms(28000), 10000)
         self.assertEqual(state.plan_total_ms(), 75000)
 
+    def test_a_pause_before_the_step_is_reached_starts_its_hold_when_the_run_is_back_on_the_plan(self):
+        state = state_with_plan()
+        state.feed(dict(event='reported_running', monotonic_ms=1000))
+        state.feed(dict(event='target_requested', monotonic_ms=1000, stage=0, speed_code=20, incline_code=0))
+        state.feed(dict(event='console_pause', monotonic_ms=1500, status_code=4))
+        state.feed(dict(event='console_play', monotonic_ms=5000))
+        state.feed(dict(event='console_resumed', monotonic_ms=7000))
+        self.assertEqual(state.step_left_ms(9000), 8000)
+
     def test_a_refused_pause_marks_pause_as_unsupported(self):
         state = state_with_plan()
         state.feed(dict(event='manual_command_result', monotonic_ms=5, seq=1, cmd='pause', result='refused', reason='unknown command'))

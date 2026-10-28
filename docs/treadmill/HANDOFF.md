@@ -19,6 +19,7 @@ Garmin FIT workouts built from JSON specs; plans are JSON manifests; runs can be
 - **Wake handling:** `--wait-wake N` (auto-start 5 s after the wake unless Q) and `--wait-wake --wait-wake-confirm` (start on ENTER only).
 - **Running mode:** `--running-mode`, staged validation trials `run-7/8/10/12`, registry `~/.local/state/treadmill/running-validated.json`.
 - **FIT:** `treadmill-fit build|dump|check|activity` (official SDK in `src/fit-sdk`), `trainings/*.json` (54 specs) and `workouts/*.fit`, `plan.py`, `make_plan.py`, `summarize_run.py`, plans in `tools/treadmill/plans/` (10 plans), audio probe script.
+- **TUI:** `tools/treadmill/treadmill_tui.py` (curses) wraps `workout run --manual-control`: training picker, the CLI's approval prompts, live run screen with next-segment heads-up, link age, console pause and safety-key banners, run summary and FIT export. Fake-treadmill tested only.
 - **Tests and CI:** C++ gtests (gate), Python suites under `tools/treadmill/tests/` (fake-peer trials run through `run_parallel.py`, about 3 minutes), Docker clean-package build, `.github/workflows/treadmill.yml` (green on `develop`).
 
 ## Hardware and identity

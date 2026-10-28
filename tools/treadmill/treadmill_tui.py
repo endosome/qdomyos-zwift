@@ -514,9 +514,11 @@ class RunState:
 
     def on_console_resumed(self, r, at):
         if self.frozen_at is not None:
-            for stage in list(self.step_start):
-                if stage == self.stage:
-                    self.step_start[stage] += at - self.frozen_at
+            # As the CLI does: the step continues where it was paused, or starts now if it had not been reached yet.
+            if self.stage in self.step_start:
+                self.step_start[self.stage] += at - self.frozen_at
+            else:
+                self.step_start[self.stage] = at
             self.paused_ms += at - self.frozen_at
             self.frozen_at = None
         self.phase = "running"

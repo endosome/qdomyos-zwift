@@ -40,7 +40,7 @@ counted, and writes it to the log as a `distance_reported` record. `summarize_ru
 
 ### Terminal UI
 
-`python3 tools/treadmill/treadmill_tui.py` wraps the CLI in a full-screen terminal UI (Python 3 standard library only,
+`treadmill-tui` wraps the CLI in a full-screen terminal UI (Python 3 standard library only,
 Linux backend). It lists the catalog by category with each training's description, profile chart, segments, estimated
 distance and climb, and the date and result of its last run. `h` sets the handrail (running mode), `w` waiting for the
 wake, `m` the manual strategy; ENTER starts.
@@ -52,7 +52,10 @@ the age of the last status report (the helper stops the belt past 1.5 s), consol
 allowance, and a banner with the time when the safety key is removed. Keys: `q` stop, `↑`/`↓` speed ±0.1 km/h (PgUp/PgDn
 ±0.5), `←`/`→` incline level, `r` back to the plan, `space` pause, `b` beeps. Pause from the TUI waits for a CLI command
 that does not exist yet (API.md); until then the CLI refuses it and the TUI says to use the console's Pause/Play. At the
-end it summarizes the run and `f` exports a Garmin FIT activity next to the log.
+end it summarizes the run and `f` exports a Garmin FIT activity next to the log. `?` shows the keys of the current screen.
+
+Install the command once with a symlink (the script finds its trainings and `summarize_run.py` through it):
+`ln -s <repo>/tools/treadmill/treadmill_tui.py ~/.local/bin/treadmill-tui`, or run `python3 tools/treadmill/treadmill_tui.py`.
 
 It always runs with `--manual-control`, which lets the helper accept any target inside the mode's limits. If the TUI exits
 or crashes, the CLI's input closes and the CLI stops the belt. The console's own stop remains the real safeguard.

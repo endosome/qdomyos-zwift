@@ -27,8 +27,11 @@ Garmin FIT workouts built from JSON specs; plans are JSON manifests; runs can be
 Launch it on the Pi, in a terminal of at least 80x24 (120x36 shows the event log too):
 
 ```sh
-python3 ~/qdomyos-zwift/tools/treadmill/treadmill_tui.py
+treadmill-tui
 ```
+
+`~/.local/bin/treadmill-tui` is a symlink to `~/qdomyos-zwift/tools/treadmill/treadmill_tui.py` (executable); `python3 <that file>`
+works too. `?` opens the key help on every screen (other keys keep working while it is open, so `q` still stops the run).
 
 - It runs the installed `treadmill` on PATH (`~/.local/bin/treadmill`, reinstalled on 2026-10-28 with the two-ENTER prompt).
   A CLI built before that asks for `MOTOR` and the TUI shows "THIS CLI IS TOO OLD": rebuild and `make install` (README, Build).

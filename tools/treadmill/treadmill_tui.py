@@ -6,7 +6,7 @@ on a pty, passes the operator's ENTER presses through, sends stop, speed and inc
 draws the JSON records the CLI writes to stdout (API.md, "Manual control"). If this program ends, the CLI's input
 closes and the CLI stops the belt.
 
-usage: treadmill_tui.py [PLAN_FILE ...]      extra .xml/.fit plans are listed next to the catalog
+usage: treadmill-tui [PLAN_FILE ...]        (or python3 treadmill_tui.py); press ? for the keys      extra .xml/.fit plans are listed next to the catalog
 TREADMILL_BIN selects the CLI (default: `treadmill` on PATH); TREADMILL_LOG_DIR the log directory (~/treadmill-logs).
 """
 
@@ -37,6 +37,21 @@ PROMPT_APPROVE, PROMPT_AGAIN = "Press ENTER to approve", "Press ENTER again"
 CATEGORIES = [("all", "All"), ("hike", "Hiking"), ("mr", "Power-hike"), ("mrun", "Mountain run"), ("run", "Running"),
               ("trail", "Trail"), ("skimo", "Ski touring"), ("vo2", "VO2max"), ("file", "Files")]
 STRATEGIES = ["hold", "offset", "takeover"]
+HELP = {
+    "picker": ("Choosing a training", [
+        ("↑ ↓  PgUp PgDn", "move through the list"), ("← → Tab", "change category"), ("/", "search (ENTER keeps it, Esc clears it)"),
+        ("h", "handrail up (running mode) or down (walking)"), ("w", "wait for the console to wake, or start at once"),
+        ("m", "manual strategy: hold, offset or takeover"), ("ENTER", "start the selected training"), ("q  Ctrl-C", "quit")]),
+    "briefing": ("Approving the run", [
+        ("ENTER", "approve, then ENTER again to confirm"), ("Esc  q", "cancel (nothing has been sent to the treadmill)")]),
+    "run": ("During the run", [
+        ("q  s  Ctrl-C", "STOP the belt and end the run"), ("ENTER", "start the belt once the treadmill is awake"),
+        ("↑ ↓  + -", "speed ±0.1 km/h"), ("PgUp PgDn", "speed ±0.5 km/h"), ("← → [ ]", "incline one level down or up"),
+        ("r", "back to the plan's target"), ("space  p", "pause or resume (console Pause/Play until the CLI supports it)"),
+        ("b", "beeps on or off"), ("", "Esc does not stop the run; the console's stop always works")]),
+    "summary": ("After the run", [
+        ("f", "export a Garmin FIT activity next to the log"), ("ENTER  Esc", "back to the trainings"), ("q", "quit")]),
+}
 STATES = {0: "IDLE", 1: "END", 2: "COUNTDOWN", 3: "RUNNING", 4: "STOPPING", 5: "ERROR", 6: "DISABLED", 7: "STUDY",
           9: "READY", 10: "PAUSED"}
 
@@ -707,6 +722,7 @@ class App:
         self.alerted = set()
         self.flash_until = 0
         self.message = ""
+        self.help = False
 
     # Picker -----------------------------------------------------------------------------------------------------
     def visible(self):
@@ -780,7 +796,7 @@ class App:
         if entry and width - x0 > 30:
             self.draw_details(entry, top, x0, width - x0 - 1, height - top - 2)
         s.fill(height - 1, c["title"])
-        s.put(height - 1, 1, "↑↓ choose  ←→ category  / search  h handrail  w wake  m manual  ENTER start  q quit", c["title"])
+        s.put(height - 1, 1, "↑↓ choose  ←→ category  / search  h handrail  w wake  m manual  ENTER start  ? help  q quit", c["title"])
         if self.message:
             s.put(height - 2, 1, self.message, c["warn"])
 
@@ -986,7 +1002,7 @@ class App:
         else:
             s.put(row, 2, "Preparing the run…", c["dim"])
         s.fill(height - 1, c["title"])
-        s.put(height - 1, 1, "ENTER approve   Esc/q cancel", c["title"])
+        s.put(height - 1, 1, "ENTER approve   Esc/q cancel   ? help", c["title"])
 
     def briefing_key(self, key):
         if key in (10, 13, curses.KEY_ENTER) and self.prompt in (1, 2):
@@ -1073,7 +1089,7 @@ class App:
             row += 1
         s.fill(height - 1, c["title"])
         keys = [(" q STOP ", "badge_danger"), (" space pause ", "title"), (" ↑↓ speed ", "title"), (" ←→ incline ", "title"),
-                (" r plan ", "title"), (" b beeps %s " % ("on" if self.beeps else "off"), "title")]
+                (" r plan ", "title"), (" b beeps %s " % ("on" if self.beeps else "off"), "title"), (" ? help ", "title")]
         if st.phase == "awake":
             keys.insert(1, (" ENTER start belt ", "badge_good"))
         x = 0
@@ -1257,7 +1273,7 @@ class App:
         if st.steps:
             s.profile(row, 4, width - 12, max(3, min(6, height - row - 4)), st.steps, st.plan_elapsed_ms(st.last_ms) / 1000)
         s.fill(height - 1, c["title"])
-        s.put(height - 1, 1, "ENTER back to trainings   f FIT export   q quit", c["title"])
+        s.put(height - 1, 1, "ENTER back to trainings   f FIT export   ? help   q quit", c["title"])
 
     def summary_key(self, key):
         if key in (ord("q"), ord("Q"), 3):
@@ -1274,6 +1290,21 @@ class App:
         if self.child:
             self.child.close()
             self.child = None
+
+    def draw_help(self):
+        s, c = self.screen, self.screen.colors
+        height, width = self.window.getmaxyx()
+        title, rows = HELP[self.mode]
+        box_width = min(width - 4, max(len(k) + len(t) for k, t in rows) + 22)
+        box_height = min(height - 2, len(rows) + 5)
+        y, x = max(1, (height - box_height) // 2), max(2, (width - box_width) // 2)
+        for row in range(box_height):
+            s.put(y + row, x, " " * box_width, c["info"])
+        s.box(y, x, box_height, box_width, "Help · " + title, c["accent"] | curses.A_BOLD)
+        for index, (keys, text) in enumerate(rows[:box_height - 5]):
+            s.put(y + 2 + index, x + 3, "%-15s" % keys, c["warn"] | curses.A_BOLD)
+            s.put(y + 2 + index, x + 19, text, c["info"], box_width - 21)
+        s.put(y + box_height - 2, x + 3, "? or Esc closes; other keys still work", c["dim"])
 
     # Main loop --------------------------------------------------------------------------------------------------
     def follow_resize(self):
@@ -1295,10 +1326,20 @@ class App:
             self.window.erase()
             {"picker": self.draw_picker, "briefing": self.draw_briefing, "run": self.draw_run,
              "summary": self.draw_summary}[self.mode]()
+            if self.help:
+                self.draw_help()
             self.window.refresh()
             key = self.window.getch()
             if key == -1 or key == curses.KEY_RESIZE:
                 continue
+            if key == ord("?") and not (self.mode == "picker" and self.search is not None):
+                self.help = not self.help
+                continue
+            if self.help:
+                self.help = False
+                if key == 27:
+                    continue
+                # Any other key still acts (q must always stop the run) and closes the help.
             handler = {"picker": self.picker_key, "briefing": self.briefing_key, "run": self.run_key,
                        "summary": self.summary_key}[self.mode]
             if not handler(key):

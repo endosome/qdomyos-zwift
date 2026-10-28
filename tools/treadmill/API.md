@@ -104,9 +104,11 @@ interface raise or lower speed and incline during a hardware workout. Linux back
   The wrapper **must keep reading stdout**: if the CLI cannot write, the helper stops the belt (fail-safe).
 - stdin: one command per line. Because both the stdout stream and the log file carry every record, a command and its
   outcome can be compared on either side when diagnosing the link.
-- The CLI still insists on a terminal on stdin and on the `MOTOR` confirmation line, so the wrapper has to give the child a
+- The CLI still insists on a terminal on stdin and on the operator's two-ENTER confirmation, so the wrapper has to give the child a
   pty and pass the operator's confirmation through. This was deliberately not relaxed. The pty is set to raw, no-echo mode.
-- Before the run: send `MOTOR`, then an empty line (ENTER) to start after `--wait-wake` (or `q` to cancel).
+- Before the run: the CLI prints `Press ENTER to approve this exact trial` and then `Press ENTER again to confirm` on stderr.
+  Send one empty line after each prompt has appeared: the CLI discards input that arrived before a prompt. Anything else cancels.
+  With `--wait-wake --wait-wake-confirm`, send another empty line once the CLI reports the treadmill awake (or `q` to cancel).
 - Closing stdin stops the belt ("Operator input closed").
 
 **Commands** (one JSON object per line): `{"seq": 7, "cmd": "speed_up"}` with `cmd` one of `speed_up`, `speed_down` (0.1 km/h),

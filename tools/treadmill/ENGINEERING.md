@@ -105,7 +105,7 @@ No QZ initialization sequence, repeated start/target, pause or arbitrary raw
 write is permitted. Repeated motor requests are rejected rather than retried.
 
 After separate review of this exact raw-code trial, add `--confirm-motor` and a
-new `--log <path>` instead of `--dry-run`. Interactive MOTOR confirmation
+new `--log <path>` instead of `--dry-run`. Interactive confirmation (ENTER, then ENTER again)
 asserts a stopped/clear belt, normally attached safety key, no other controller,
 and an operator at the physical stop. Do not launch while nobody is attending.
 
@@ -500,7 +500,7 @@ After reviewing the plan, run:
   --confirm-motor --log /tmp/runpad-workout.jsonl
 ```
 
-The CLI also requires typing `MOTOR`. Wake the treadmill manually, clear the belt,
+The CLI also requires pressing ENTER twice at two separate prompts (it was a typed `MOTOR` until 2026-10-28). Wake the treadmill manually, clear the belt,
 keep the safety key attached, and stay at the controls with the physical stop
 reachable. Playback refuses any device except the exact W1 identity and live
 walking bounds (raw speed 10–60, unit tag 0, incline 0–8). Speeds are limited to

@@ -294,8 +294,17 @@ static int runMotorTrial(QCoreApplication &app, const QCommandLineParser &parser
         << (pauseAllowanceSeconds > 0 ? QString("CONSOLE PAUSE: pressing Pause on the console pauses this run (up to %1 min in all); press Play on the console to continue: "
                                                 "the belt then returns gradually to where the plan was. Q ends the run at any time.\n").arg(pauseAllowanceSeconds / 60) : QString())
         << (longRunMinutes >= 60 ? QString("LONG RUN (%1 min): there is no temperature reading. The longest proven run is 62 minutes; check the motor housing by hand and stop if it is hot.\n").arg(longRunMinutes) : QString())
-        << "Type MOTOR to approve this exact trial: " << Qt::flush;
-    if (QTextStream(stdin).readLine() != "MOTOR") return fail("Motor trial was not confirmed");
+        ;
+    // Two separate ENTER presses approve. Input typed before each prompt is discarded, so a double-tap counts once.
+    // A closed input (EOF) reads as a null line and never approves.
+    auto enterPressed = [](const char *prompt) {
+        ::tcflush(STDIN_FILENO, TCIFLUSH);
+        QTextStream(stderr) << prompt << Qt::flush;
+        const QString line = QTextStream(stdin).readLine();
+        return !line.isNull() && line.isEmpty();
+    };
+    if (!enterPressed("Press ENTER to approve this exact trial (anything else cancels): ") ||
+        !enterPressed("Press ENTER again to confirm: ")) return fail("Motor trial was not confirmed");
     }
     if (trial.operatorMarks && batchConfirmed) return fail("Operator-timed trials must run individually");
     if (trial.operatorMarks) QTextStream(stderr) << "Start only with the deck physically settled at level 0.\n"

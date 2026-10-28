@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import pty
+import select
 import signal
 import subprocess
 import sys
@@ -13,6 +14,34 @@ import unittest
 
 BINARY = str(Path(sys.argv.pop(1)).resolve())
 ADDRESS = 'AA:BB:CC:DD:EE:FF'
+PROMPTS = (b'Press ENTER to approve', b'Press ENTER again')
+
+
+def approve(master, stderr, answers=(b'\n', b'\n'), timeout=30):
+    """Answer the CLI's two ENTER prompts, each once it is printed: the CLI discards input typed before a prompt.
+    Stops after an answer other than ENTER (the CLI cancels). stderr is a PIPE or a file; returns what was read from a PIPE."""
+    consumed, closed = b'', False
+    def text():
+        nonlocal consumed, closed
+        if stderr.seekable():
+            time.sleep(0.01)
+            stderr.seek(0)
+            return stderr.read()
+        if select.select([stderr], [], [], 0.01)[0]:
+            chunk = os.read(stderr.fileno(), 65536)
+            consumed, closed = consumed + chunk, not chunk
+        return consumed
+    deadline = time.monotonic() + timeout
+    for prompt, answer in zip(PROMPTS, answers):
+        while prompt not in text():
+            if closed:  # the CLI refused before asking
+                return consumed
+            if time.monotonic() > deadline:
+                raise AssertionError('The CLI never printed %r; stderr: %s' % (prompt, text()[-1500:]))
+        os.write(master, answer)
+        if answer != b'\n':
+            break
+    return consumed
 
 
 class MotorTrialTests(unittest.TestCase):
@@ -180,14 +209,14 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
     def events(self):
         return [json.loads(line) for line in self.log.read_text().splitlines()]
 
-    def trial(self, mode='normal', confirmation=b'MOTOR\n', terminate=False, trial='start-stop'):
+    def trial(self, mode='normal', confirmation=(b'\n', b'\n'), terminate=False, trial='start-stop'):
         self.environment['MOTOR_MODE'] = mode
         master, slave = pty.openpty()
         before = termios.tcgetattr(slave)
         process = subprocess.Popen([*self.arguments, '--trial', trial, '--confirm-motor', '--log', str(self.log)],
                                    stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
-            os.write(master, confirmation)
+            early = approve(master, process.stderr, confirmation)
             if terminate:
                 deadline = time.monotonic() + 5
                 while time.monotonic() < deadline:
@@ -199,7 +228,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                     self.fail('Motor request never reached fake peer')
             output, errors = process.communicate(timeout=180)
             self.assertEqual(termios.tcgetattr(slave), before)
-            return process.returncode, output, errors
+            return process.returncode, output, early + errors
         finally:
             if process.poll() is None:
                 process.kill()
@@ -220,7 +249,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                                 stdin=subprocess.DEVNULL, capture_output=True, env=self.environment)
         self.assertEqual(result.returncode, 2)
         self.assertFalse(self.calls.exists())
-        code, _, _ = self.trial(confirmation=b'NO\n')
+        code, _, _ = self.trial(confirmation=(b'NO\n',))
         self.assertEqual(code, 2)
         self.assertFalse(self.log.exists())
         self.assertFalse(self.calls.exists())
@@ -254,10 +283,10 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    env=self.environment)
         try:
-            os.write(master, b'MOTOR\n')
+            early = approve(master, process.stderr)
             output, errors = process.communicate(timeout=45)
             self.assertEqual(termios.tcgetattr(slave), before)
-            return process.returncode, output, errors
+            return process.returncode, output, early + errors
         finally:
             if process.poll() is None:
                 process.kill()
@@ -389,7 +418,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 time.sleep(0.02)
             self.fail('Timed out waiting for trial event')
         try:
-            os.write(master, b'MOTOR\n')
+            approve(master, err_file)
             for stage, key in ((1, b'U'), (2, b'D')):
                 wait_for(lambda rows: any(r['event'] == 'reported_target' and r.get('stage') == stage for r in rows))
                 os.write(master, key)  # Arrival without a movement mark must be ignored.
@@ -523,9 +552,9 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         process = subprocess.Popen([*self.arguments, '--trial', 'start-stop', '--confirm-motor', '--log', str(self.log), *extra],
                                    stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
-            os.write(master, b'MOTOR\n')
+            early = approve(master, process.stderr)
             output, errors = process.communicate(timeout=180)
-            return process.returncode, output, errors
+            return process.returncode, output, early + errors
         finally:
             if process.poll() is None:
                 process.kill()
@@ -566,7 +595,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             self.fail('Never saw %s (exit %s); last events:\n%s; stderr: %s' % (
                 name, process.poll(), '\n'.join(tail), captured(err_file).decode(errors='replace')[-1500:]))
         try:
-            os.write(master, b'MOTOR\n')
+            approve(master, err_file)
             if actions:
                 actions(lambda data: os.write(master, data), wait_for)
             process.wait(timeout=timeout)
@@ -683,8 +712,9 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         process = subprocess.Popen([*self.arguments, '--trial', 'run-7', '--running-mode', '--confirm-motor', '--log', str(self.log)],
                                    stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
-            os.write(master, b'NO\n')
+            early = approve(master, process.stderr, (b'NO\n',))
             _, errors = process.communicate(timeout=30)
+            errors = early + errors
         finally:
             os.close(master); os.close(slave)
         self.assertIn(b'WATCH THE CONSOLE DISPLAY', errors)
@@ -798,9 +828,9 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         master, slave = pty.openpty()
         process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
-            os.write(master, b'MOTOR\n')
+            early = approve(master, process.stderr)
             output, errors = process.communicate(timeout=90)
-            return process.returncode, output, errors
+            return process.returncode, output, early + errors
         finally:
             if process.poll() is None:
                 process.kill()
@@ -859,7 +889,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         master, slave = pty.openpty()
         process = subprocess.Popen(arguments, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environment)
         try:
-            os.write(master, b'MOTOR\n')
+            early = approve(master, process.stderr)
             deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
                 if self.log.exists() and any(row['event'] == 'reported_target' and row['stage'] == wait_stage for row in self.events()):
@@ -869,7 +899,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 os.write(master, (command if isinstance(command, bytes) else json.dumps(command).encode()) + b'\n')
                 time.sleep(0.4)
             output, errors = process.communicate(timeout=60)
-            return process.returncode, output, errors
+            return process.returncode, output, early + errors
         finally:
             if process.poll() is None:
                 process.kill()
@@ -930,7 +960,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
         self.assertEqual((json.loads(ok.stdout)['manual_strategy'], json.loads(ok.stdout)['manual_max_speed_code']), ('takeover', 60))
 
     # --- wait-for-wake (Linux backend) -------------------------------------------------
-    def waiting(self, extra, wake_after=4, resleep=None, key=False, first=b'MOTOR\n', actions=None, timeout=90):
+    def waiting(self, extra, wake_after=4, resleep=None, key=False, early=b'', actions=None, timeout=90):
         """Run start-stop with --wait-wake against a fake peer that sleeps for the first polls."""
         self.linux()
         self.environment.update(MOTOR_MODE='normal', MOTOR_WAKE_AFTER=str(wake_after))
@@ -955,7 +985,8 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
                 time.sleep(0.02)
             self.fail('Never saw event %s x%d' % (name, count))
         try:
-            os.write(master, first)
+            approve(master, err_file)
+            os.write(master, early)  # typed after the approval, before the wake: must not count as the start ENTER
             if actions:
                 actions(lambda data: os.write(master, data), wait_for)
             process.wait(timeout=timeout)
@@ -997,7 +1028,7 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             self.assertEqual(self.motor_frames(), [])
             self.assertFalse(any(row['event'] == 'start_requested' for row in self.events()))
             send(b'\n')
-        code, errors = self.waiting(['--wait-wake', '1', '--wait-wake-confirm'], first=b'MOTOR\n\n\n', actions=actions)
+        code, errors = self.waiting(['--wait-wake', '1', '--wait-wake-confirm'], early=b'\n\n', actions=actions)
         self.assertEqual(code, 0, errors)
         self.assertEqual(sum(row['event'] == 'awake_waiting_for_confirmation' for row in self.events()), 1)
         self.assertLess(self.first('start_confirmed')['monotonic_ms'], self.first('start_requested')['monotonic_ms'])

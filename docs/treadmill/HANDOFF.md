@@ -80,7 +80,7 @@ Never treat a name or address as proof of identity without rechecking at connect
 
 ## Working rules
 
-- Motor runs need the operator at the console with the belt clear and a physical stop within reach; the CLI asks for `MOTOR`. Do not launch runs unattended, and ask the operator before waking the console or starting a stage.
+- Motor runs need the operator at the console with the belt clear and a physical stop within reach; the CLI asks for ENTER, then ENTER again (until 2026-10-28 it asked for a typed `MOTOR`). Do not launch runs unattended, and ask the operator before waking the console or starting a stage.
 - Drivers (scripts) must write the CLI's output to files. Prefer `workout run <id> --wait-wake 10 --wait-wake-confirm` (add `--running-mode` for running trainings).
 - Walking trainings need the handrail down; running trainings need it up and the staged validation done.
 - Commit after each significant change. `develop` was rebased on `master` and force-pushed with a lease; `master` tracks `cagnulein/qdomyos-zwift`.

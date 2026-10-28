@@ -26,7 +26,8 @@ Before a real run:
 1. Wake the treadmill from its console. It sleeps after about 5 minutes idle and
    the CLI refuses to start a sleeping treadmill.
 2. Keep the safety key attached, step on, and keep the physical stop within reach.
-3. Type `MOTOR` when prompted.
+3. Press `ENTER` when prompted, then `ENTER` again at the second prompt. Anything else cancels, and
+   keys pressed before a prompt appears are discarded, so a quick double-tap counts as one press.
 
 The run starts at 1.0 km/h and moves to the first target once the belt reports
 running. Each target is held after the treadmill reports it. At the end the
@@ -162,7 +163,7 @@ answers NORMAL, then runs the normal preflight.
 
 - `--wait-wake 10`: unattended. After the wake it prints a notice and **starts
   the belt by itself 5 seconds later** unless you press `Q`. Use it only when you
-  will be at the treadmill. Typing `MOTOR` then means "start whenever it wakes".
+  will be at the treadmill. Approving with the two ENTER presses then means "start whenever it wakes".
 - `--wait-wake 10 --wait-wake-confirm`: after the wake it waits for you to press
   `ENTER`. If the console falls asleep before you do, it waits again and an earlier
   `ENTER` doesn't count. This keeps the normal "I'm here, start now" meaning.

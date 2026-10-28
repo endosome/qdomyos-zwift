@@ -26,6 +26,20 @@ def run(*arguments):
     return subprocess.run(list(arguments), capture_output=True, text=True, timeout=60)
 
 
+def cancel_at_prompt(master, process):
+    """Answer the CLI's approval prompt with NO once it is printed (input typed earlier is discarded); returns all stderr."""
+    import os
+    errors = b''
+    while b'Press ENTER to approve' not in errors:
+        chunk = os.read(process.stderr.fileno(), 65536)
+        if not chunk:
+            break
+        errors += chunk
+    os.write(master, b'NO\n')
+    _, rest = process.communicate(timeout=30)
+    return errors + rest
+
+
 class FitTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -292,13 +306,12 @@ class FitTests(unittest.TestCase):
                       '--expected-name', 'FS-0F7A32', '--address-type', 'public')
         self.assertEqual(windows.returncode, 2)
         self.assertIn('limited to 70 minutes', windows.stderr)
-        # The MOTOR prompt warns about a long run; answering anything else cancels before Bluetooth is opened.
+        # The approval prompt warns about a long run; answering anything but ENTER cancels before Bluetooth is opened.
         master, slave = pty.openpty()
         try:
             process = subprocess.Popen([CLI, 'workout', 'run', str(out), '--confirm-motor', '--log', str(self.directory / 'long.jsonl'), *ADDRESS],
                                        stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(os.environ, TREADMILL_LINUX_HELPER='/nonexistent'))
-            os.write(master, b'NO\n')
-            _, errors = process.communicate(timeout=30)
+            errors = cancel_at_prompt(master, process)
         finally:
             os.close(master); os.close(slave)
         self.assertIn(b'LONG RUN (100 min)', errors)
@@ -311,8 +324,7 @@ class FitTests(unittest.TestCase):
         try:
             process = subprocess.Popen([CLI, 'workout', 'run', str(short.with_suffix('.fit')), '--confirm-motor', '--log', str(self.directory / 'short.jsonl'), *ADDRESS],
                                        stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(os.environ, TREADMILL_LINUX_HELPER='/nonexistent'))
-            os.write(master, b'NO\n')
-            _, errors = process.communicate(timeout=30)
+            errors = cancel_at_prompt(master, process)
         finally:
             os.close(master); os.close(slave)
         self.assertNotIn(b'LONG RUN', errors)

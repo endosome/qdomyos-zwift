@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     parser.addOption(QCommandLineOption("status-data-sport", "Experimental Windows status plus documented current-exercise-data query."));
     parser.addOption(QCommandLineOption("measure-sleep-timer", "Windows nonmotor observer: start asleep, wake physically, measure first NORMAL to next sleep."));
     addWorkoutOptions(parser);
-    // `treadmill workout run <plan>` defaults to the RunPad W1 with a timestamped log; the typed
-    // MOTOR confirmation still applies. Under WSL it uses the Windows bridge, elsewhere BlueZ.
+    // `treadmill workout run <plan>` defaults to the RunPad W1 with a timestamped log; the
+    // two-ENTER confirmation still applies. Under WSL it uses the Windows bridge, elsewhere BlueZ.
     QStringList commandLine = app.arguments();
     if (commandLine.size() >= 4 && commandLine[1] == "workout" && commandLine[2] == "run" &&
         !commandLine.contains("--simulate") && !commandLine.contains("--backend")) {

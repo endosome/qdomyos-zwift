@@ -907,6 +907,55 @@ send(json.dumps(dict(command='control-test', backend=os.environ.get('MOTOR_BACKE
             os.close(master)
             os.close(slave)
 
+    def test_the_tui_driver_approves_adjusts_and_stops_a_workout_through_the_pty(self):
+        """treadmill_tui's Child, StderrParser and RunState against the real CLI: two ENTERs only after each prompt,
+        a speed command, a pause the CLI does not know yet (refused, so the TUI points to the console) and a stop."""
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        import treadmill_tui as tui
+        self.linux()
+        workout = self.directory / 'tui-w1.xml'
+        workout.write_text('''<rows version="1" id="tui-w1" name="TUI W1" speedunit="km/h" inclineunit="percent" device="treadmill">
+  <row name="Baseline" duration="00:00:01" forcespeed="1" speed="1" inclination="0" />
+  <row name="First" duration="00:00:30" forcespeed="1" speed="2" inclination="0" />
+</rows>''')
+        child = tui.Child([BINARY, 'workout', 'run', str(workout), '--backend', 'linux', '--device', 'DD:87:70:39:74:20',
+                           '--expected-name', 'FS-0F7A32', '--confirm-motor', '--log', str(self.log), '--manual-control'],
+                          env=self.environment)
+        state, stderr = tui.RunState(), tui.StderrParser()
+        approved, sent, exit_code = 0, False, None
+        deadline = time.monotonic() + 60
+        try:
+            while exit_code is None and time.monotonic() < deadline:
+                try:
+                    kind, value = child.events.get(timeout=0.1)
+                except tui.queue.Empty:
+                    continue
+                if kind == 'record':
+                    state.feed(value)
+                elif kind == 'stderr':
+                    stderr.feed(value)
+                    while stderr.prompts > approved:
+                        child.send('\n')
+                        approved += 1
+                elif kind == 'exit':
+                    exit_code = value
+                if 1 in state.step_start and not sent:
+                    sent = True
+                    child.command('speed_up')
+                    child.command('pause')
+                if state.pause_supported is False and state.target_speed == 21 and state.phase == 'running':
+                    child.stop()
+        finally:
+            child.close()
+        self.assertEqual(approved, 2)
+        self.assertEqual(exit_code, 1)  # an operator stop is not a completed plan
+        self.assertEqual(state.stop_reason, 'Operator stop')
+        self.assertIs(state.pause_supported, False)
+        self.assertEqual(state.target_speed, 21)
+        self.assertGreater(state.distance()[0], 0)
+        self.assertTrue(state.result['stop_write_succeeded'])
+        self.assertIsNone(state.key_removed)
+
     def motor_targets(self):
         return [frame for frame in json.loads(self.calls.read_text()) if frame.startswith('025302')]
 

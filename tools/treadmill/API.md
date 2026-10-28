@@ -135,6 +135,20 @@ While the console is paused or the run is returning to the plan (see below), com
 speed 10..limit and incline 0..8 (at most 2000 writes) instead of only the plan's sequence, and the same limits become the
 feedback ceilings. Start, stop, stale-status, deadline and bounds checks are unchanged.
 
+### Planned: `pause` and `resume` (not implemented yet)
+
+In the backlog (docs/treadmill/HANDOFF.md). `treadmill_tui.py` already sends them; today the CLI answers
+`manual_command_result {result: "refused", reason: "unknown command"}` and the TUI tells the operator to use the console's
+Pause/Play. The contract the TUI expects:
+
+- `{"seq": N, "cmd": "pause"}`: the belt pauses and the plan clock freezes as for a console pause. Answer:
+  `manual_command_result {seq, cmd: "pause", result: "applied"}` (or `refused` with a reason).
+- `{"seq": N, "cmd": "resume"}`: answer `manual_command_result {seq, cmd: "resume", result: "applied"}`, then the same return
+  to the plan as after a console Play: `resume_target_requested` steps, ending with `console_resumed`.
+- Optional extra records `host_pause`, `host_resume` and `host_resumed`, with the fields of `console_pause`, `console_play`
+  and `console_resumed`; the TUI treats them the same way.
+- The pause allowance and the helper-gate rules of the console pause apply unchanged.
+
 ## Console Pause/Play records
 
 On the Linux backend, a workout continues across a pause from the console (README, "Pause and Play on the console").

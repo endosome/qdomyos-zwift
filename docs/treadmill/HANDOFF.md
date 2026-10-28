@@ -75,6 +75,10 @@ Never treat a name or address as proof of identity without rechecking at connect
   - Before a run, check that the Pi is idle (`top`: low `wa`, little swap traffic). Optionally stop `wifi-reliability.timer` for the run and restart it afterwards.
   - Safety gap: when a GATT write hangs, the helper's emergency STOP queues behind it. In `-162208` the STOP went out 12 s late. In `-161022` the STOP was sent during the countdown, yet the console still started the belt at 1.0 km/h and kept it running with no host attached. The operator's console Stop is the real safeguard.
   - `summarize_run.py` ignores the silence after the last status, so "longest gap" understated `-162208` (it printed 0.58 s).
+- Backlog: pause and resume from the host. Our only FitShow pause trial (`5306`) did nothing on the W1, but the FitShow mobile app
+  has a pause, so the W1 probably accepts some other sequence. Capture the app's traffic while pausing and resuming (Android
+  HCI snoop log or `btmon`), then add the `pause`/`resume` manual commands specified in `tools/treadmill/API.md`
+  ("Planned"). `treadmill_tui.py` already sends them and currently shows the CLI's refusal.
 - Walking trainings also run with the handrail up: pass `--running-mode` (the profile is fixed before connecting, so the CLI does not auto-detect the handrail). With the handrail up and no flag, the CLI faults before the belt moves.
 - Most of the 54 trainings (including every VO2 training except `vo2-30-30-light-30`, and the 12 km/h mountain/trail ones) have never run on the hardware; the new VO2 trainings' paces are starting points.
 

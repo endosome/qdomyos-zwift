@@ -38,6 +38,25 @@ At the end of a run with FTMS observation (always on in running mode) the CLI pr
 counted, and writes it to the log as a `distance_reported` record. `summarize_run.py` shows it too, and
 `treadmill-fit activity` uses it for the FIT file's distance (falling back to an estimate from speed when the log has none).
 
+### Terminal UI
+
+`python3 tools/treadmill/treadmill_tui.py` wraps the CLI in a full-screen terminal UI (Python 3 standard library only,
+Linux backend). It lists the catalog by category with each training's description, profile chart, segments, estimated
+distance and climb, and the date and result of its last run. `h` sets the handrail (running mode), `w` waiting for the
+wake, `m` the manual strategy; ENTER starts.
+
+The TUI shows the CLI's own safety text and passes its two ENTER prompts through, then the wake prompt. During the run it
+shows speed, incline, distance (the treadmill's counter when it reports one, otherwise an estimate from speed), estimated
+climb, plan time, the current segment and a countdown to the next two, with a beep 10 s before each change. It also shows
+the age of the last status report (the helper stops the belt past 1.5 s), console pauses with the remaining pause
+allowance, and a banner with the time when the safety key is removed. Keys: `q` stop, `↑`/`↓` speed ±0.1 km/h (PgUp/PgDn
+±0.5), `←`/`→` incline level, `r` back to the plan, `space` pause, `b` beeps. Pause from the TUI waits for a CLI command
+that does not exist yet (API.md); until then the CLI refuses it and the TUI says to use the console's Pause/Play. At the
+end it summarizes the run and `f` exports a Garmin FIT activity next to the log.
+
+It always runs with `--manual-control`, which lets the helper accept any target inside the mode's limits. If the TUI exits
+or crashes, the CLI's input closes and the CLI stops the belt. The console's own stop remains the real safeguard.
+
 To change speed or incline during a run, add `--manual-control` (Linux backend): it reads JSON command lines on stdin so a
 TUI can drive it. The protocol, the three strategies and the limits are in [API.md](API.md#manual-control-for-a-tui-wrapper).
 

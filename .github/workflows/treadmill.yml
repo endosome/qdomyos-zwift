@@ -85,6 +85,7 @@ jobs:
           python3 tools/treadmill/tests/test_windows_bridge.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/run_parallel.py tools/treadmill/tests/test_motortrial.py /tmp/treadmill-build/treadmill
           python3 tools/treadmill/tests/test_summarize_run.py
+          python3 tools/treadmill/tests/test_tui.py
       - name: Check staged installation
         run: |
           cd /tmp/treadmill-build

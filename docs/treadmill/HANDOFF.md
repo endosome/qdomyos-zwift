@@ -1,6 +1,6 @@
 # RunPad W1 treadmill project handoff
 
-Current state as of 2026-10-17. The full chronological log (every trial, dead end and checkpoint, about 1,400 lines) is
+Current state as of 2026-10-28 (TUI and the two-ENTER approval added; see "Terminal UI"). The full chronological log (every trial, dead end and checkpoint, about 1,400 lines) is
 [archive/HANDOFF-history-20261017.md](archive/HANDOFF-history-20261017.md); read it only to find out why something is the way it is.
 User guide: `tools/treadmill/README.md`. Engineering notes: `tools/treadmill/ENGINEERING.md`. Short status: `tools/treadmill/STATUS.md`.
 VO2max testing: [VO2MAX.md](VO2MAX.md).
@@ -21,6 +21,40 @@ Garmin FIT workouts built from JSON specs; plans are JSON manifests; runs can be
 - **FIT:** `treadmill-fit build|dump|check|activity` (official SDK in `src/fit-sdk`), `trainings/*.json` (54 specs) and `workouts/*.fit`, `plan.py`, `make_plan.py`, `summarize_run.py`, plans in `tools/treadmill/plans/` (10 plans), audio probe script.
 - **TUI:** `tools/treadmill/treadmill_tui.py` (curses) wraps `workout run --manual-control`: training picker, the CLI's approval prompts, live run screen with next-segment heads-up, link age, console pause and safety-key banners, run summary and FIT export. Fake-treadmill tested only.
 - **Tests and CI:** C++ gtests (gate), Python suites under `tools/treadmill/tests/` (fake-peer trials run through `run_parallel.py`, about 3 minutes), Docker clean-package build, `.github/workflows/treadmill.yml` (green on `develop`).
+
+## Terminal UI (2026-10-28)
+
+Launch it on the Pi, in a terminal of at least 80x24 (120x36 shows the event log too):
+
+```sh
+python3 ~/qdomyos-zwift/tools/treadmill/treadmill_tui.py
+```
+
+- It runs the installed `treadmill` on PATH (`~/.local/bin/treadmill`, reinstalled on 2026-10-28 with the two-ENTER prompt).
+  A CLI built before that asks for `MOTOR` and the TUI shows "THIS CLI IS TOO OLD": rebuild and `make install` (README, Build).
+  `TREADMILL_BIN=<path>` selects another CLI, `TREADMILL_LOG_DIR=<dir>` another log directory (default `~/treadmill-logs`).
+  Extra plan files can be passed as arguments (`treadmill_tui.py my-plan.xml`); they appear under "Files".
+- Flow: picker (←→ category, ↑↓ training, `/` search, `h` handrail up = `--running-mode`, `w` wait for wake, `m` manual strategy),
+  ENTER → the CLI's safety text and its two ENTER prompts → "wake the console" → ENTER starts the belt → run screen → summary
+  (`f` exports a FIT activity next to the log). Run keys: `q`/`s`/Ctrl-C stop (Esc deliberately does not), ↑↓ speed ±0.1
+  (PgUp/PgDn ±0.5), ←→ incline level, `r` back to the plan, `space` pause, `b` beeps.
+- The command it starts: `treadmill workout run <id> --confirm-motor --log ~/treadmill-logs/<id>-<timestamp>.jsonl --manual-control
+  --manual-strategy hold [--running-mode] [--wait-wake 10 --wait-wake-confirm]`, on a pty, reading the JSON records on stdout
+  (API.md, "Manual control"). If the TUI exits, the CLI's input closes and it stops the belt.
+- Design: `Child` (pty + reader threads; stdout is always drained), `StderrParser` (drops the plan JSON, counts the prompts),
+  `RunState` (everything on screen, built only from records), then curses drawing in `App`. The safety key is
+  `raw_status` 06/01 (06/02 is sleep); distance is the FTMS counter when present (running mode), otherwise speed integrated.
+- Choices not yet confirmed on hardware: it always uses `--manual-control` (the helper then accepts any target inside the
+  mode's limits, not only the plan's sequence; never run on the W1, and never together with a console pause), default
+  strategy `hold` (the CLI's default is `takeover`).
+- Pause from the TUI is a placeholder: it sends `pause`/`resume`, which the CLI refuses ("unknown command"); the TUI then
+  points to the console's Pause/Play. Contract in API.md ("Planned"), backlog item below.
+- Tests: `tests/test_tui.py` (model, no binary, in CI) and `test_the_tui_driver_...` in `test_motortrial.py` (real CLI, fake
+  peer). Checked by hand in tmux against the fake helper extracted from `test_motortrial.py` (set `TREADMILL_LINUX_HELPER`,
+  `MOTOR_CALLS`, `MOTOR_MODE=normal`, `MOTOR_BACKEND=linux-bluez`, optionally `MOTOR_WAKE_AFTER`, `MOTOR_CONSOLE_PAUSE`).
+  Use a private tmux server (`tmux -L test -f /dev/null`); the user's tmux config splits new windows.
+- First hardware session: a short walking training (e.g. `hike-recovery-35`), handrail down, operator at the console stop;
+  watch the link indicator, try ↑↓ once, a console Pause/Play, then `q`.
 
 ## Hardware and identity
 
@@ -93,7 +127,8 @@ Never treat a name or address as proof of identity without rechecking at connect
 
 ## Suggested next work
 
-1. Run the console Pause/Play hardware test (sessions A and B above) on an idle Pi.
+1. Run the console Pause/Play hardware test (sessions A and B above) on an idle Pi, and a first supervised TUI session
+   ("Terminal UI" above).
 2. Make the emergency STOP independent of a hung write: for example, cancel or skip the pending write, or disconnect if STOP is not acknowledged within about 2 s. Find out why a STOP during the countdown does not prevent the belt start. Count the trailing silence in `summarize_run.py`.
 3. Run the remaining trainings on the hardware, one new feature per supervised run (skimo and hiking first, then the running and VO2 sets); a 90-minute run before relying on anything over 65 minutes.
 4. Calibrate: inclinometer reading per level and belt-speed revolution timing (VO2MAX.md), then replace the provisional 1.375 %/level.

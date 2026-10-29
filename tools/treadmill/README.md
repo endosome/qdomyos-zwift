@@ -47,10 +47,11 @@ wake, `m` the manual strategy; ENTER starts.
 
 The TUI shows the CLI's own safety text and passes its two ENTER prompts through, then the wake prompt. During the run it
 shows speed, incline, distance (the treadmill's counter when it reports one, otherwise an estimate from speed), estimated
-climb, plan time, the current segment and a countdown to the next two, with a beep 10 s before each change. It also shows
+climb, plan time, the current segment and a countdown to the next two, highlighted 10 s before each change. It also shows
 the age of the last status report (the helper stops the belt past 1.5 s), console pauses with the remaining pause
 allowance, and a banner with the time when the safety key is removed. Keys: `q` stop, `↑`/`↓` speed ±0.1 km/h (PgUp/PgDn
-±0.5), `←`/`→` incline level, `r` back to the plan, `space` pause, `b` beeps. Pause from the TUI waits for a CLI command
+±0.5), `←`/`→` incline level, `r` back to the plan, `space` pause, `b` terminal bell. The bell (10 s before each change, on faults, pauses
+and a removed key) is off unless you start `treadmill-tui --bell`; under tmux or ssh it reaches the outer terminal as a sound. Pause from the TUI waits for a CLI command
 that does not exist yet (API.md); until then the CLI refuses it and the TUI says to use the console's Pause/Play. At the
 end it summarizes the run and `f` exports a Garmin FIT activity next to the log. `?` shows the keys of the current screen.
 

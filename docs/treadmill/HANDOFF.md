@@ -40,7 +40,7 @@ works too. `?` opens the key help on every screen (other keys keep working while
 - Flow: picker (←→ category, ↑↓ training, `/` search, `h` handrail up = `--running-mode`, `w` wait for wake, `m` manual strategy),
   ENTER → the CLI's safety text and its two ENTER prompts → "wake the console" → ENTER starts the belt → run screen → summary
   (`f` exports a FIT activity next to the log). Run keys: `q`/`s`/Ctrl-C stop (Esc deliberately does not), ↑↓ speed ±0.1
-  (PgUp/PgDn ±0.5), ←→ incline level, `r` back to the plan, `space` pause, `b` beeps.
+  (PgUp/PgDn ±0.5), ←→ incline level, `r` back to the plan, `space` pause, `b` terminal bell (off by default; `treadmill-tui --bell` starts with it on).
 - The command it starts: `treadmill workout run <id> --confirm-motor --log ~/treadmill-logs/<id>-<timestamp>.jsonl --manual-control
   --manual-strategy hold [--running-mode] [--wait-wake 10 --wait-wake-confirm]`, on a pty, reading the JSON records on stdout
   (API.md, "Manual control"). If the TUI exits, the CLI's input closes and it stops the belt.

@@ -6,7 +6,9 @@ on a pty, passes the operator's ENTER presses through, sends stop, speed and inc
 draws the JSON records the CLI writes to stdout (API.md, "Manual control"). If this program ends, the CLI's input
 closes and the CLI stops the belt.
 
-usage: treadmill-tui [PLAN_FILE ...]        (or python3 treadmill_tui.py); press ? for the keys      extra .xml/.fit plans are listed next to the catalog
+usage: treadmill-tui [--bell] [PLAN_FILE ...]   (or python3 treadmill_tui.py); press ? for the keys
+PLAN_FILE: extra .xml/.fit plans, listed next to the catalog.
+--bell: ring the terminal bell on alerts (off by default; `b` toggles it during a session).
 TREADMILL_BIN selects the CLI (default: `treadmill` on PATH); TREADMILL_LOG_DIR the log directory (~/treadmill-logs).
 """
 
@@ -48,7 +50,7 @@ HELP = {
         ("q  s  Ctrl-C", "STOP the belt and end the run"), ("ENTER", "start the belt once the treadmill is awake"),
         ("↑ ↓  + -", "speed ±0.1 km/h"), ("PgUp PgDn", "speed ±0.5 km/h"), ("← → [ ]", "incline one level down or up"),
         ("r", "back to the plan's target"), ("space  p", "pause or resume (console Pause/Play until the CLI supports it)"),
-        ("b", "beeps on or off"), ("", "Esc does not stop the run; the console's stop always works")]),
+        ("b", "terminal bell on or off (off unless started with --bell)"), ("", "Esc does not stop the run; the console's stop always works")]),
     "summary": ("After the run", [
         ("f", "export a Garmin FIT activity next to the log"), ("ENTER  Esc", "back to the trainings"), ("q", "quit")]),
 }
@@ -692,7 +694,7 @@ class Screen:
 # --- the application -----------------------------------------------------------------------------------------------
 
 class App:
-    def __init__(self, window, extra_files):
+    def __init__(self, window, extra_files, bell=False):
         self.screen = Screen(window)
         self.window = window
         self.cli = cli_path()
@@ -718,7 +720,7 @@ class App:
         self.run_running = False
         self.export_message = ""
         self.exit_code = None
-        self.beeps = True
+        self.beeps = bell  # off by default: under tmux/ssh the bell reaches the outer terminal as a sound
         self.alerted = set()
         self.flash_until = 0
         self.message = ""
@@ -1089,7 +1091,7 @@ class App:
             row += 1
         s.fill(height - 1, c["title"])
         keys = [(" q STOP ", "badge_danger"), (" space pause ", "title"), (" ↑↓ speed ", "title"), (" ←→ incline ", "title"),
-                (" r plan ", "title"), (" b beeps %s " % ("on" if self.beeps else "off"), "title"), (" ? help ", "title")]
+                (" r plan ", "title"), (" b bell %s " % ("on" if self.beeps else "off"), "title"), (" ? help ", "title")]
         if st.phase == "awake":
             keys.insert(1, (" ENTER start belt ", "badge_good"))
         x = 0
@@ -1357,7 +1359,7 @@ def main(argv=None):
 
     def run(window):
         curses.raw()  # Ctrl-C arrives as a key (stop), not as a signal
-        holder["app"] = App(window, arguments)
+        holder["app"] = App(window, [a for a in arguments if a != "--bell"], bell="--bell" in arguments)
         holder["app"].loop()
 
     try:

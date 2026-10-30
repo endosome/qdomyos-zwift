@@ -1,7 +1,7 @@
 {
   "id": "vo2-30-30-light-20",
   "name": "VO2 30-30 light 20",
-  "description": "A 20-minute version: ten 30 s brisk / 30 s easy alternations at 10.5 km/h and 6.5 km/h (level 1): a gentle first taste of VO2 work. Needs --running-mode, handrail up. See docs/treadmill/VO2MAX.md.",
+  "description": "Ten 30 s brisk / 30 s easy alternations at 10.5 and 6.5 km/h (level 1): a gentle first taste of VO2 work. UNPROVEN LENGTH: two runs stopped early with \"Unexpected motor feedback\". Needs --running-mode, handrail up.",
   "sport": "running",
   "sub_sport": "treadmill",
   "steps": [
